@@ -5,3 +5,7 @@ node_modules
 
 # Migrations, won't be used in version controlling
 prisma/migrations
+
+# Build folder
+dist
+build
