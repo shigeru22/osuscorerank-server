@@ -1,0 +1,20 @@
+{
+  "name": "osuinactive-api",
+  "version": "0.1.0",
+  "description": "API for osu! Inactive User Score Rankings",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "shigeru22",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^17.0.8",
+    "prisma": "^3.8.0",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
+  },
+  "dependencies": {
+    "@prisma/client": "^3.8.0"
+  }
+}
