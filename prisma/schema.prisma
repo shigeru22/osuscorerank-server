@@ -1,33 +1,33 @@
 generator client {
-  provider = "prisma-client-js"
+	provider = "prisma-client-js"
 }
 
 datasource db {
-  provider          = "postgresql"
-  url               = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+	provider          = "postgresql"
+	url               = env("DATABASE_URL")
+	shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model Countries {
-  countryId   Int     @id @default(autoincrement())
-  countryName String  @db.VarChar(255)
-  osuId       Int
-  users       Users[]
+	countryId   Int     @id @default(autoincrement())
+	countryName String  @db.VarChar(255)
+	osuId       Int
+	users       Users[]
 }
 
 model Users {
-  userId    Int       @id @default(autoincrement())
-  osuId     Int
-  userName  String    @db.VarChar(255)
-  countryId Int
-  country   Countries @relation(fields: [countryId], references: [countryId])
-  scores    Scores[]
+	userId    Int       @id @default(autoincrement())
+	osuId     Int
+	userName  String    @db.VarChar(255)
+	countryId Int
+	country   Countries @relation(fields: [countryId], references: [countryId])
+	scores    Scores[]
 }
 
 model Scores {
-  scoreId    Int    @id @default(autoincrement())
-  userId     Int
-  score      BigInt // bigint since the number is unusually large
-  globalRank Int
-  user       Users  @relation(fields: [userId], references: [userId])
+	scoreId    Int    @id @default(autoincrement())
+	userId     Int
+	score      BigInt // bigint since the number is unusually large
+	globalRank Int
+	user       Users  @relation(fields: [userId], references: [userId])
 }

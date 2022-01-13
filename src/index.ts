@@ -11,6 +11,6 @@ app.use(express.json());
 
 app.use("/", mainRoute);
 
-app.listen(PORT, async () => {
-  console.log(`[INFO] Server is running at port ${ PORT }`);
+app.listen(PORT, () => {
+	console.log(`[INFO] Server is running at port ${ PORT }`);
 });
