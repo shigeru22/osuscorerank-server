@@ -50,7 +50,9 @@ module.exports = {
 			"ignoreImports": false,
 			"ignoreGlobals": false
 		} ],
-		"capitalized-comments": [ "warn", "never" ],
+		"capitalized-comments": [ "warn", "never", {
+			"ignorePattern": "^(// TODO: )|^(/* TODO: )|^(// FIXME: )|^(/* FIXME: )"
+		} ],
 		"class-methods-use-this": [ "error", {
 			"exceptMethods": [],
 			"enforceForClassFields": true
