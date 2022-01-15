@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import _ from "lodash";
 import { ICountryDELETEData, ICountryPOSTData } from "../types/countries";
 import { checkNumber } from "../utils/common";
+import { HTTPStatus } from "../utils/http";
 
 /* TODO: use JWT for actions other than GET */
 
@@ -28,7 +29,7 @@ export function getAllCountries(req: Request, res: Response) {
 		}
 	};
 
-	res.status(200).json(ret);
+	res.status(HTTPStatus.OK).json(ret);
 }
 
 export function getCountry(req: Request, res: Response) {
@@ -41,7 +42,7 @@ export function getCountry(req: Request, res: Response) {
 			message: "Invalid ID parameter."
 		};
 
-		res.status(400).json(ret);
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
 		return;
 	}
 
@@ -57,7 +58,7 @@ export function getCountry(req: Request, res: Response) {
 		}
 	};
 
-	res.status(200).json(ret);
+	res.status(HTTPStatus.OK).json(ret);
 }
 
 export function addCountry(req: Request, res: Response) {
@@ -70,7 +71,7 @@ export function addCountry(req: Request, res: Response) {
 			message: "Invalid POST data."
 		};
 
-		res.status(400).json(ret);
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
 		return;
 	}
 
@@ -86,7 +87,7 @@ export function addCountry(req: Request, res: Response) {
 		}
 	};
 
-	res.status(200).json(ret);
+	res.status(HTTPStatus.OK).json(ret);
 }
 
 export function deleteCountry(req: Request, res: Response) {
@@ -99,7 +100,7 @@ export function deleteCountry(req: Request, res: Response) {
 			message: "Invalid DELETE data."
 		};
 
-		res.status(400).json(ret);
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
 		return;
 	}
 
@@ -117,7 +118,7 @@ export function deleteCountry(req: Request, res: Response) {
 		}
 	};
 
-	res.status(200).json(ret);
+	res.status(HTTPStatus.OK).json(ret);
 }
 
 export function resetCountries(req: Request, res: Response) {
@@ -130,7 +131,7 @@ export function resetCountries(req: Request, res: Response) {
 		message: "Data deleted successfully."
 	};
 
-	res.status(200).json(ret);
+	res.status(HTTPStatus.OK).json(ret);
 }
 
 function validateCountryPostData(data: ICountryPOSTData) {

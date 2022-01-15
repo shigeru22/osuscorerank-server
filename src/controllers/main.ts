@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { HTTPStatus } from "../utils/http";
 
 export function getGreeting(req: Request, res: Response) {
 	console.log("[LOG] Accessed: getGreeting()");
@@ -7,5 +8,5 @@ export function getGreeting(req: Request, res: Response) {
 		message: "Hello, world!"
 	};
 
-	res.status(200).json(ret);
+	res.status(HTTPStatus.OK).json(ret);
 }

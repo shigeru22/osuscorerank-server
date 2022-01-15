@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import _ from "lodash";
 import { checkNumber } from "../utils/common";
 import { IScorePOSTData, IScoreDELETEData } from "../types/scores";
+import { HTTPStatus } from "../utils/http";
 
 /* TODO: use JWT for actions other than GET */
 
@@ -34,7 +35,7 @@ export function getAllScores(req: Request, res: Response) {
 		}
 	};
 
-	res.status(200).json(ret);
+	res.status(HTTPStatus.OK).json(ret);
 }
 
 export function getScoresByCountry(req: Request, res: Response) {
@@ -47,7 +48,7 @@ export function getScoresByCountry(req: Request, res: Response) {
 			message: "Invalid ID parameter."
 		};
 
-		res.status(400).json(ret);
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
 		return;
 	}
 
@@ -82,7 +83,7 @@ export function getScoresByCountry(req: Request, res: Response) {
 		}
 	};
 
-	res.status(200).json(ret);
+	res.status(HTTPStatus.OK).json(ret);
 }
 
 export function getScoreByUser(req: Request, res: Response) {
@@ -95,7 +96,7 @@ export function getScoreByUser(req: Request, res: Response) {
 			message: "Invalid ID parameter."
 		};
 
-		res.status(400).json(ret);
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
 		return;
 	}
 
@@ -115,7 +116,7 @@ export function getScoreByUser(req: Request, res: Response) {
 		}
 	};
 
-	res.status(200).json(ret);
+	res.status(HTTPStatus.OK).json(ret);
 }
 
 export function addUserScore(req: Request, res: Response) {
@@ -128,7 +129,7 @@ export function addUserScore(req: Request, res: Response) {
 			message: "Invalid POST data."
 		};
 
-		res.status(400).json(ret);
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
 		return;
 	}
 
@@ -147,7 +148,7 @@ export function addUserScore(req: Request, res: Response) {
 		}
 	};
 
-	res.status(200).json(ret);
+	res.status(HTTPStatus.OK).json(ret);
 }
 
 export function deleteUserScore(req: Request, res: Response) {
@@ -160,7 +161,7 @@ export function deleteUserScore(req: Request, res: Response) {
 			message: "Invalid DELETE data."
 		};
 
-		res.status(400).json(ret);
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
 		return;
 	}
 
@@ -174,7 +175,7 @@ export function deleteUserScore(req: Request, res: Response) {
 		}
 	};
 
-	res.status(200).json(ret);
+	res.status(HTTPStatus.OK).json(ret);
 }
 
 export function resetScores(req: Request, res: Response) {
@@ -185,7 +186,7 @@ export function resetScores(req: Request, res: Response) {
 		message: "Data deleted successfully."
 	};
 
-	res.status(200).json(ret);
+	res.status(HTTPStatus.OK).json(ret);
 }
 
 function validateScorePostData(data: IScorePOSTData) {
