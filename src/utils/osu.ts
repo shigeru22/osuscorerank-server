@@ -18,8 +18,6 @@ export async function getAccessToken(clientId: number, clientSecret: string) {
 		const response = await axios.post<ClientCredentialsPOSTResponse>(OSU_API_OAUTH_ENDPOINT, request);
 
 		if(response.status === HTTPStatus.OK) {
-			/* TODO: remove console.log when no longer needed */
-			console.log(`[DEBUG] Access token: ${ response.data.access_token }`);
 			return response.data.access_token;
 		}
 		else {
@@ -47,5 +45,42 @@ export async function getAccessToken(clientId: number, clientSecret: string) {
 		}
 
 		return "";
+	}
+}
+
+export async function revokeAccessToken(token: string) {
+	try {
+		const response = await axios.delete(`${ OSU_API_ENDPOINT }/oauth/tokens/current`, {
+			headers: {
+				Authorization: `Bearer ${ token }`
+			}
+		});
+
+		if(response.status !== HTTPStatus.NO_CONTENT) {
+			console.log(`[WARN] API returned status ${ response.status }`);
+			console.log(`[WARN] Response data:\n${ JSON.stringify(response.data) }`);
+			return false;
+		}
+
+		return true;
+	}
+	catch (e) {
+		if(axios.isAxiosError(e)) {
+			if(!_.isUndefined(e.response)) {
+				console.log(`[ERROR] API returned status ${ e.response.status }.`);
+				console.log(`[ERROR] Response data:\n${ JSON.stringify(e.response.data) }`);
+			}
+			else {
+				console.log("[ERROR] API returned undefined status code.");
+			}
+		}
+		else if(_.isError(e)) {
+			console.log(`[ERROR] Error while revoking access token: ${ e.message }`);
+		}
+		else {
+			console.log("[ERROR] Unknown error occurred while revoking access token.");
+		}
+
+		return false;
 	}
 }

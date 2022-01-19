@@ -1,6 +1,6 @@
 import env from "dotenv";
 import _ from "lodash";
-import { getAccessToken } from "./utils/osu";
+import { getAccessToken, revokeAccessToken } from "./utils/osu";
 import { checkNumber } from "./utils/common";
 
 env.config();
@@ -21,6 +21,16 @@ async function fetchData() {
 
 	console.log("[INFO] Retrieving access token...");
 	const token = await getAccessToken(clientId, process.env.OSU_CLIENT_SECRET);
+
+	console.log(`[DEBUG] Access token: ${ token }`);
+
+	console.log("[INFO] Revoking access token...");
+	if(await revokeAccessToken(token)) {
+		console.log("[INFO] Access token revoked successfully.");
+	}
+	else {
+		console.log("[WARN] Unable to revoke access token.");
+	}
 }
 
 fetchData();
