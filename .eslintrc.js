@@ -48,7 +48,8 @@ module.exports = {
 			"properties": "always",
 			"ignoreDestructuring": false,
 			"ignoreImports": false,
-			"ignoreGlobals": false
+			"ignoreGlobals": false,
+			"allow": [ "client_id", "client_secret", "grant_type", "token_type", "expires_in", "access_token" ] // allow these since osu!api uses these names
 		} ],
 		"capitalized-comments": [ "warn", "never", {
 			"ignorePattern": "^(// TODO: )|^(/* TODO: )|^(// FIXME: )|^(/* FIXME: )"
