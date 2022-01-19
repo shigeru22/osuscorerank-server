@@ -8,7 +8,6 @@ env.config();
 async function fetchData() {
 	console.log("[INFO] Checking for environment variables...");
 	if(_.isUndefined(process.env.OSU_CLIENT_ID) || _.isUndefined(process.env.OSU_CLIENT_SECRET)) {
-		console.log(process.env.OSU_CLIENT_SECRET);
 		console.log("[ERROR] OSU_CLIENT_ID or OSU_CLIENT_SECRET must not be empty. Exiting.");
 		return;
 	}
