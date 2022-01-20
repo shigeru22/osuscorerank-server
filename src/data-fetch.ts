@@ -1,6 +1,7 @@
 import env from "dotenv";
 import _ from "lodash";
-import { getAccessToken, revokeAccessToken } from "./utils/osu";
+import fs from "fs";
+import { getAccessToken, getScoreRanking, revokeAccessToken } from "./utils/osu";
 import { checkNumber } from "./utils/common";
 
 env.config();
@@ -22,6 +23,28 @@ async function fetchData() {
 	const token = await getAccessToken(clientId, process.env.OSU_CLIENT_SECRET);
 
 	console.log(`[DEBUG] Access token: ${ token }`);
+
+	const rankings = await getScoreRanking(token);
+
+	if(_.isNull(rankings)) {
+		console.log("[ERROR] Failed to retrieve rankings. Exiting.");
+	}
+	else {
+		try {
+			if(!fs.existsSync("./dist")) {
+				fs.mkdirSync("./dist");
+			}
+			fs.writeFileSync("./dist/rankings.json", JSON.stringify(rankings, null, 2));
+		}
+		catch (e) {
+			if(_.isError(e)) {
+				console.log(`[DEBUG] Error while writing file: ${ e.message }` );
+			}
+			else {
+				console.log("[DEBUG] Unknown error occurred.");
+			}
+		}
+	}
 
 	console.log("[INFO] Revoking access token...");
 	if(await revokeAccessToken(token)) {
