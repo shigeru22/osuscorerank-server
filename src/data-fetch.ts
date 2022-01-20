@@ -1,7 +1,7 @@
 import env from "dotenv";
 import _ from "lodash";
 import fs from "fs";
-import { getAccessToken, getScoreRanking, revokeAccessToken } from "./utils/osu";
+import { getAccessToken, getScoreRanking, revokeAccessToken } from "./utils/osu-api/osu";
 import { checkNumber } from "./utils/common";
 
 env.config();

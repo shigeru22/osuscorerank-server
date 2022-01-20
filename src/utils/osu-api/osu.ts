@@ -1,9 +1,9 @@
-import axios, { AxiosResponse } from "axios";
-import _, { delay } from "lodash";
-import { ClientCredentialsPOSTRequest, ClientCredentialsPOSTResponse, RankingsGETResponse } from "../types/osu-api";
-import { RankingsCursor, UserStatistics } from "../types/osu-structures";
-import { sleep } from "./common";
-import { HTTPStatus } from "./http";
+import axios from "axios";
+import _ from "lodash";
+import { ClientCredentialsPOSTRequest, ClientCredentialsPOSTResponse, RankingsGETResponse } from "../../types/osu/osu-api";
+import { RankingsCursor, UserStatistics } from "../../types/osu/osu-structures";
+import { sleep } from "../common";
+import { HTTPStatus } from "../http";
 
 const OSU_API_OAUTH_ENDPOINT = "https://osu.ppy.sh/oauth/token";
 const OSU_API_ENDPOINT = "https://osu.ppy.sh/api/v2";
