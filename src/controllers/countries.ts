@@ -1,38 +1,29 @@
 import { Request, Response } from "express";
 import _ from "lodash";
 import { ICountryDELETEData, ICountryPOSTData } from "../types/countries";
+import { getCountries, getCountryById, insertCountry, removeCountry } from "../utils/prisma/db-operations";
 import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";
 
 /* TODO: use JWT for actions other than GET */
 
-export function getAllCountries(req: Request, res: Response) {
+export async function getAllCountries(req: Request, res: Response) {
 	console.log("[LOG] Accessed: getAllCountries");
 
-	/* TODO: query all countries */
+	const data = await getCountries();
+
 	const ret = {
 		message: "Data retrieved successfully.",
 		data: {
-			countries: [
-				{
-					countryId: 1,
-					countryName: "Country 1",
-					osuId: 1
-				},
-				{
-					countryId: 2,
-					countryName: "Country 2",
-					osuId: 2
-				}
-			],
-			total: 2
+			countries: data,
+			total: data.length
 		}
 	};
 
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export function getCountry(req: Request, res: Response) {
+export async function getCountry(req: Request, res: Response) {
 	console.log("[LOG] Accessed: getCountry");
 
 	const id = _.parseInt(req.params.countryId, 10);
@@ -46,22 +37,28 @@ export function getCountry(req: Request, res: Response) {
 		return;
 	}
 
-	/* TODO: query country information */
+	const data = await getCountryById(id);
+
+	if(_.isNull(data)) {
+		const ret = {
+			message: "Country with specified ID can't be found."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
 	const ret = {
 		message: "Data retrieved successfully.",
 		data: {
-			country: {
-				countryId: id,
-				countryName: "Country 2",
-				osuId: 3
-			}
+			country: data
 		}
 	};
 
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export function addCountry(req: Request, res: Response) {
+export async function addCountry(req: Request, res: Response) {
 	console.log("[LOG] Accessed: addCountry");
 
 	const data: ICountryPOSTData = req.body;
@@ -76,21 +73,25 @@ export function addCountry(req: Request, res: Response) {
 	}
 
 	/* TODO: add to database, check for existing data and validity */
+	const result = await insertCountry([ data ]);
+
+	if(result <= 0) {
+		const ret = {
+			message: "Data insertion failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	const ret = {
-		message: "Data added successfully.",
-		data: {
-			submitted: {
-				countryId: 3,
-				countryName: data.countryName,
-				osuId: data.osuId
-			}
-		}
+		message: "Data inserted successfully."
 	};
 
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export function deleteCountry(req: Request, res: Response) {
+export async function deleteCountry(req: Request, res: Response) {
 	console.log("[LOG] Accessed: deleteCountry");
 
 	const data: ICountryDELETEData = req.body;
@@ -104,18 +105,20 @@ export function deleteCountry(req: Request, res: Response) {
 		return;
 	}
 
-	/* TODO: delete scores and users from that country, and delete the country from database */
+	/* TODO: delete scores from that country too */
+	const result = await removeCountry(data.countryId);
+
+	if(result !== 1) {
+		const ret = {
+			message: "Data deletion failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	const ret = {
-		message: "Data deleted successfully.",
-		data: {
-			deleted: {
-				countryId: 2,
-				users: [
-					{ userId: 1 },
-					{ userId: 2 }
-				]
-			}
-		}
+		message: "Data deleted successfully."
 	};
 
 	res.status(HTTPStatus.OK).json(ret);
@@ -135,8 +138,10 @@ export function resetCountries(req: Request, res: Response) {
 }
 
 function validateCountryPostData(data: ICountryPOSTData) {
-	const hasValidTypes = checkNumber(data.countryName) && checkNumber(data.osuId);
+	const hasValidTypes = _.isString(data.countryName) && checkNumber(data.osuId);
 	const hasValidData = !_.isEmpty(data.countryName) && data.osuId > 0;
+
+	console.log(`[DEBUG] countryName: ${ data.osuId }`);
 
 	console.log(`[DEBUG] validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`);
 

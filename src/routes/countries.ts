@@ -6,4 +6,8 @@ const router = Router();
 router.get("/", countries.getAllCountries);
 router.get("/:countryId", countries.getCountry);
 
+router.post("/add", countries.addCountry);
+
+router.delete("/remove", countries.deleteCountry);
+
 export default router;
