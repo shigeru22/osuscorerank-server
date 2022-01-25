@@ -72,7 +72,6 @@ export async function addCountry(req: Request, res: Response) {
 		return;
 	}
 
-	/* TODO: add to database, check for existing data and validity */
 	const result = await insertCountry([ data ]);
 
 	if(result <= 0) {
