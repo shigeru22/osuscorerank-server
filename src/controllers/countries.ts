@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import _ from "lodash";
-import { ICountryDELETEData, ICountryPOSTData } from "../types/countries";
+import { ICountryDELETEData, ICountryPOSTData } from "../types/country";
 import { getCountries, getCountryById, insertCountry, removeCountry } from "../utils/prisma/countries";
 import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";

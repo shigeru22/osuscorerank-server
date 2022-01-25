@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import _ from "lodash";
-import { IUserPOSTData, IUserDELETEData } from "../types/users";
+import { IUserPOSTData, IUserDELETEData } from "../types/user";
 import { getUsers, getUserById, insertUser, removeUser } from "../utils/prisma/users";
 import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";

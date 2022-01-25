@@ -1,10 +1,10 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { IUserPOSTData } from "../../types/users";
-import { Users } from "../../types/prisma/users";
+import { IUserPOSTData } from "../../types/user";
+import { User } from "../../types/prisma/user";
 
 const prisma = new PrismaClient();
 
-export async function getUsers(): Promise<Users[]> {
+export async function getUsers(): Promise<User[]> {
 	try {
 		const result = await prisma.users.findMany({
 			select: {
@@ -35,7 +35,7 @@ export async function getUsers(): Promise<Users[]> {
 	}
 }
 
-export async function getUserById(id: number): Promise<Users | null> {
+export async function getUserById(id: number): Promise<User | null> {
 	try {
 		const result = await prisma.users.findFirst({
 			select: {

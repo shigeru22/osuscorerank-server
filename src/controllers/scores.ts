@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import _ from "lodash";
-import { IScorePOSTData, IScoreDELETEData } from "../types/scores";
+import { IScorePOSTData, IScoreDELETEData } from "../types/score";
 import { getCountryById } from "../utils/prisma/countries";
 import { getScores, getScoresByCountryId, getScoreByUserId, insertScore, removeScore, removeAllScores } from "../utils/prisma/scores";
 import { getUserById } from "../utils/prisma/users";

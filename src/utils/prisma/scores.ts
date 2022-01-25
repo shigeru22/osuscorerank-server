@@ -1,9 +1,10 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { IScorePOSTData } from "../../types/scores";
+import { IScorePOSTData } from "../../types/score";
+import { ScoreWithCountry, Score } from "../../types/prisma/score";
 
 const prisma = new PrismaClient();
 
-export async function getScores() {
+export async function getScores(): Promise<ScoreWithCountry[]> {
 	try {
 		const result = await prisma.scores.findMany({
 			select: {
@@ -44,7 +45,7 @@ export async function getScores() {
 	}
 }
 
-export async function getScoresByCountryId(id: number) {
+export async function getScoresByCountryId(id: number): Promise<Score[]> {
 	try {
 		const result = await prisma.scores.findMany({
 			select: {
@@ -83,7 +84,7 @@ export async function getScoresByCountryId(id: number) {
 	}
 }
 
-export async function getScoreByUserId(id: number) {
+export async function getScoreByUserId(id: number): Promise<ScoreWithCountry | null> {
 	try {
 		const result = await prisma.scores.findFirst({
 			select: {
@@ -92,7 +93,14 @@ export async function getScoreByUserId(id: number) {
 					select: {
 						userId: true,
 						userName: true,
-						osuId: true
+						osuId: true,
+						country: {
+							select: {
+								countryId: true,
+								countryName: true,
+								osuId: true
+							}
+						}
 					}
 				},
 				score: true,

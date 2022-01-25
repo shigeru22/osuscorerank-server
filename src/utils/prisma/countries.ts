@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { ICountryPOSTData } from "../../types/countries";
+import { ICountryPOSTData } from "../../types/country";
 import { Country } from "../../types/prisma/country";
 
 const prisma = new PrismaClient();
