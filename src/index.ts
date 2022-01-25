@@ -2,6 +2,7 @@ import express from "express";
 import env from "dotenv";
 import mainRoute from "./routes/main";
 import scoreRoute from "./routes/scores";
+import userRoute from "./routes/users";
 import countryRoute from "./routes/countries";
 
 env.config();
@@ -15,6 +16,7 @@ app.use(express.json());
 /* routes */
 app.use("/", mainRoute);
 app.use("/scores", scoreRoute);
+app.use("/users", userRoute);
 app.use("/countries", countryRoute);
 
 app.listen(PORT, () => {
