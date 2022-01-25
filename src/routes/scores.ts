@@ -4,8 +4,8 @@ import * as scores from "../controllers/scores";
 const router = Router();
 
 router.get("/", scores.getAllScores);
-router.get("/country/:countryId", scores.getScoresByCountry);
-router.get("/user/:userId", scores.getScoreByUser);
+router.get("/country/:countryId", scores.getCountryScores);
+router.get("/user/:userId", scores.getUserScore);
 
 router.post("/add", scores.addUserScore);
 

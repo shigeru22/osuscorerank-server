@@ -1,11 +1,9 @@
 export interface IScorePOSTData {
-	userName: string;
-	osuId: number;
-	countryId: number;
+	userId: number;
 	score: number;
 	globalRank: number;
 }
 
 export interface IScoreDELETEData {
-	osuId: number;
+	scoreId: number;
 }

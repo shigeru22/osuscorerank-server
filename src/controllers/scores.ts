@@ -1,45 +1,42 @@
 import { Request, Response } from "express";
 import _ from "lodash";
-import { checkNumber } from "../utils/common";
 import { IScorePOSTData, IScoreDELETEData } from "../types/scores";
+import { getScores, getCountryById, getScoresByCountryId, getUserById, getScoreByUserId, insertScore, removeScore, removeAllScores } from "../utils/prisma/db-operations";
+import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";
 
 /* TODO: use JWT for actions other than GET */
 
-export function getAllScores(req: Request, res: Response) {
+export async function getAllScores(req: Request, res: Response) {
 	console.log("[LOG] Accessed: getScoresByCountry");
 
-	/* TODO: query all scores from database */
+	const data = await getScores();
+
+	if(_.isEmpty(data)) {
+		const ret = {
+			message: "Empty rankings returned."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	const ret = {
 		message: "Data retrieved successfully.",
 		data: {
-			rankings: [
-				{
-					scoreId: 73,
-					userId: 56,
-					userName: "User 1",
-					osuId: 2987165,
-					score: 595876723879,
-					globalRank: 2335
-				},
-				{
-					scoreId: 29,
-					userId: 109,
-					userName: "User 8",
-					osuId: 6198753,
-					score: 587261987642,
-					globalRank: 4356
-				}
-			],
-			total: 2
+			scores: data,
+			length: data.length
 		}
 	};
 
-	res.status(HTTPStatus.OK).json(ret);
+	res.status(HTTPStatus.OK).send(JSON.stringify(
+		ret,
+		(key, value) => (typeof value === "bigint" ? value.toString() : value) // return bigint as string
+	));
 }
 
-export function getScoresByCountry(req: Request, res: Response) {
-	console.log("[LOG] Accessed: getScoresByCountry");
+export async function getCountryScores(req: Request, res: Response) {
+	console.log("[LOG] Accessed: getCountryScores");
 
 	const id = _.parseInt(req.params.countryId, 10); // database's country id
 
@@ -52,42 +49,49 @@ export function getScoresByCountry(req: Request, res: Response) {
 		return;
 	}
 
-	/* TODO: query country scores */
+	const country = await getCountryById(id);
+
+	if(_.isNull(country)) {
+		const ret = {
+			message: "Country with specified ID can't be found."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
+	const data = await getScoresByCountryId(id);
+
+	if(_.isEmpty(data)) {
+		const ret = {
+			message: "Empty rankings returned."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	const ret = {
 		message: "Data retrieved successfully.",
 		data: {
 			country: {
 				countryId: id,
-				countryName: "Country 2",
-				osuId: 3
+				countryName: country.countryName,
+				osuId: country.osuId
 			},
-			rankings: [
-				{
-					scoreId: 73,
-					userId: 56,
-					userName: "User 1",
-					osuId: 2987165,
-					score: 595876723879,
-					globalRank: 2335
-				},
-				{
-					scoreId: 29,
-					userId: 109,
-					userName: "User 8",
-					osuId: 6198753,
-					score: 587261987642,
-					globalRank: 4356
-				}
-			],
-			total: 2
+			rankings: data,
+			total: data.length
 		}
 	};
 
-	res.status(HTTPStatus.OK).json(ret);
+	res.status(HTTPStatus.OK).send(JSON.stringify(
+		ret,
+		(key, value) => (typeof value === "bigint" ? value.toString() : value) // return bigint as string
+	));
 }
 
-export function getScoreByUser(req: Request, res: Response) {
-	console.log("[LOG] Accessed: getScoreByUser");
+export async function getUserScore(req: Request, res: Response) {
+	console.log("[LOG] Accessed: getUserScore");
 
 	const id = _.parseInt(req.params.userId, 10); // database's user id
 
@@ -100,26 +104,42 @@ export function getScoreByUser(req: Request, res: Response) {
 		return;
 	}
 
-	/* TODO: query user score */
+	const user = await getUserById(id);
+
+	if(_.isNull(user)) {
+		const ret = {
+			message: "User with specified ID can't be found."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
+	const score = await getScoreByUserId(id);
+
+	if(_.isNull(score)) {
+		const ret = {
+			message: "Null data returned."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	const ret = {
 		message: "Data retrieved successfully.",
 		data: {
-			userData: {
-				scoreId: 46,
-				userId: id,
-				userName: "User 5",
-				countryId: 2,
-				osuId: 1263488,
-				score: 234680156234,
-				globalRank: 3163
-			}
+			score: score
 		}
 	};
 
-	res.status(HTTPStatus.OK).json(ret);
+	res.status(HTTPStatus.OK).send(JSON.stringify(
+		ret,
+		(key, value) => (typeof value === "bigint" ? value.toString() : value) // return bigint as string
+	));
 }
 
-export function addUserScore(req: Request, res: Response) {
+export async function addUserScore(req: Request, res: Response) {
 	console.log("[LOG] Accessed: addUserScore");
 
 	const data: IScorePOSTData = req.body;
@@ -133,25 +153,25 @@ export function addUserScore(req: Request, res: Response) {
 		return;
 	}
 
-	/* TODO: add to database, check for existing data and validity */
+	const result = await insertScore([ data ]);
+
+	if(result <= 0) {
+		const ret = {
+			message: "Data insertion failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	const ret = {
-		message: "Data added successfully.",
-		data: {
-			submitted: {
-				userId: 2,
-				userName: data.userName,
-				osuId: data.osuId,
-				countryId: data.countryId,
-				score: data.score,
-				globalRank: data.globalRank
-			}
-		}
+		message: "Data added successfully."
 	};
 
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export function deleteUserScore(req: Request, res: Response) {
+export async function deleteUserScore(req: Request, res: Response) {
 	console.log("[LOG] Accessed: deleteUserScore");
 
 	const data: IScoreDELETEData = req.body;
@@ -165,23 +185,38 @@ export function deleteUserScore(req: Request, res: Response) {
 		return;
 	}
 
-	/* TODO: delete from database */
+	const result = await removeScore(data.scoreId);
+
+	if(result !== 1) {
+		const ret = {
+			message: "Data deletion failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	const ret = {
-		message: "Data deleted successfully.",
-		data: {
-			deleted: {
-				osuId: data.osuId
-			}
-		}
+		message: "Data deleted successfully."
 	};
 
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export function resetScores(req: Request, res: Response) {
+export async function resetScores(req: Request, res: Response) {
 	console.log("[LOG] Accessed: resetScores");
 
-	/* TODO: delete all scores */
+	const result = await removeAllScores();
+
+	if(result <= 0) {
+		const ret = {
+			message: "Data deletion failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	const ret = {
 		message: "Data deleted successfully."
 	};
@@ -190,8 +225,8 @@ export function resetScores(req: Request, res: Response) {
 }
 
 function validateScorePostData(data: IScorePOSTData) {
-	const hasValidTypes = _.isString(data.userName) && checkNumber(data.osuId) && checkNumber(data.countryId) && checkNumber(data.score) && checkNumber(data.globalRank);
-	const hasValidData = !_.isEmpty(data.userName) && data.osuId > 0 && data.countryId > 0 && data.score >= 0 && data.globalRank > 0;
+	const hasValidTypes = checkNumber(data.userId) && checkNumber(data.score) && checkNumber(data.globalRank);
+	const hasValidData = data.userId > 0 && data.score >= 0 && data.globalRank > 0;
 
 	console.log(`[DEBUG] validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`);
 
@@ -199,8 +234,8 @@ function validateScorePostData(data: IScorePOSTData) {
 }
 
 function validateScoreDeleteData(data: IScoreDELETEData) {
-	const hasValidTypes = checkNumber(data.osuId);
-	const hasValidData = data.osuId > 0;
+	const hasValidTypes = checkNumber(data.scoreId);
+	const hasValidData = data.scoreId > 0;
 
 	console.log(`[DEBUG] validateScoreDeleteData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`);
 
