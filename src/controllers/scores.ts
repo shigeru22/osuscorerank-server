@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import _ from "lodash";
 import { IScorePOSTData, IScoreDELETEData } from "../types/scores";
-import { getScores, getCountryById, getScoresByCountryId, getUserById, getScoreByUserId, insertScore, removeScore, removeAllScores } from "../utils/prisma/db-operations";
+import { getCountryById } from "../utils/prisma/countries";
+import { getScores, getScoresByCountryId, getScoreByUserId, insertScore, removeScore, removeAllScores } from "../utils/prisma/scores";
+import { getUserById } from "../utils/prisma/users";
 import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";
 
