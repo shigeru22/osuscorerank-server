@@ -152,6 +152,31 @@ export async function removeUserByCountryId(id: number) {
 		});
 
 		if(result.count > 0) {
+			console.log(`[INFO] users: Deleted ${ result.count } rows.`);
+		}
+		else {
+			console.log("[ERROR] Invalid deleted user record.");
+		}
+
+		return result.count;
+	}
+	catch (e) {
+		if(e instanceof Prisma.PrismaClientKnownRequestError) {
+			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+		}
+		else {
+			console.log("[ERROR] Unknown error occurred while inserting data.");
+		}
+
+		return 0;
+	}
+}
+
+export async function removeAllUsers() {
+	try {
+		const result = await prisma.users.deleteMany();
+
+		if(result.count > 0) {
 			console.log(`[INFO] users: Deleted ${ result.count } row.`);
 		}
 		else {

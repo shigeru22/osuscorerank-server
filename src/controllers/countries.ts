@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import _ from "lodash";
 import { ICountryDELETEData, ICountryPOSTData } from "../types/country";
-import { removeScoresByCountryId } from "../utils/prisma/scores";
-import { removeUserByCountryId } from "../utils/prisma/users";
-import { getCountries, getCountryById, insertCountry, removeCountry } from "../utils/prisma/countries";
+import { removeAllScores, removeScoresByCountryId } from "../utils/prisma/scores";
+import { removeAllUsers, removeUserByCountryId } from "../utils/prisma/users";
+import { getCountries, getCountryById, insertCountry, removeAllCountries, removeCountry } from "../utils/prisma/countries";
 import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";
 
@@ -146,12 +146,44 @@ export async function deleteCountry(req: Request, res: Response) {
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export function resetCountries(req: Request, res: Response) {
+export async function resetCountries(req: Request, res: Response) {
 	/* this essentially resets everything */
 
 	console.log("[LOG] Accessed: resetCountries");
 
-	/* TODO: delete all scores, then users, and lastly, countries from database */
+	const resScores = await removeAllScores();
+
+	if(resScores <= 0) {
+		const ret = {
+			message: "Data deletion failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
+	const resUsers = await removeAllUsers();
+
+	if(resUsers <= 0) {
+		const ret = {
+			message: "Data deletion failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
+	const resCountries = await removeAllCountries();
+
+	if(resCountries <= 0) {
+		const ret = {
+			message: "Data deletion failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	const ret = {
 		message: "Data deleted successfully."
 	};

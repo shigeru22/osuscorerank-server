@@ -9,5 +9,6 @@ router.get("/:countryId", countries.getCountry);
 router.post("/add", countries.addCountry);
 
 router.delete("/remove", countries.deleteCountry);
+router.delete("/removeall", countries.resetCountries);
 
 export default router;

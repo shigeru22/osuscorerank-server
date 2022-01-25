@@ -130,3 +130,28 @@ export async function removeCountry(id: number) {
 		return 0;
 	}
 }
+
+export async function removeAllCountries() {
+	try {
+		const result = await prisma.countries.deleteMany();
+
+		if(result.count > 0) {
+			console.log(`[INFO] countries: Deleted ${ result.count } rows.`);
+		}
+		else {
+			console.log("[ERROR] Invalid deleted user record.");
+		}
+
+		return result.count;
+	}
+	catch (e) {
+		if(e instanceof Prisma.PrismaClientKnownRequestError) {
+			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+		}
+		else {
+			console.log("[ERROR] Unknown error occurred while deleting row data.");
+		}
+
+		return 0;
+	}
+}

@@ -237,7 +237,7 @@ export async function removeAllScores() {
 		const result = await prisma.scores.deleteMany();
 
 		if(result.count > 0) {
-			console.log(`[INFO] users: Deleted ${ result.count } row.`);
+			console.log(`[INFO] scores: Deleted ${ result.count } rows.`);
 		}
 		else {
 			console.log("[ERROR] Invalid deleted user record.");
