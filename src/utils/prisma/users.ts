@@ -69,6 +69,40 @@ export async function getUserById(id: number): Promise<User | null> {
 	}
 }
 
+export async function getUserByOsuId(id: number): Promise<User | null> {
+	try {
+		const result = await prisma.users.findFirst({
+			select: {
+				userId: true,
+				userName: true,
+				osuId: true,
+				country: {
+					select: {
+						countryId: true,
+						countryName: true,
+						osuId: true
+					}
+				}
+			},
+			where: {
+				osuId: id
+			}
+		});
+
+		return result;
+	}
+	catch (e) {
+		if(e instanceof Prisma.PrismaClientKnownRequestError) {
+			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+		}
+		else {
+			console.log("[ERROR] Unknown error occurred while querying data.");
+		}
+
+		return null;
+	}
+}
+
 export async function insertUser(users: IUserPOSTData[]) {
 	try {
 		const data: Prisma.UsersCreateManyInput[] = users.map(item => ({
