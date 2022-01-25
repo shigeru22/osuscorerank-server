@@ -181,13 +181,44 @@ export async function removeScore(id: number) {
 		});
 
 		if(result.scoreId === score[0].scoreId) {
-			console.log("[INFO] users: Deleted 1 row.");
+			console.log("[INFO] scores: Deleted 1 row.");
 			return 1;
 		}
 		else {
 			console.log("[ERROR] Invalid deleted user record.");
 			return 0;
 		}
+	}
+	catch (e) {
+		if(e instanceof Prisma.PrismaClientKnownRequestError) {
+			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+		}
+		else {
+			console.log("[ERROR] Unknown error occurred while deleting data.");
+		}
+
+		return 0;
+	}
+}
+
+export async function removeScoresByCountryId(id: number) {
+	try {
+		const result = await prisma.scores.deleteMany({
+			where: {
+				user: {
+					countryId: id
+				}
+			}
+		});
+
+		if(result.count > 0) {
+			console.log(`[INFO] scores: Deleted ${ result.count } rows.`);
+		}
+		else {
+			console.log("[ERROR] Failed to delete scores.");
+		}
+
+		return result.count;
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {

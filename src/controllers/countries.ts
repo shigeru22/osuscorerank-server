@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import _ from "lodash";
 import { ICountryDELETEData, ICountryPOSTData } from "../types/country";
+import { removeScoresByCountryId } from "../utils/prisma/scores";
+import { removeUserByCountryId } from "../utils/prisma/users";
 import { getCountries, getCountryById, insertCountry, removeCountry } from "../utils/prisma/countries";
 import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";
@@ -104,7 +106,28 @@ export async function deleteCountry(req: Request, res: Response) {
 		return;
 	}
 
-	/* TODO: delete scores from that country too */
+	const resScores = await removeScoresByCountryId(data.countryId);
+
+	if(resScores <= 0) {
+		const ret = {
+			message: "Data deletion failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
+	const resUsers = await removeUserByCountryId(data.countryId);
+
+	if(resUsers <= 0) {
+		const ret = {
+			message: "Data deletion failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	const result = await removeCountry(data.countryId);
 
 	if(result !== 1) {
