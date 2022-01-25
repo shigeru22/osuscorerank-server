@@ -26,7 +26,7 @@ export async function getAllUsers(req: Request, res: Response) {
 export async function getUser(req: Request, res: Response) {
 	console.log("[LOG] Accessed: getUser");
 
-	const id = _.parseInt(req.params.userId, 10);
+	const id = _.parseInt(req.params.userId, 10); // database's user id
 
 	if(!checkNumber) {
 		const ret = {

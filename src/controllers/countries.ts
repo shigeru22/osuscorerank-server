@@ -26,7 +26,7 @@ export async function getAllCountries(req: Request, res: Response) {
 export async function getCountry(req: Request, res: Response) {
 	console.log("[LOG] Accessed: getCountry");
 
-	const id = _.parseInt(req.params.countryId, 10);
+	const id = _.parseInt(req.params.countryId, 10); // database's country id
 
 	if(!checkNumber(id)) {
 		const ret = {
