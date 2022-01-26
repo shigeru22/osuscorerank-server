@@ -5,6 +5,7 @@ import mainRoute from "./routes/main";
 import scoreRoute from "./routes/scores";
 import userRoute from "./routes/users";
 import countryRoute from "./routes/countries";
+import authRoute from "./routes/auth";
 import { LogLevel, log } from "./utils/log";
 
 env.config();
@@ -20,6 +21,7 @@ app.use("/", mainRoute);
 app.use("/scores", scoreRoute);
 app.use("/users", userRoute);
 app.use("/countries", countryRoute);
+app.use("/auth", authRoute);
 
 /* environment check */
 function checkEnv() {
