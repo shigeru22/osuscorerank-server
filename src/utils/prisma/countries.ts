@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { ICountryPOSTData } from "../../types/country";
 import { Country } from "../../types/prisma/country";
+import { LogLevel, log } from "../log";
 
 const prisma = new PrismaClient();
 
@@ -21,10 +22,10 @@ export async function getCountries(): Promise<Country[]> {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while querying row data.");
+			log("Unknown error occurred while querying row data.", LogLevel.ERROR);
 		}
 
 		return [];
@@ -48,10 +49,10 @@ export async function getCountryById(id: number): Promise<Country | null> {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while querying row data.");
+			log("Unknown error occurred while querying row data.", LogLevel.ERROR);
 		}
 
 		return null;
@@ -71,20 +72,20 @@ export async function insertCountry(countries: ICountryPOSTData[]) {
 		});
 
 		if(result.count > 0) {
-			console.log(`[INFO] countries: Inserted ${ result.count } rows.`);
+			log(`countries: Inserted ${ result.count } rows.`, LogLevel.LOG);
 		}
 		else {
-			console.log("[INFO] countries: Failed to insert rows.");
+			log("countries: Failed to insert rows.", LogLevel.LOG);
 		}
 
 		return result.count;
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while inserting row data.");
+			log("Unknown error occurred while inserting row data.", LogLevel.ERROR);
 		}
 
 		return 0;
@@ -100,7 +101,7 @@ export async function removeCountry(id: number) {
 		});
 
 		if(country.length !== 1) {
-			console.log("[ERROR] Country not found or returned more than 1 rows.");
+			log("[ERROR] Country not found or returned more than 1 rows.", LogLevel.ERROR);
 			return 0;
 		}
 
@@ -111,20 +112,20 @@ export async function removeCountry(id: number) {
 		});
 
 		if(result.countryId === id) {
-			console.log("[INFO] countries: Deleted 1 row.");
+			log("countries: Deleted 1 row.", LogLevel.LOG);
 			return 1;
 		}
 		else {
-			console.log("[ERROR] Invalid deleted country record.");
+			log("Invalid deleted country record.", LogLevel.ERROR);
 			return 0;
 		}
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while deleting row data.");
+			log("Unknown error occurred while deleting row data.", LogLevel.ERROR);
 		}
 
 		return 0;
@@ -136,20 +137,20 @@ export async function removeAllCountries() {
 		const result = await prisma.countries.deleteMany();
 
 		if(result.count > 0) {
-			console.log(`[INFO] countries: Deleted ${ result.count } rows.`);
+			log(`countries: Deleted ${ result.count } rows.`, LogLevel.LOG);
 		}
 		else {
-			console.log("[ERROR] Invalid deleted user record.");
+			log("Invalid deleted user record.", LogLevel.ERROR);
 		}
 
 		return result.count;
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while deleting row data.");
+			log("Unknown error occurred while deleting row data.", LogLevel.ERROR);
 		}
 
 		return 0;

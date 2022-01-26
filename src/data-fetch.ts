@@ -2,32 +2,33 @@ import env from "dotenv";
 import _ from "lodash";
 import fs from "fs";
 import { getAccessToken, getScoreRanking, revokeAccessToken } from "./utils/osu-api/osu";
+import { LogLevel, log } from "./utils/log";
 import { checkNumber } from "./utils/common";
 
 env.config();
 
 async function fetchData() {
-	console.log("[INFO] Checking for environment variables...");
+	log("Checking for environment variables...");
 	if(_.isUndefined(process.env.OSU_CLIENT_ID) || _.isUndefined(process.env.OSU_CLIENT_SECRET)) {
-		console.log("[ERROR] OSU_CLIENT_ID or OSU_CLIENT_SECRET must not be empty. Exiting.");
+		log("OSU_CLIENT_ID or OSU_CLIENT_SECRET must not be empty. Exiting.", LogLevel.ERROR);
 		return;
 	}
 
 	const clientId = _.parseInt(process.env.OSU_CLIENT_ID, 10);
 	if(!checkNumber(clientId)) {
-		console.log("[ERROR] OSU_CLIENT_ID must be number. Exiting.");
+		log("OSU_CLIENT_ID must be number. Exiting.", LogLevel.ERROR);
 		return;
 	}
 
-	console.log("[INFO] Retrieving access token...");
+	log("Retrieving access token...");
 	const token = await getAccessToken(clientId, process.env.OSU_CLIENT_SECRET);
 
-	console.log(`[DEBUG] Access token: ${ token }`);
+	log(`Access token: ${ token }`, LogLevel.DEBUG);
 
 	const rankings = await getScoreRanking(token);
 
 	if(_.isNull(rankings)) {
-		console.log("[ERROR] Failed to retrieve rankings. Exiting.");
+		log("Failed to retrieve rankings. Exiting.", LogLevel.ERROR);
 	}
 	else {
 		try {
@@ -38,20 +39,20 @@ async function fetchData() {
 		}
 		catch (e) {
 			if(_.isError(e)) {
-				console.log(`[DEBUG] Error while writing file: ${ e.message }` );
+				log(`Error while writing file: ${ e.message }`, LogLevel.WARN);
 			}
 			else {
-				console.log("[DEBUG] Unknown error occurred.");
+				log("Unknown error occurred.", LogLevel.WARN);
 			}
 		}
 	}
 
-	console.log("[INFO] Revoking access token...");
+	log("Revoking access token...");
 	if(await revokeAccessToken(token)) {
-		console.log("[INFO] Access token revoked successfully.");
+		log("Access token revoked successfully.");
 	}
 	else {
-		console.log("[WARN] Unable to revoke access token.");
+		log("Unable to revoke access token.", LogLevel.WARN);
 	}
 }
 

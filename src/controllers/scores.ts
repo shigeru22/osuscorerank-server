@@ -6,11 +6,12 @@ import { getScores, getScoresByCountryId, getScoreByUserId, insertScore, removeS
 import { getUserById } from "../utils/prisma/users";
 import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";
+import { LogLevel, log } from "../utils/log";
 
 /* TODO: use JWT for actions other than GET */
 
 export async function getAllScores(req: Request, res: Response) {
-	console.log("[LOG] Accessed: getScoresByCountry");
+	log("Accessed: getScoresByCountry", LogLevel.LOG);
 
 	const data = await getScores();
 
@@ -38,7 +39,7 @@ export async function getAllScores(req: Request, res: Response) {
 }
 
 export async function getCountryScores(req: Request, res: Response) {
-	console.log("[LOG] Accessed: getCountryScores");
+	log("Accessed: getCountryScores", LogLevel.LOG);
 
 	const id = _.parseInt(req.params.countryId, 10); // database's country id
 
@@ -93,7 +94,7 @@ export async function getCountryScores(req: Request, res: Response) {
 }
 
 export async function getUserScore(req: Request, res: Response) {
-	console.log("[LOG] Accessed: getUserScore");
+	log("Accessed: getUserScore", LogLevel.LOG);
 
 	const id = _.parseInt(req.params.userId, 10); // database's user id
 
@@ -142,7 +143,7 @@ export async function getUserScore(req: Request, res: Response) {
 }
 
 export async function addUserScore(req: Request, res: Response) {
-	console.log("[LOG] Accessed: addUserScore");
+	log("Accessed: addUserScore", LogLevel.LOG);
 
 	const data: IScorePOSTData = req.body;
 
@@ -174,7 +175,7 @@ export async function addUserScore(req: Request, res: Response) {
 }
 
 export async function deleteUserScore(req: Request, res: Response) {
-	console.log("[LOG] Accessed: deleteUserScore");
+	log("Accessed: deleteUserScore", LogLevel.LOG);
 
 	const data: IScoreDELETEData = req.body;
 
@@ -206,7 +207,7 @@ export async function deleteUserScore(req: Request, res: Response) {
 }
 
 export async function resetScores(req: Request, res: Response) {
-	console.log("[LOG] Accessed: resetScores");
+	log("Accessed: resetScores", LogLevel.LOG);
 
 	const result = await removeAllScores();
 
@@ -230,7 +231,7 @@ function validateScorePostData(data: IScorePOSTData) {
 	const hasValidTypes = checkNumber(data.userId) && checkNumber(data.score) && checkNumber(data.globalRank);
 	const hasValidData = data.userId > 0 && data.score >= 0 && data.globalRank > 0;
 
-	console.log(`[DEBUG] validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`);
+	log(`validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
 
 	return hasValidTypes && hasValidData;
 }
@@ -239,7 +240,7 @@ function validateScoreDeleteData(data: IScoreDELETEData) {
 	const hasValidTypes = checkNumber(data.scoreId);
 	const hasValidData = data.scoreId > 0;
 
-	console.log(`[DEBUG] validateScoreDeleteData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`);
+	log(`validateScoreDeleteData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
 
 	return hasValidTypes && hasValidData;
 }

@@ -4,6 +4,7 @@ import { ClientCredentialsPOSTRequest, ClientCredentialsPOSTResponse, RankingsGE
 import { RankingsCursor, UserStatistics } from "../../types/osu/osu-structures";
 import { sleep } from "../common";
 import { HTTPStatus } from "../http";
+import { LogLevel, log } from "../log";
 
 const OSU_API_OAUTH_ENDPOINT = "https://osu.ppy.sh/oauth/token";
 const OSU_API_ENDPOINT = "https://osu.ppy.sh/api/v2";
@@ -23,8 +24,8 @@ export async function getAccessToken(clientId: number, clientSecret: string) {
 			return response.data.access_token;
 		}
 		else {
-			console.log(`[WARN] API returned status ${ response.status }`);
-			console.log(`[WARN] Response data:\n${ JSON.stringify(response.data) }`);
+			log(`API returned status ${ response.status }`, LogLevel.WARN);
+			log(`Response data:\n${ JSON.stringify(response.data) }`, LogLevel.WARN);
 		}
 
 		return !_.isUndefined(response.data.access_token) ? response.data.access_token : "";
@@ -32,18 +33,18 @@ export async function getAccessToken(clientId: number, clientSecret: string) {
 	catch (e) {
 		if(axios.isAxiosError(e)) {
 			if(!_.isUndefined(e.response)) {
-				console.log(`[ERROR] API returned status ${ e.response.status }.`);
-				console.log(`[ERROR] Response data:\n${ JSON.stringify(e.response.data) }`);
+				log(`API returned status ${ e.response.status }.`, LogLevel.ERROR);
+				log(`Response data:\n${ JSON.stringify(e.response.data) }`, LogLevel.ERROR);
 			}
 			else {
-				console.log("[ERROR] API returned undefined status code.");
+				log("API returned undefined status code.", LogLevel.ERROR);
 			}
 		}
 		else if(_.isError(e)) {
-			console.log(`[ERROR] Error while retrieving score data: ${ e.message }`);
+			log(`Error while retrieving score data: ${ e.message }`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while retrieving score ranking data.");
+			log("Unknown error occurred while retrieving score ranking data.", LogLevel.ERROR);
 		}
 
 		return "";
@@ -59,8 +60,8 @@ export async function revokeAccessToken(token: string) {
 		});
 
 		if(response.status !== HTTPStatus.NO_CONTENT) {
-			console.log(`[WARN] API returned status ${ response.status }`);
-			console.log(`[WARN] Response data:\n${ JSON.stringify(response.data) }`);
+			log(`[WARN] API returned status ${ response.status }`, LogLevel.WARN);
+			log(`[WARN] Response data:\n${ JSON.stringify(response.data) }`, LogLevel.WARN);
 			return false;
 		}
 
@@ -69,18 +70,18 @@ export async function revokeAccessToken(token: string) {
 	catch (e) {
 		if(axios.isAxiosError(e)) {
 			if(!_.isUndefined(e.response)) {
-				console.log(`[ERROR] API returned status ${ e.response.status }.`);
-				console.log(`[ERROR] Response data:\n${ JSON.stringify(e.response.data) }`);
+				log(`[ERROR] API returned status ${ e.response.status }.`, LogLevel.ERROR);
+				log(`[ERROR] Response data:\n${ JSON.stringify(e.response.data) }`, LogLevel.ERROR);
 			}
 			else {
-				console.log("[ERROR] API returned undefined status code.");
+				log("[ERROR] API returned undefined status code.", LogLevel.ERROR);
 			}
 		}
 		else if(_.isError(e)) {
-			console.log(`[ERROR] Error while revoking access token: ${ e.message }`);
+			log(`[ERROR] Error while revoking access token: ${ e.message }`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while revoking access token.");
+			log("[ERROR] Unknown error occurred while revoking access token.", LogLevel.ERROR);
 		}
 
 		return false;
@@ -143,18 +144,18 @@ export async function getScoreRanking(token: string) {
 	catch (e) {
 		if(axios.isAxiosError(e)) {
 			if(!_.isUndefined(e.response)) {
-				console.log(`[ERROR] API returned status ${ e.response.status }.`);
-				console.log(`[ERROR] Response data:\n${ e.response.data }`);
+				log(`[ERROR] API returned status ${ e.response.status }.`, LogLevel.ERROR);
+				log(`[ERROR] Response data:\n${ e.response.data }`, LogLevel.ERROR);
 			}
 			else {
-				console.log("[ERROR] API returned undefined status code.");
+				log("[ERROR] API returned undefined status code.", LogLevel.ERROR);
 			}
 		}
 		else if(_.isError(e)) {
-			console.log(`[ERROR] Error while retrieving score data: ${ e.message }`);
+			log(`[ERROR] Error while retrieving score data: ${ e.message }`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while retrieving score ranking data.");
+			log("[ERROR] Unknown error occurred while retrieving score ranking data.", LogLevel.ERROR);
 		}
 
 		return null;

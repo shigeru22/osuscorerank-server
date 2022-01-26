@@ -4,6 +4,7 @@ import mainRoute from "./routes/main";
 import scoreRoute from "./routes/scores";
 import userRoute from "./routes/users";
 import countryRoute from "./routes/countries";
+import { LogLevel, log } from "./utils/log";
 
 env.config();
 
@@ -20,5 +21,5 @@ app.use("/users", userRoute);
 app.use("/countries", countryRoute);
 
 app.listen(PORT, () => {
-	console.log(`[INFO] Server is running at port ${ PORT }`);
+	log(`Server is running at port ${ PORT }`, LogLevel.LOG);
 });

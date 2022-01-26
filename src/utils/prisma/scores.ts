@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { IScorePOSTData } from "../../types/score";
 import { ScoreWithCountry, Score } from "../../types/prisma/score";
+import { LogLevel, log } from "../log";
 
 const prisma = new PrismaClient();
 
@@ -35,10 +36,10 @@ export async function getScores(): Promise<ScoreWithCountry[]> {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while querying data.");
+			log("Unknown error occurred while querying data.", LogLevel.ERROR);
 		}
 
 		return [];
@@ -74,10 +75,10 @@ export async function getScoresByCountryId(id: number): Promise<Score[]> {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while querying data.");
+			log("Unknown error occurred while querying data.", LogLevel.ERROR);
 		}
 
 		return [];
@@ -117,10 +118,10 @@ export async function getScoreByUserId(id: number): Promise<ScoreWithCountry | n
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while querying data.");
+			log("Unknown error occurred while querying data.", LogLevel.ERROR);
 		}
 
 		return null;
@@ -141,20 +142,20 @@ export async function insertScore(scores: IScorePOSTData[]) {
 		});
 
 		if(result.count > 0) {
-			console.log(`[INFO] users: Inserted ${ result.count } rows.`);
+			log(`users: Inserted ${ result.count } rows.`, LogLevel.LOG);
 		}
 		else {
-			console.log("[INFO] users: Failed to insert rows.");
+			log("users: Failed to insert rows.");
 		}
 
 		return result.count;
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while inserting data.");
+			log("Unknown error occurred while inserting data.", LogLevel.ERROR);
 		}
 
 		return 0;
@@ -170,7 +171,7 @@ export async function removeScore(id: number) {
 		});
 
 		if(score.length !== 1) {
-			console.log("[ERROR] Score not found or returned more than 1 rows.");
+			log("Score not found or returned more than 1 rows.", LogLevel.ERROR);
 			return 0;
 		}
 
@@ -181,20 +182,20 @@ export async function removeScore(id: number) {
 		});
 
 		if(result.scoreId === score[0].scoreId) {
-			console.log("[INFO] scores: Deleted 1 row.");
+			log("scores: Deleted 1 row.", LogLevel.LOG);
 			return 1;
 		}
 		else {
-			console.log("[ERROR] Invalid deleted user record.");
+			log("[ERROR] Invalid deleted user record.", LogLevel.ERROR);
 			return 0;
 		}
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while deleting data.");
+			log("Unknown error occurred while deleting data.", LogLevel.ERROR);
 		}
 
 		return 0;
@@ -212,20 +213,20 @@ export async function removeScoresByCountryId(id: number) {
 		});
 
 		if(result.count > 0) {
-			console.log(`[INFO] scores: Deleted ${ result.count } rows.`);
+			log(`scores: Deleted ${ result.count } rows.`, LogLevel.LOG);
 		}
 		else {
-			console.log("[ERROR] Failed to delete scores.");
+			log("Failed to delete scores.", LogLevel.ERROR);
 		}
 
 		return result.count;
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while deleting data.");
+			log("Unknown error occurred while deleting data.", LogLevel.ERROR);
 		}
 
 		return 0;
@@ -237,20 +238,20 @@ export async function removeAllScores() {
 		const result = await prisma.scores.deleteMany();
 
 		if(result.count > 0) {
-			console.log(`[INFO] scores: Deleted ${ result.count } rows.`);
+			log(`scores: Deleted ${ result.count } rows.`, LogLevel.LOG);
 		}
 		else {
-			console.log("[ERROR] Invalid deleted user record.");
+			log("Invalid deleted user record.", LogLevel.ERROR);
 		}
 
 		return result.count;
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			console.log(`[ERROR] Prisma Client returned error code ${ e.code }. See documentation for details.`);
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			console.log("[ERROR] Unknown error occurred while deleting data.");
+			log("Unknown error occurred while deleting data.", LogLevel.ERROR);
 		}
 
 		return 0;

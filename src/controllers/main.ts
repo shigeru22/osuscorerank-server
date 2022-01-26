@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { HTTPStatus } from "../utils/http";
+import { LogLevel, log } from "../utils/log";
 
 export function getGreeting(req: Request, res: Response) {
-	console.log("[LOG] Accessed: getGreeting()");
+	log("Accessed: getGreeting()", LogLevel.LOG);
 
 	const ret = {
 		message: "Hello, world!"

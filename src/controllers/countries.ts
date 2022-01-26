@@ -6,11 +6,12 @@ import { removeAllUsers, removeUserByCountryId } from "../utils/prisma/users";
 import { getCountries, getCountryById, insertCountry, removeAllCountries, removeCountry } from "../utils/prisma/countries";
 import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";
+import { LogLevel, log } from "../utils/log";
 
 /* TODO: use JWT for actions other than GET */
 
 export async function getAllCountries(req: Request, res: Response) {
-	console.log("[LOG] Accessed: getAllCountries");
+	log("Accessed: getAllCountries", LogLevel.LOG);
 
 	const data = await getCountries();
 
@@ -26,7 +27,7 @@ export async function getAllCountries(req: Request, res: Response) {
 }
 
 export async function getCountry(req: Request, res: Response) {
-	console.log("[LOG] Accessed: getCountry");
+	log("Accessed: getCountry", LogLevel.LOG);
 
 	const id = _.parseInt(req.params.countryId, 10); // database's country id
 
@@ -61,7 +62,7 @@ export async function getCountry(req: Request, res: Response) {
 }
 
 export async function addCountry(req: Request, res: Response) {
-	console.log("[LOG] Accessed: addCountry");
+	log("Accessed: addCountry", LogLevel.LOG);
 
 	const data: ICountryPOSTData = req.body;
 
@@ -93,7 +94,7 @@ export async function addCountry(req: Request, res: Response) {
 }
 
 export async function deleteCountry(req: Request, res: Response) {
-	console.log("[LOG] Accessed: deleteCountry");
+	log("Accessed: deleteCountry", LogLevel.LOG);
 
 	const data: ICountryDELETEData = req.body;
 
@@ -149,7 +150,7 @@ export async function deleteCountry(req: Request, res: Response) {
 export async function resetCountries(req: Request, res: Response) {
 	/* this essentially resets everything */
 
-	console.log("[LOG] Accessed: resetCountries");
+	log("[LOG] Accessed: resetCountries", LogLevel.LOG);
 
 	const resScores = await removeAllScores();
 
@@ -195,9 +196,7 @@ function validateCountryPostData(data: ICountryPOSTData) {
 	const hasValidTypes = _.isString(data.countryName) && checkNumber(data.osuId);
 	const hasValidData = !_.isEmpty(data.countryName) && data.osuId > 0;
 
-	console.log(`[DEBUG] countryName: ${ data.osuId }`);
-
-	console.log(`[DEBUG] validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`);
+	log(`validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
 
 	return hasValidTypes && hasValidData;
 }
@@ -206,7 +205,7 @@ function validateCountryDeleteData(data: ICountryDELETEData) {
 	const hasValidTypes = checkNumber(data.countryId);
 	const hasValidData = data.countryId > 0;
 
-	console.log(`[DEBUG] validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`);
+	log(`validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
 
 	return hasValidTypes && hasValidData;
 }

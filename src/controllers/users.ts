@@ -4,11 +4,12 @@ import { IUserPOSTData, IUserDELETEData } from "../types/user";
 import { getUsers, getUserById, insertUser, removeUser, getUserByOsuId } from "../utils/prisma/users";
 import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";
+import { LogLevel, log } from "../utils/log";
 
 /* TODO: use JWT for actions other than GET */
 
 export async function getAllUsers(req: Request, res: Response) {
-	console.log("[LOG] Accessed: getAllUsers");
+	log("Accessed: getAllUsers", LogLevel.LOG);
 
 	const data = await getUsers();
 
@@ -24,7 +25,7 @@ export async function getAllUsers(req: Request, res: Response) {
 }
 
 export async function getUser(req: Request, res: Response) {
-	console.log("[LOG] Accessed: getUser");
+	log("Accessed: getUser", LogLevel.LOG);
 
 	const id = _.parseInt(req.params.userId, 10); // database's user id
 
@@ -59,7 +60,7 @@ export async function getUser(req: Request, res: Response) {
 }
 
 export async function addUser(req: Request, res: Response) {
-	console.log("[LOG] Accessed: addCountry");
+	log("Accessed: addCountry", LogLevel.LOG);
 
 	const data: IUserPOSTData = req.body;
 
@@ -102,7 +103,7 @@ export async function addUser(req: Request, res: Response) {
 }
 
 export async function deleteUser(req: Request, res: Response) {
-	console.log("[LOG] Accessed: deleteUser");
+	log("Accessed: deleteUser", LogLevel.LOG);
 
 	const data: IUserDELETEData = req.body;
 
@@ -137,7 +138,7 @@ function validateUserPostData(data: IUserPOSTData) {
 	const hasValidTypes = _.isString(data.userName) && checkNumber(data.osuId) && checkNumber(data.countryId);
 	const hasValidData = !_.isEmpty(data.userName) && data.osuId > 0 && data.countryId > 0;
 
-	console.log(`[DEBUG] validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`);
+	log(`validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
 
 	return hasValidTypes && hasValidData;
 }
@@ -146,7 +147,7 @@ function validateUserDeleteData(data: IUserDELETEData) {
 	const hasValidTypes = checkNumber(data.userId);
 	const hasValidData = data.userId > 0;
 
-	console.log(`[DEBUG] validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`);
+	log(`validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
 
 	return hasValidTypes && hasValidData;
 }
