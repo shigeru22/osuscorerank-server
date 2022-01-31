@@ -9,8 +9,6 @@ import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";
 import { LogLevel, log } from "../utils/log";
 
-/* TODO: use JWT for actions other than GET */
-
 export async function getAllCountries(req: Request, res: Response) {
 	log("Accessed: getAllCountries", LogLevel.LOG);
 
