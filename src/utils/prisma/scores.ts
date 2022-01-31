@@ -204,7 +204,7 @@ export async function removeScore(id: number) {
 
 export async function removeScoresByCountryId(id: number) {
 	try {
-		const result = await prisma.scores.deleteMany({
+		const scores = await prisma.scores.findMany({
 			where: {
 				user: {
 					countryId: id
@@ -212,14 +212,25 @@ export async function removeScoresByCountryId(id: number) {
 			}
 		});
 
-		if(result.count > 0) {
+		if(scores.length > 0) {
+			const result = await prisma.scores.deleteMany({
+				where: {
+					user: {
+						countryId: id
+					}
+				}
+			});
+
+			if(result.count <= 0) {
+				log("Failed to delete scores.", LogLevel.ERROR);
+				return -1;
+			}
+
 			log(`scores: Deleted ${ result.count } rows.`, LogLevel.LOG);
-		}
-		else {
-			log("Failed to delete scores.", LogLevel.ERROR);
+			return result.count;
 		}
 
-		return result.count;
+		return 0;
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {

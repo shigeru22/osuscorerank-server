@@ -9,6 +9,8 @@ import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";
 import { LogLevel, log } from "../utils/log";
 
+/* TODO: use JWT for actions other than GET */
+
 export async function getAllCountries(req: Request, res: Response) {
 	log("Accessed: getAllCountries", LogLevel.LOG);
 
@@ -108,9 +110,20 @@ export async function deleteCountry(decode: JwtPayload, req: Request, res: Respo
 		return;
 	}
 
+	const country = await getCountryById(data.countryId);
+
+	if(_.isNull(country)) {
+		const ret = {
+			message: "Country with specified ID can't be found."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
 	const resScores = await removeScoresByCountryId(data.countryId);
 
-	if(resScores <= 0) {
+	if(resScores < 0) {
 		const ret = {
 			message: "Data deletion failed."
 		};
@@ -121,7 +134,7 @@ export async function deleteCountry(decode: JwtPayload, req: Request, res: Respo
 
 	const resUsers = await removeUserByCountryId(data.countryId);
 
-	if(resUsers <= 0) {
+	if(resUsers < 0) {
 		const ret = {
 			message: "Data deletion failed."
 		};
