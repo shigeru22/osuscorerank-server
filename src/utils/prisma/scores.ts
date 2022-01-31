@@ -187,7 +187,7 @@ export async function removeScore(id: number) {
 		}
 		else {
 			log("[ERROR] Invalid deleted user record.", LogLevel.ERROR);
-			return 0;
+			return -1;
 		}
 	}
 	catch (e) {

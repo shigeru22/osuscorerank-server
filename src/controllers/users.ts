@@ -3,6 +3,7 @@ import _ from "lodash";
 import { JwtPayload } from "jsonwebtoken";
 import { IUserPOSTData, IUserDELETEData } from "../types/user";
 import { getUsers, getUserById, insertUser, removeUser, getUserByOsuId } from "../utils/prisma/users";
+import { removeScore } from "../utils/prisma/scores";
 import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";
 import { LogLevel, log } from "../utils/log";
@@ -114,6 +115,28 @@ export async function deleteUser(decode: JwtPayload, req: Request, res: Response
 		};
 
 		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+
+	const user = await getUserById(data.userId);
+
+	if(_.isNull(user)) {
+		const ret = {
+			message: "User with specified ID can't be found."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
+	const resScore = await removeScore(data.userId);
+
+	if(resScore === -1) {
+		const ret = {
+			message: "Data deletion failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
 		return;
 	}
 
