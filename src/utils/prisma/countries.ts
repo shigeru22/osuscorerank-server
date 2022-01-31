@@ -101,7 +101,7 @@ export async function removeCountry(id: number) {
 		});
 
 		if(country.length !== 1) {
-			log("[ERROR] Country not found or returned more than 1 rows.", LogLevel.ERROR);
+			log("Country not found or returned more than 1 rows.", LogLevel.ERROR);
 			return 0;
 		}
 
