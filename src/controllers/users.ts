@@ -1,5 +1,6 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
+import { JwtPayload } from "jsonwebtoken";
 import { IUserPOSTData, IUserDELETEData } from "../types/user";
 import { getUsers, getUserById, insertUser, removeUser, getUserByOsuId } from "../utils/prisma/users";
 import { checkNumber } from "../utils/common";
@@ -59,8 +60,9 @@ export async function getUser(req: Request, res: Response) {
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export async function addUser(req: Request, res: Response) {
-	log("Accessed: addCountry", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function addUser(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
+	log(`Accessed: addCountry, Auth: ${ decode.clientId }`, LogLevel.LOG);
 
 	const data: IUserPOSTData = req.body;
 
@@ -102,8 +104,9 @@ export async function addUser(req: Request, res: Response) {
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export async function deleteUser(req: Request, res: Response) {
-	log("Accessed: deleteUser", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function deleteUser(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
+	log(`Accessed: deleteUser, Auth: ${ decode.clientId }`, LogLevel.LOG);
 
 	const data: IUserDELETEData = req.body;
 

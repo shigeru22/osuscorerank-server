@@ -1,5 +1,6 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
+import { JwtPayload } from "jsonwebtoken";
 import { ICountryDELETEData, ICountryPOSTData } from "../types/country";
 import { removeAllScores, removeScoresByCountryId } from "../utils/prisma/scores";
 import { removeAllUsers, removeUserByCountryId } from "../utils/prisma/users";
@@ -61,8 +62,9 @@ export async function getCountry(req: Request, res: Response) {
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export async function addCountry(req: Request, res: Response) {
-	log("Accessed: addCountry", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function addCountry(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
+	log(`Accessed: addCountry, Auth: ${ decode.clientId }`, LogLevel.LOG);
 
 	const data: ICountryPOSTData = req.body;
 
@@ -93,8 +95,9 @@ export async function addCountry(req: Request, res: Response) {
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export async function deleteCountry(req: Request, res: Response) {
-	log("Accessed: deleteCountry", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function deleteCountry(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
+	log(`Accessed: deleteCountry, Auth: ${ decode.clientId }`, LogLevel.LOG);
 
 	const data: ICountryDELETEData = req.body;
 
@@ -147,10 +150,11 @@ export async function deleteCountry(req: Request, res: Response) {
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export async function resetCountries(req: Request, res: Response) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function resetCountries(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
 	/* this essentially resets everything */
 
-	log("[LOG] Accessed: resetCountries", LogLevel.LOG);
+	log(`Accessed: resetCountries, Auth: ${ decode.clientId }`, LogLevel.LOG);
 
 	const resScores = await removeAllScores();
 

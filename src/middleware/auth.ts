@@ -45,9 +45,7 @@ export function verifyToken(req: Request, res: Response, next: NextFunction) {
 
 	try {
 		const decode = jwt.verify(accessToken, secret);
-		return res.sendStatus(HTTPStatus.NO_CONTENT);
-
-		/* return next(decode); */
+		return next(decode);
 	}
 	catch (e) {
 		if(_.isError(e)) {

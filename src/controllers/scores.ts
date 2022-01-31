@@ -1,5 +1,6 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
+import { JwtPayload } from "jsonwebtoken";
 import { IScorePOSTData, IScoreDELETEData } from "../types/score";
 import { getCountryById } from "../utils/prisma/countries";
 import { getScores, getScoresByCountryId, getScoreByUserId, insertScore, removeScore, removeAllScores } from "../utils/prisma/scores";
@@ -142,8 +143,9 @@ export async function getUserScore(req: Request, res: Response) {
 	));
 }
 
-export async function addUserScore(req: Request, res: Response) {
-	log("Accessed: addUserScore", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function addUserScore(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
+	log(`Accessed: addUserScore, Auth: ${ decode.clientId }`, LogLevel.LOG);
 
 	const data: IScorePOSTData = req.body;
 
@@ -174,8 +176,9 @@ export async function addUserScore(req: Request, res: Response) {
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export async function deleteUserScore(req: Request, res: Response) {
-	log("Accessed: deleteUserScore", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function deleteUserScore(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
+	log(`Accessed: deleteUserScore, Auth: ${ decode.clientId }`, LogLevel.LOG);
 
 	const data: IScoreDELETEData = req.body;
 
@@ -206,7 +209,8 @@ export async function deleteUserScore(req: Request, res: Response) {
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export async function resetScores(req: Request, res: Response) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function resetScores(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
 	log("Accessed: resetScores", LogLevel.LOG);
 
 	const result = await removeAllScores();
