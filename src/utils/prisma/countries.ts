@@ -134,16 +134,21 @@ export async function removeCountry(id: number) {
 
 export async function removeAllCountries() {
 	try {
-		const result = await prisma.countries.deleteMany();
+		const countries = await prisma.countries.findMany();
 
-		if(result.count > 0) {
+		if(countries.length > 0) {
+			const result = await prisma.countries.deleteMany();
+
+			if(result.count < 0) {
+				log("Invalid deleted country record.", LogLevel.ERROR);
+				return -1;
+			}
+
 			log(`countries: Deleted ${ result.count } rows.`, LogLevel.LOG);
-		}
-		else {
-			log("Invalid deleted user record.", LogLevel.ERROR);
+			return result.count;
 		}
 
-		return result.count;
+		return 0;
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {

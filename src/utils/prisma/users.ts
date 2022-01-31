@@ -218,16 +218,21 @@ export async function removeUserByCountryId(id: number) {
 
 export async function removeAllUsers() {
 	try {
-		const result = await prisma.users.deleteMany();
+		const users = await prisma.users.findMany();
 
-		if(result.count > 0) {
+		if(users.length > 0) {
+			const result = await prisma.users.deleteMany();
+
+			if(result.count < 0) {
+				log("Invalid deleted user record.", LogLevel.ERROR);
+				return -1;
+			}
+
 			log(`users: Deleted ${ result.count } rows.`, LogLevel.LOG);
-		}
-		else {
-			log("Invalid deleted user record.", LogLevel.ERROR);
+			return result.count;
 		}
 
-		return result.count;
+		return 0;
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {

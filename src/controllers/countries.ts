@@ -167,9 +167,20 @@ export async function resetCountries(decode: JwtPayload, req: Request, res: Resp
 
 	log(`Accessed: resetCountries, Auth: ${ decode.clientId }`, LogLevel.LOG);
 
+	const countries = await getCountries();
+
+	if(countries.length <= 0) {
+		const ret = {
+			message: "No countries to delete."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
 	const resScores = await removeAllScores();
 
-	if(resScores <= 0) {
+	if(resScores < 0) {
 		const ret = {
 			message: "Data deletion failed."
 		};
@@ -180,7 +191,7 @@ export async function resetCountries(decode: JwtPayload, req: Request, res: Resp
 
 	const resUsers = await removeAllUsers();
 
-	if(resUsers <= 0) {
+	if(resUsers < 0) {
 		const ret = {
 			message: "Data deletion failed."
 		};
@@ -191,7 +202,7 @@ export async function resetCountries(decode: JwtPayload, req: Request, res: Resp
 
 	const resCountries = await removeAllCountries();
 
-	if(resCountries <= 0) {
+	if(resCountries < 0) {
 		const ret = {
 			message: "Data deletion failed."
 		};
