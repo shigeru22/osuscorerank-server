@@ -75,7 +75,7 @@ export async function addUser(decode: JwtPayload, req: Request, res: Response, n
 
 	const user = await getUserByOsuId(data.osuId);
 
-	if(_.isNull(user)) {
+	if(!_.isNull(user)) {
 		const ret = {
 			message: "User with the specified osu! ID already exists."
 		};
