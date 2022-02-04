@@ -1,12 +1,25 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { IScorePOSTData } from "../../types/score";
-import { ScoreWithCountry, Score } from "../../types/prisma/score";
+import _ from "lodash";
+import { IGlobalScore, ICountryScore, IUserScore, IScoreInsertData } from "../../types/prisma/score";
 import { LogLevel, log } from "../log";
 
 const prisma = new PrismaClient();
 
-export async function getScores(): Promise<ScoreWithCountry[]> {
+export async function getScores(sort: number): Promise<IGlobalScore[]> {
 	try {
+		const scoreSorting: Prisma.Enumerable<Prisma.ScoresOrderByWithRelationInput> = {
+			score: "desc"
+		};
+
+		const ppSorting: Prisma.Enumerable<Prisma.ScoresOrderByWithRelationInput> = {
+			pp: "desc"
+		};
+
+		let sorting = 1;
+		if(!_.isUndefined(sort)) {
+			sorting = sort;
+		}
+
 		const result = await prisma.scores.findMany({
 			select: {
 				scoreId: true,
@@ -25,11 +38,12 @@ export async function getScores(): Promise<ScoreWithCountry[]> {
 					}
 				},
 				score: true,
-				globalRank: true
+				pp: true,
+				globalRank: true,
+				previousGlobalPpRank: true,
+				previousGlobalScoreRank: true
 			},
-			orderBy: {
-				score: "desc"
-			}
+			orderBy: sorting === 1 ? scoreSorting : ppSorting
 		});
 
 		return result;
@@ -46,8 +60,21 @@ export async function getScores(): Promise<ScoreWithCountry[]> {
 	}
 }
 
-export async function getScoresByCountryId(id: number): Promise<Score[]> {
+export async function getScoresByCountryId(id: number, sort: number): Promise<ICountryScore[]> {
 	try {
+		const scoreSorting: Prisma.Enumerable<Prisma.ScoresOrderByWithRelationInput> = {
+			score: "desc"
+		};
+
+		const ppSorting: Prisma.Enumerable<Prisma.ScoresOrderByWithRelationInput> = {
+			pp: "desc"
+		};
+
+		let sorting = 1;
+		if(!_.isUndefined(sort)) {
+			sorting = sort;
+		}
+
 		const result = await prisma.scores.findMany({
 			select: {
 				scoreId: true,
@@ -59,16 +86,17 @@ export async function getScoresByCountryId(id: number): Promise<Score[]> {
 					}
 				},
 				score: true,
-				globalRank: true
+				pp: true,
+				globalRank: true,
+				previousPpRank: true,
+				previousScoreRank: true
 			},
 			where: {
 				user: {
 					countryId: id
 				}
 			},
-			orderBy: {
-				score: "desc"
-			}
+			orderBy: sorting === 1 ? scoreSorting : ppSorting
 		});
 
 		return result;
@@ -85,7 +113,7 @@ export async function getScoresByCountryId(id: number): Promise<Score[]> {
 	}
 }
 
-export async function getScoreByUserId(id: number): Promise<ScoreWithCountry | null> {
+export async function getScoreByUserId(id: number): Promise<IUserScore | null> {
 	try {
 		const result = await prisma.scores.findFirst({
 			select: {
@@ -105,6 +133,7 @@ export async function getScoreByUserId(id: number): Promise<ScoreWithCountry | n
 					}
 				},
 				score: true,
+				pp: true,
 				globalRank: true
 			},
 			where: {
@@ -128,12 +157,19 @@ export async function getScoreByUserId(id: number): Promise<ScoreWithCountry | n
 	}
 }
 
-export async function insertScore(scores: IScorePOSTData[]) {
+export async function insertScore(scores: IScoreInsertData[]) {
 	try {
+		/* TODO: find previous ranks */
+
 		const data: Prisma.ScoresCreateManyInput[] = scores.map(item => ({
 			userId: item.userId,
 			score: item.score,
-			globalRank: item.globalRank
+			pp: item.pp,
+			globalRank: item.globalRank,
+			previousPpRank: item.previousPpRank,
+			previousScoreRank: item.previousScoreRank,
+			previousGlobalPpRank: item.previousGlobalPpRank,
+			previousGlobalScoreRank: item.previousGlobalScoreRank
 		}));
 
 		const result = await prisma.scores.createMany({

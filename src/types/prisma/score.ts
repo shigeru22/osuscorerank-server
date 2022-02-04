@@ -1,5 +1,16 @@
-export interface ScoreWithCountry {
+export interface IScore {
 	scoreId: number;
+	user: {
+		userId: number;
+		userName: string;
+		osuId: number;
+	};
+	score: bigint | number;
+	pp: number;
+	globalRank: number;
+}
+
+export interface IGlobalScore extends IScore {
 	user: {
 		userId: number;
 		userName: string;
@@ -10,17 +21,35 @@ export interface ScoreWithCountry {
 			osuId: number;
 		};
 	};
-	score: bigint | number;
-	globalRank: number;
+	previousGlobalPpRank: number | null;
+	previousGlobalScoreRank: number | null;
 }
 
-export interface Score {
-	scoreId: number;
+export interface ICountryScore extends IScore {
+	previousPpRank: number | null;
+	previousScoreRank: number | null;
+}
+
+export interface IUserScore extends IScore {
 	user: {
 		userId: number;
 		userName: string;
 		osuId: number;
+		country: {
+			countryId: number;
+			countryName: string;
+			osuId: number;
+		};
 	};
-	score: bigint | number;
+}
+
+export interface IScoreInsertData {
+	userId: number;
+	score: number;
+	pp: number;
 	globalRank: number;
+	previousPpRank: number | null;
+	previousScoreRank: number | null;
+	previousGlobalPpRank: number | null;
+	previousGlobalScoreRank: number | null;
 }

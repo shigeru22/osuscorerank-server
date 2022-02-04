@@ -219,8 +219,8 @@ export async function resetCountries(decode: JwtPayload, req: Request, res: Resp
 }
 
 function validateCountryPostData(data: ICountryPOSTData) {
-	const hasValidTypes = _.isString(data.countryName) && checkNumber(data.osuId);
-	const hasValidData = !_.isEmpty(data.countryName) && data.osuId > 0;
+	const hasValidTypes = _.isString(data.countryName) && checkNumber(data.osuId) && checkNumber(data.recentlyInactive) && checkNumber(data.totalInactive);
+	const hasValidData = !_.isEmpty(data.countryName) && data.osuId > 0 && data.recentlyInactive > 0 && data.totalInactive > 0;
 
 	log(`validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
 

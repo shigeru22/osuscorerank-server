@@ -11,7 +11,9 @@ export async function getCountries(): Promise<Country[]> {
 			select: {
 				countryId: true,
 				countryName: true,
-				osuId: true
+				osuId: true,
+				recentlyInactive: true,
+				totalInactive: true
 			},
 			orderBy: {
 				countryId: "asc"
@@ -38,7 +40,9 @@ export async function getCountryById(id: number): Promise<Country | null> {
 			select: {
 				countryId: true,
 				countryName: true,
-				osuId: true
+				osuId: true,
+				recentlyInactive: true,
+				totalInactive: true
 			},
 			where: {
 				countryId: id
@@ -63,7 +67,9 @@ export async function insertCountry(countries: ICountryPOSTData[]) {
 	try {
 		const data: Prisma.CountriesCreateManyInput[] = countries.map(item => ({
 			countryName: item.countryName,
-			osuId: item.osuId
+			osuId: item.osuId,
+			recentlyInactive: item.recentlyInactive,
+			totalInactive: item.totalInactive
 		}));
 
 		const result = await prisma.countries.createMany({

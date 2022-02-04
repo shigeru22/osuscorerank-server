@@ -1,10 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
 import { JwtPayload } from "jsonwebtoken";
-import { IScorePOSTData, IScoreDELETEData } from "../types/score";
+import { IScorePOSTData, IScoreDELETEData, IGlobalScoreDeltaResponseData, IScoreDeltaResponseData } from "../types/score";
+import { IScoreInsertData } from "../types/prisma/score";
 import { getCountryById } from "../utils/prisma/countries";
 import { getScores, getScoresByCountryId, getScoreByUserId, insertScore, removeScore, removeAllScores } from "../utils/prisma/scores";
 import { getUserById } from "../utils/prisma/users";
+import { getRecentInactives } from "../utils/prisma/updates";
 import { checkNumber } from "../utils/common";
 import { HTTPStatus } from "../utils/http";
 import { LogLevel, log } from "../utils/log";
@@ -12,9 +14,32 @@ import { LogLevel, log } from "../utils/log";
 export async function getAllScores(req: Request, res: Response) {
 	log("Accessed: getScoresByCountry", LogLevel.LOG);
 
-	const data = await getScores();
+	const sortQuery = _.parseInt(req.query.sort as string, 10);
 
-	if(_.isEmpty(data)) {
+	if(!_.isUndefined(req.query.sort) && !validateSortQueryString(sortQuery)) {
+		const ret = {
+			message: "Invalid sort value."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+
+	let sort = 1;
+	if(!_.isUndefined(req.query.sort)) {
+		switch(sortQuery) {
+		case 1: sort = 1; break;
+		case 2: sort = 2; break;
+		default: sort = 1;
+		}
+	}
+	else {
+		sort = 1;
+	}
+
+	const scores = await getScores(sort);
+
+	if(_.isEmpty(scores)) {
 		const ret = {
 			message: "Empty rankings returned."
 		};
@@ -23,11 +48,46 @@ export async function getAllScores(req: Request, res: Response) {
 		return;
 	}
 
+	const inactives = await getRecentInactives();
+
+	if(_.isNull(inactives)) {
+		const ret = {
+			message: "Empty inactive record."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
+	const data: IGlobalScoreDeltaResponseData[] = scores.map((item, index) => ({
+		scoreId: item.scoreId,
+		user: {
+			userId: item.user.userId,
+			userName: item.user.userName,
+			osuId: item.user.osuId,
+			country: {
+				countryId: item.user.country.countryId,
+				countryName: item.user.country.countryName,
+				osuId: item.user.country.osuId
+			}
+		},
+		score: item.score,
+		pp: item.pp,
+		globalRank: item.globalRank,
+		delta: (
+			sort === 1 ? (!_.isNull(item.previousGlobalScoreRank) ? item.previousGlobalScoreRank - (index + 1) : 0) : (!_.isNull(item.previousGlobalPpRank) ? item.previousGlobalPpRank - (index + 1) : 0)
+		)
+	}));
+
 	const ret = {
 		message: "Data retrieved successfully.",
 		data: {
-			scores: data,
-			length: data.length
+			rankings: data,
+			inactives: {
+				recentlyInactive: inactives.recentlyInactive,
+				totalInactive: inactives.totalInactive
+			},
+			total: data.length
 		}
 	};
 
@@ -51,6 +111,29 @@ export async function getCountryScores(req: Request, res: Response) {
 		return;
 	}
 
+	const sortQuery = _.parseInt(req.query.sort as string, 10);
+
+	if(!_.isUndefined(req.query.sort) && !validateSortQueryString(sortQuery)) {
+		const ret = {
+			message: "Invalid sort value."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+
+	let sort = 1;
+	if(!_.isUndefined(req.query.sort)) {
+		switch(sortQuery) {
+		case 1: sort = 1; break;
+		case 2: sort = 2; break;
+		default: sort = 1;
+		}
+	}
+	else {
+		sort = 1;
+	}
+
 	const country = await getCountryById(id);
 
 	if(_.isNull(country)) {
@@ -62,9 +145,9 @@ export async function getCountryScores(req: Request, res: Response) {
 		return;
 	}
 
-	const data = await getScoresByCountryId(id);
+	const scores = await getScoresByCountryId(id, sort);
 
-	if(_.isEmpty(data)) {
+	if(_.isEmpty(scores)) {
 		const ret = {
 			message: "Empty rankings returned."
 		};
@@ -73,6 +156,21 @@ export async function getCountryScores(req: Request, res: Response) {
 		return;
 	}
 
+	const data: IScoreDeltaResponseData[] = scores.map((item, index) => ({
+		scoreId: item.scoreId,
+		user: {
+			userId: item.user.userId,
+			userName: item.user.userName,
+			osuId: item.user.osuId
+		},
+		score: item.score,
+		pp: item.pp,
+		globalRank: item.globalRank,
+		delta: (
+			sort === 1 ? (!_.isNull(item.previousScoreRank) ? item.previousScoreRank - (index + 1) : 0) : (!_.isNull(item.previousPpRank) ? item.previousPpRank - (index + 1) : 0)
+		)
+	}));
+
 	const ret = {
 		message: "Data retrieved successfully.",
 		data: {
@@ -80,6 +178,10 @@ export async function getCountryScores(req: Request, res: Response) {
 				countryId: id,
 				countryName: country.countryName,
 				osuId: country.osuId
+			},
+			inactives: {
+				recentlyInactive: country.recentlyInactive,
+				totalInactive: country.totalInactive
 			},
 			rankings: data,
 			total: data.length
@@ -156,7 +258,54 @@ export async function addUserScore(decode: JwtPayload, req: Request, res: Respon
 		return;
 	}
 
-	const result = await insertScore([ data ]);
+	const score: IScoreInsertData = {
+		userId: data.userId,
+		score: data.score,
+		pp: data.pp,
+		globalRank: data.globalRank,
+		previousPpRank: null,
+		previousScoreRank: null,
+		previousGlobalPpRank: null,
+		previousGlobalScoreRank: null
+	};
+
+	const userScore = await getScoreByUserId(data.userId);
+
+	if(!_.isNull(userScore)) {
+		const user = await getUserById(data.userId);
+
+		if(_.isNull(user)) {
+			const ret = {
+				message: "User with specified ID can't be found."
+			};
+
+			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
+		}
+
+		const globalScoreRank = await getScores(1);
+		const globalPpRank = await getScores(2);
+		const countryScoreRank = await getScoresByCountryId(user.country.countryId, 1);
+		const countryPpRank = await getScoresByCountryId(user.country.countryId, 2);
+
+		score.previousScoreRank = countryScoreRank.findIndex(item => item.user.userId === user.userId);
+		score.previousGlobalScoreRank = globalScoreRank.findIndex(item => item.user.userId === user.userId);
+		score.previousPpRank = countryPpRank.findIndex(item => item.user.userId === user.userId);
+		score.previousGlobalPpRank = globalPpRank.findIndex(item => item.user.userId === user.userId);
+
+		const resDelete = await removeScore(userScore.scoreId);
+
+		if(resDelete < 0) {
+			const ret = {
+				message: "Invalid record deletion."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+	}
+
+	const result = await insertScore([ score ]);
 
 	if(result <= 0) {
 		const ret = {
@@ -241,6 +390,15 @@ function validateScorePostData(data: IScorePOSTData) {
 function validateScoreDeleteData(data: IScoreDELETEData) {
 	const hasValidTypes = checkNumber(data.scoreId);
 	const hasValidData = data.scoreId > 0;
+
+	log(`validateScoreDeleteData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+
+	return hasValidTypes && hasValidData;
+}
+
+function validateSortQueryString(sort: unknown) {
+	const hasValidTypes = checkNumber(sort);
+	const hasValidData = _.isNumber(sort) && (sort >= 1 && sort <= 2);
 
 	log(`validateScoreDeleteData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
 
