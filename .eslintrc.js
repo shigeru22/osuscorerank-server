@@ -148,7 +148,9 @@ module.exports = {
 		"eol-last": [ "warn", "always" ],
 		"func-call-spacing": [ "warn", "never" ],
 		"implicit-arrow-linebreak": [ "warn", "beside" ],
-		"indent": [ "warn", "tab" ],
+		"indent": [ "warn", "tab", {
+			"SwitchCase": 1
+		} ],
 		"jsx-quotes": [ "warn", "prefer-double" ],
 		"key-spacing": [ "warn", {
 			"beforeColon": false,

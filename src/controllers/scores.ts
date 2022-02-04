@@ -28,9 +28,9 @@ export async function getAllScores(req: Request, res: Response) {
 	let sort = 1;
 	if(!_.isUndefined(req.query.sort)) {
 		switch(sortQuery) {
-		case 1: sort = 1; break;
-		case 2: sort = 2; break;
-		default: sort = 1;
+			case 1: sort = 1; break;
+			case 2: sort = 2; break;
+			default: sort = 1;
 		}
 	}
 	else {
@@ -125,9 +125,9 @@ export async function getCountryScores(req: Request, res: Response) {
 	let sort = 1;
 	if(!_.isUndefined(req.query.sort)) {
 		switch(sortQuery) {
-		case 1: sort = 1; break;
-		case 2: sort = 2; break;
-		default: sort = 1;
+			case 1: sort = 1; break;
+			case 2: sort = 2; break;
+			default: sort = 1;
 		}
 	}
 	else {
