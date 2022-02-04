@@ -1,17 +1,19 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { ICountryPOSTData } from "../../types/country";
-import { Country } from "../../types/prisma/country";
+import { ICountry } from "../../types/prisma/country";
 import { LogLevel, log } from "../log";
 
 const prisma = new PrismaClient();
 
-export async function getCountries(): Promise<Country[]> {
+export async function getCountries(): Promise<ICountry[]> {
 	try {
 		const result = await prisma.countries.findMany({
 			select: {
 				countryId: true,
 				countryName: true,
-				osuId: true
+				osuId: true,
+				recentlyInactive: true,
+				totalInactive: true
 			},
 			orderBy: {
 				countryId: "asc"
@@ -32,13 +34,15 @@ export async function getCountries(): Promise<Country[]> {
 	}
 }
 
-export async function getCountryById(id: number): Promise<Country | null> {
+export async function getCountryById(id: number): Promise<ICountry | null> {
 	try {
 		const result = await prisma.countries.findFirst({
 			select: {
 				countryId: true,
 				countryName: true,
-				osuId: true
+				osuId: true,
+				recentlyInactive: true,
+				totalInactive: true
 			},
 			where: {
 				countryId: id
@@ -63,7 +67,9 @@ export async function insertCountry(countries: ICountryPOSTData[]) {
 	try {
 		const data: Prisma.CountriesCreateManyInput[] = countries.map(item => ({
 			countryName: item.countryName,
-			osuId: item.osuId
+			osuId: item.osuId,
+			recentlyInactive: item.recentlyInactive,
+			totalInactive: item.totalInactive
 		}));
 
 		const result = await prisma.countries.createMany({

@@ -1,7 +1,7 @@
 import axios from "axios";
 import _ from "lodash";
-import { ClientCredentialsPOSTRequest, ClientCredentialsPOSTResponse, RankingsGETResponse } from "../../types/osu/osu-api";
-import { RankingsCursor, UserStatistics } from "../../types/osu/osu-structures";
+import { IClientCredentialsPOSTRequest, IClientCredentialsPOSTResponse, IRankingsGETResponse } from "../../types/osu/osu-api";
+import { IRankingsCursor, IUserStatistics } from "../../types/osu/osu-structures";
 import { sleep } from "../common";
 import { HTTPStatus } from "../http";
 import { LogLevel, log } from "../log";
@@ -11,14 +11,14 @@ const OSU_API_ENDPOINT = "https://osu.ppy.sh/api/v2";
 
 export async function getAccessToken(clientId: number, clientSecret: string) {
 	try {
-		const request: ClientCredentialsPOSTRequest = {
+		const request: IClientCredentialsPOSTRequest = {
 			client_id: clientId,
 			client_secret: clientSecret,
 			grant_type: "client_credentials",
 			scope: "public"
 		};
 
-		const response = await axios.post<ClientCredentialsPOSTResponse>(OSU_API_OAUTH_ENDPOINT, request);
+		const response = await axios.post<IClientCredentialsPOSTResponse>(OSU_API_OAUTH_ENDPOINT, request);
 
 		if(response.status === HTTPStatus.OK) {
 			return response.data.access_token;
@@ -93,14 +93,14 @@ export async function getScoreRanking(token: string) {
 		let loop = true;
 		let page = 1;
 
-		let ret: UserStatistics[] = [];
+		let ret: IUserStatistics[] = [];
 
 		do {
 			process.stdout.write(`[INFO] Requesting rankings (page: ${ page })...`);
 
 			/* disable this since looping require cursor */
 			// eslint-disable-next-line no-await-in-loop
-			const response = await axios.get<RankingsGETResponse<RankingsCursor>>(`${ OSU_API_ENDPOINT }/rankings/osu/score?page=${ page }`, {
+			const response = await axios.get<IRankingsGETResponse<IRankingsCursor>>(`${ OSU_API_ENDPOINT }/rankings/osu/score?page=${ page }`, {
 				headers: {
 					"Content-Type": "application/json",
 					"Authorization": `Bearer ${ token }`

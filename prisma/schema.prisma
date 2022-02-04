@@ -9,10 +9,12 @@ datasource db {
 }
 
 model Countries {
-  countryId   Int     @id @default(autoincrement())
-  countryName String  @db.VarChar(255)
-  osuId       Int
-  users       Users[]
+  countryId        Int     @id @default(autoincrement())
+  countryName      String  @db.VarChar(255)
+  osuId            Int
+  recentlyInactive Int
+  totalInactive    Int
+  users            Users[]
 }
 
 model Users {
@@ -25,15 +27,29 @@ model Users {
 }
 
 model Scores {
-  scoreId    Int    @id @default(autoincrement())
-  userId     Int
-  score      BigInt // bigint since the number is unusually large
-  globalRank Int
-  user       Users  @relation(fields: [userId], references: [userId])
+  scoreId                 Int    @id @default(autoincrement())
+  userId                  Int
+  score                   BigInt // bigint since the number is unusually large
+  pp                      Int
+  globalRank              Int
+  previousPpRank          Int?
+  previousScoreRank       Int?
+  previousGlobalPpRank    Int?
+  previousGlobalScoreRank Int?
+  user                    Users  @relation(fields: [userId], references: [userId])
 }
 
 model Auth {
   clientId   String @id
   clientName String @db.VarChar(255)
   clientKey  String @db.VarChar(64)
+}
+
+model Updates {
+  updateId         Int      @id @default(autoincrement())
+  date             DateTime
+  webVersion       String   @db.VarChar(255)
+  apiVersion       String   @db.VarChar(255)
+  recentlyInactive Int
+  totalInactive    Int
 }

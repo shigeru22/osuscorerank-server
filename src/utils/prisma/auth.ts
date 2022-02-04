@@ -1,10 +1,10 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { Client } from "../../types/prisma/auth";
+import { IClient } from "../../types/prisma/auth";
 import { LogLevel, log } from "../log";
 
 const prisma = new PrismaClient();
 
-export async function getClientById(id: string): Promise<Client | null> {
+export async function getClientById(id: string): Promise<IClient | null> {
 	try {
 		const result = await prisma.auth.findFirst({
 			select: {
