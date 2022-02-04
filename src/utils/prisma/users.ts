@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { IUserPOSTData } from "../../types/user";
-import { User } from "../../types/prisma/user";
+import { IUser } from "../../types/prisma/user";
 import { LogLevel, log } from "../log";
 
 const prisma = new PrismaClient();
 
-export async function getUsers(): Promise<User[]> {
+export async function getUsers(): Promise<IUser[]> {
 	try {
 		const result = await prisma.users.findMany({
 			select: {
@@ -36,7 +36,7 @@ export async function getUsers(): Promise<User[]> {
 	}
 }
 
-export async function getUserById(id: number): Promise<User | null> {
+export async function getUserById(id: number): Promise<IUser | null> {
 	try {
 		const result = await prisma.users.findFirst({
 			select: {
@@ -70,7 +70,7 @@ export async function getUserById(id: number): Promise<User | null> {
 	}
 }
 
-export async function getUserByOsuId(id: number): Promise<User | null> {
+export async function getUserByOsuId(id: number): Promise<IUser | null> {
 	try {
 		const result = await prisma.users.findFirst({
 			select: {

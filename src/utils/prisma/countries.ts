@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { ICountryPOSTData } from "../../types/country";
-import { Country } from "../../types/prisma/country";
+import { ICountry } from "../../types/prisma/country";
 import { LogLevel, log } from "../log";
 
 const prisma = new PrismaClient();
 
-export async function getCountries(): Promise<Country[]> {
+export async function getCountries(): Promise<ICountry[]> {
 	try {
 		const result = await prisma.countries.findMany({
 			select: {
@@ -34,7 +34,7 @@ export async function getCountries(): Promise<Country[]> {
 	}
 }
 
-export async function getCountryById(id: number): Promise<Country | null> {
+export async function getCountryById(id: number): Promise<ICountry | null> {
 	try {
 		const result = await prisma.countries.findFirst({
 			select: {

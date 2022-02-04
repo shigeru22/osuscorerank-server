@@ -1,4 +1,4 @@
-export interface Covers {
+export interface ICovers {
   cover: string;
   "cover@2x": string;
   card: string;
@@ -9,10 +9,10 @@ export interface Covers {
   "slimcover@2x": string;
 }
 
-export interface BeatmapsetCompact {
+export interface IBeatmapsetCompact {
   artist: string;
   artist_unicode: string;
-  covers: Covers;
+  covers: ICovers;
   creator: string;
   favourite_count: string;
   id: number;
@@ -27,7 +27,7 @@ export interface BeatmapsetCompact {
   video: boolean;
 }
 
-export interface Beatmapset extends BeatmapsetCompact {
+export interface IBeatmapset extends IBeatmapsetCompact {
   availability: {
     download_disabled: boolean;
     more_information?: string;
@@ -56,7 +56,7 @@ export interface Beatmapset extends BeatmapsetCompact {
   tags: string;
 }
 
-export interface UserCompact {
+export interface IUserCompact {
   avatar_url: string;
   country_code: string;
   default_group: string;
@@ -72,7 +72,7 @@ export interface UserCompact {
   username: string;
 }
 
-export interface UserStatistics {
+export interface IUserStatistics {
   grade_counts: {
     a: number;
     s: number;
@@ -95,10 +95,10 @@ export interface UserStatistics {
   replays_watched_by_others: number;
   total_hits: number;
   total_score: number;
-  user: UserCompact;
+  user: IUserCompact;
 }
 
-export interface Spotlight {
+export interface ISpotlight {
   end_date: Date;
   id: number;
   mode_specific: boolean;
@@ -108,6 +108,6 @@ export interface Spotlight {
   type: string;
 }
 
-export interface RankingsCursor {
+export interface IRankingsCursor {
   page: number;
 }

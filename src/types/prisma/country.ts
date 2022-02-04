@@ -1,4 +1,4 @@
-export interface Country {
+export interface ICountry {
   countryName: string;
   osuId: number;
   recentlyInactive: number;
