@@ -159,8 +159,6 @@ export async function getScoreByUserId(id: number): Promise<IUserScore | null> {
 
 export async function insertScore(scores: IScoreInsertData[]) {
 	try {
-		/* TODO: find previous ranks */
-
 		const data: Prisma.ScoresCreateManyInput[] = scores.map(item => ({
 			userId: item.userId,
 			score: item.score,
