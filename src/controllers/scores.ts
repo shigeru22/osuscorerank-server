@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
 import { JwtPayload } from "jsonwebtoken";
-import { IScorePOSTData, IScoreDELETEData, IGlobalScoreDeltaResponseData, IScoreDeltaResponseData } from "../types/score";
+import { IScorePOSTData, IScoreDELETEData, IGlobalScoreDeltaResponseData, IScoreDeltaResponseData, IGlobalRankingResponse, ICountryRankingResponse, IUserScoreResponse } from "../types/score";
 import { IScoreInsertData } from "../types/prisma/score";
+import { IResponseMessage, IResponseData } from "../types/express";
 import { getCountryById } from "../utils/prisma/countries";
 import { getScores, getScoresByCountryId, getScoreByUserId, insertScore, removeScore, removeAllScores } from "../utils/prisma/scores";
 import { getUserById } from "../utils/prisma/users";
@@ -17,7 +18,7 @@ export async function getAllScores(req: Request, res: Response) {
 	const sortQuery = _.parseInt(req.query.sort as string, 10);
 
 	if(!_.isUndefined(req.query.sort) && !validateSortQueryString(sortQuery)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Invalid sort value."
 		};
 
@@ -40,7 +41,7 @@ export async function getAllScores(req: Request, res: Response) {
 	const scores = await getScores(sort);
 
 	if(_.isEmpty(scores)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Empty rankings returned."
 		};
 
@@ -51,7 +52,7 @@ export async function getAllScores(req: Request, res: Response) {
 	const inactives = await getRecentInactives();
 
 	if(_.isNull(inactives)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Empty inactive record."
 		};
 
@@ -79,7 +80,7 @@ export async function getAllScores(req: Request, res: Response) {
 		)
 	}));
 
-	const ret = {
+	const ret: IResponseData<IGlobalRankingResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
 			rankings: data,
@@ -103,7 +104,7 @@ export async function getCountryScores(req: Request, res: Response) {
 	const id = _.parseInt(req.params.countryId, 10); // database's country id
 
 	if(!checkNumber(id)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
 		};
 
@@ -114,7 +115,7 @@ export async function getCountryScores(req: Request, res: Response) {
 	const sortQuery = _.parseInt(req.query.sort as string, 10);
 
 	if(!_.isUndefined(req.query.sort) && !validateSortQueryString(sortQuery)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Invalid sort value."
 		};
 
@@ -137,7 +138,7 @@ export async function getCountryScores(req: Request, res: Response) {
 	const country = await getCountryById(id);
 
 	if(_.isNull(country)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Country with specified ID can't be found."
 		};
 
@@ -148,7 +149,7 @@ export async function getCountryScores(req: Request, res: Response) {
 	const scores = await getScoresByCountryId(id, sort);
 
 	if(_.isEmpty(scores)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Empty rankings returned."
 		};
 
@@ -171,7 +172,7 @@ export async function getCountryScores(req: Request, res: Response) {
 		)
 	}));
 
-	const ret = {
+	const ret: IResponseData<ICountryRankingResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
 			country: {
@@ -179,11 +180,11 @@ export async function getCountryScores(req: Request, res: Response) {
 				countryName: country.countryName,
 				osuId: country.osuId
 			},
+			rankings: data,
 			inactives: {
 				recentlyInactive: country.recentlyInactive,
 				totalInactive: country.totalInactive
 			},
-			rankings: data,
 			total: data.length
 		}
 	};
@@ -200,7 +201,7 @@ export async function getUserScore(req: Request, res: Response) {
 	const id = _.parseInt(req.params.userId, 10); // database's user id
 
 	if(!checkNumber(id)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
 		};
 
@@ -211,7 +212,7 @@ export async function getUserScore(req: Request, res: Response) {
 	const user = await getUserById(id);
 
 	if(_.isNull(user)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "User with specified ID can't be found."
 		};
 
@@ -222,7 +223,7 @@ export async function getUserScore(req: Request, res: Response) {
 	const score = await getScoreByUserId(id);
 
 	if(_.isNull(score)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Null data returned."
 		};
 
@@ -230,7 +231,7 @@ export async function getUserScore(req: Request, res: Response) {
 		return;
 	}
 
-	const ret = {
+	const ret: IResponseData<IUserScoreResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
 			score: score
@@ -250,7 +251,7 @@ export async function addUserScore(decode: JwtPayload, req: Request, res: Respon
 	const data: IScorePOSTData = req.body;
 
 	if(!validateScorePostData(data)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Invalid POST data."
 		};
 
@@ -275,7 +276,7 @@ export async function addUserScore(decode: JwtPayload, req: Request, res: Respon
 		const user = await getUserById(data.userId);
 
 		if(_.isNull(user)) {
-			const ret = {
+			const ret: IResponseMessage = {
 				message: "User with specified ID can't be found."
 			};
 
@@ -296,7 +297,7 @@ export async function addUserScore(decode: JwtPayload, req: Request, res: Respon
 		const resDelete = await removeScore(userScore.scoreId);
 
 		if(resDelete < 0) {
-			const ret = {
+			const ret: IResponseMessage = {
 				message: "Invalid record deletion."
 			};
 
@@ -308,7 +309,7 @@ export async function addUserScore(decode: JwtPayload, req: Request, res: Respon
 	const result = await insertScore([ score ]);
 
 	if(result <= 0) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Data insertion failed."
 		};
 
@@ -316,7 +317,7 @@ export async function addUserScore(decode: JwtPayload, req: Request, res: Respon
 		return;
 	}
 
-	const ret = {
+	const ret: IResponseMessage = {
 		message: "Data added successfully."
 	};
 
@@ -330,7 +331,7 @@ export async function deleteUserScore(decode: JwtPayload, req: Request, res: Res
 	const data: IScoreDELETEData = req.body;
 
 	if(!validateScoreDeleteData(data)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Invalid DELETE data."
 		};
 
@@ -341,7 +342,7 @@ export async function deleteUserScore(decode: JwtPayload, req: Request, res: Res
 	const result = await removeScore(data.scoreId);
 
 	if(result !== 1) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
 
@@ -349,7 +350,7 @@ export async function deleteUserScore(decode: JwtPayload, req: Request, res: Res
 		return;
 	}
 
-	const ret = {
+	const ret: IResponseMessage = {
 		message: "Data deleted successfully."
 	};
 
@@ -363,7 +364,7 @@ export async function resetScores(decode: JwtPayload, req: Request, res: Respons
 	const result = await removeAllScores();
 
 	if(result <= 0) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
 
@@ -371,7 +372,7 @@ export async function resetScores(decode: JwtPayload, req: Request, res: Respons
 		return;
 	}
 
-	const ret = {
+	const ret: IResponseMessage = {
 		message: "Data deleted successfully."
 	};
 

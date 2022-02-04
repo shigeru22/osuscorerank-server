@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import _ from "lodash";
+import { IResponseMessage, IResponseData } from "../types/express";
+import { IUpdatesResponse } from "../types/updates";
 import { getLatestUpdate } from "../utils/prisma/updates";
 import { HTTPStatus } from "../utils/http";
 import { LogLevel, log } from "../utils/log";
@@ -10,7 +12,7 @@ export async function getLatestUpdates(req: Request, res: Response) {
 	const update = await getLatestUpdate();
 
 	if(_.isNull(update)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Empty updates record."
 		};
 
@@ -18,7 +20,7 @@ export async function getLatestUpdates(req: Request, res: Response) {
 		return;
 	}
 
-	const ret = {
+	const ret: IResponseData<IUpdatesResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
 			date: update.date,

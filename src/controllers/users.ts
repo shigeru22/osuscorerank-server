@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
 import { JwtPayload } from "jsonwebtoken";
-import { IUserPOSTData, IUserDELETEData } from "../types/user";
+import { IUserPOSTData, IUserDELETEData, IUsersResponse, IUserResponse } from "../types/user";
+import { IResponseMessage, IResponseData } from "../types/express";
 import { getUsers, getUserById, insertUser, removeUser, getUserByOsuId } from "../utils/prisma/users";
 import { removeScore } from "../utils/prisma/scores";
 import { checkNumber } from "../utils/common";
@@ -13,7 +14,7 @@ export async function getAllUsers(req: Request, res: Response) {
 
 	const data = await getUsers();
 
-	const ret = {
+	const ret: IResponseData<IUsersResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
 			users: data,
@@ -30,7 +31,7 @@ export async function getUser(req: Request, res: Response) {
 	const id = _.parseInt(req.params.userId, 10); // database's user id
 
 	if(!checkNumber) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
 		};
 
@@ -41,7 +42,7 @@ export async function getUser(req: Request, res: Response) {
 	const data = await getUserById(id);
 
 	if(_.isNull(data)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "User with specified ID can't be found."
 		};
 
@@ -49,7 +50,7 @@ export async function getUser(req: Request, res: Response) {
 		return;
 	}
 
-	const ret = {
+	const ret: IResponseData<IUserResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
 			user: data
@@ -66,7 +67,7 @@ export async function addUser(decode: JwtPayload, req: Request, res: Response, n
 	const data: IUserPOSTData = req.body;
 
 	if(!validateUserPostData(data)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Invalid POST data."
 		};
 
@@ -77,7 +78,7 @@ export async function addUser(decode: JwtPayload, req: Request, res: Response, n
 	const user = await getUserByOsuId(data.osuId);
 
 	if(!_.isNull(user)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "User with the specified osu! ID already exists."
 		};
 
@@ -88,7 +89,7 @@ export async function addUser(decode: JwtPayload, req: Request, res: Response, n
 	const result = await insertUser([ data ]);
 
 	if(result <= 0) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Data insertion failed."
 		};
 
@@ -96,7 +97,7 @@ export async function addUser(decode: JwtPayload, req: Request, res: Response, n
 		return;
 	}
 
-	const ret = {
+	const ret: IResponseMessage = {
 		message: "Data inserted successfully."
 	};
 
@@ -110,7 +111,7 @@ export async function deleteUser(decode: JwtPayload, req: Request, res: Response
 	const data: IUserDELETEData = req.body;
 
 	if(!validateUserDeleteData(data)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Invalid DELETE data."
 		};
 
@@ -121,7 +122,7 @@ export async function deleteUser(decode: JwtPayload, req: Request, res: Response
 	const user = await getUserById(data.userId);
 
 	if(_.isNull(user)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "User with specified ID can't be found."
 		};
 
@@ -132,7 +133,7 @@ export async function deleteUser(decode: JwtPayload, req: Request, res: Response
 	const resScore = await removeScore(data.userId);
 
 	if(resScore === -1) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
 
@@ -143,7 +144,7 @@ export async function deleteUser(decode: JwtPayload, req: Request, res: Response
 	const result = await removeUser(data.userId);
 
 	if(result !== 1) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
 
@@ -151,7 +152,7 @@ export async function deleteUser(decode: JwtPayload, req: Request, res: Response
 		return;
 	}
 
-	const ret = {
+	const ret: IResponseMessage = {
 		message: "Data deleted successfully."
 	};
 

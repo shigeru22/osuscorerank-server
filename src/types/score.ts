@@ -1,3 +1,5 @@
+import { IUserScore } from "./prisma/score";
+
 export interface IScorePOSTData {
 	userId: number;
 	score: number;
@@ -40,4 +42,29 @@ export interface IScoreDeltaResponseData extends IScoreResponseData {
 
 export interface IGlobalScoreDeltaResponseData extends IGlobalScoreResponseData {
 	delta: number;
+}
+
+export interface IRankingResponse {
+	inactives: {
+		recentlyInactive: number;
+		totalInactive: number;
+	};
+	total: number;
+}
+
+export interface IGlobalRankingResponse extends IRankingResponse {
+	rankings: IGlobalScoreDeltaResponseData[];
+}
+
+export interface ICountryRankingResponse extends IRankingResponse {
+	country: {
+		countryId: number;
+		countryName: string;
+		osuId: number;
+	};
+	rankings: IScoreDeltaResponseData[];
+}
+
+export interface IUserScoreResponse {
+	score: IUserScore
 }

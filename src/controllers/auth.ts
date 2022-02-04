@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import _ from "lodash";
 import { timingSafeEqual } from "crypto";
 import jwt from "jsonwebtoken";
-import { IClientPOSTData } from "../types/auth";
+import { IClientPOSTData, IAuthenticationResponse } from "../types/auth";
+import { IResponseMessage, IResponseData } from "../types/express";
 import { HTTPStatus } from "../utils/http";
 import { LogLevel, log } from "../utils/log";
 import { getClientById } from "../utils/prisma/auth";
@@ -10,7 +11,7 @@ import { getClientById } from "../utils/prisma/auth";
 export async function getAccessToken(req: Request, res: Response) {
 	try {
 		if(_.isUndefined(process.env.TOKEN_SECRET)) {
-			const ret = {
+			const ret: IResponseMessage = {
 				message: "Secret is not defined. Please contact system administrator."
 			};
 
@@ -21,7 +22,7 @@ export async function getAccessToken(req: Request, res: Response) {
 		const data: IClientPOSTData = req.body;
 
 		if(!validateClientPostData(data)) {
-			const ret = {
+			const ret: IResponseMessage = {
 				message: "Invalid POST data."
 			};
 
@@ -32,7 +33,7 @@ export async function getAccessToken(req: Request, res: Response) {
 		const client = await getClientById(data.clientId);
 
 		if(_.isNull(client)) {
-			const ret = {
+			const ret: IResponseMessage = {
 				message: "Invalid client ID or key."
 			};
 
@@ -46,7 +47,7 @@ export async function getAccessToken(req: Request, res: Response) {
 		const equal = timingSafeEqual(keyBuffer, dbKeyBuffer);
 
 		if(!equal) {
-			const ret = {
+			const ret: IResponseMessage = {
 				message: "Invalid client ID or key."
 			};
 
@@ -56,7 +57,7 @@ export async function getAccessToken(req: Request, res: Response) {
 
 		const token = jwt.sign({ clientId: client.clientId }, process.env.TOKEN_SECRET, { expiresIn: "1d" });
 
-		const ret = {
+		const ret: IResponseData<IAuthenticationResponse> = {
 			message: "Authenticated successfully.",
 			data: {
 				accessToken: token,
@@ -70,7 +71,7 @@ export async function getAccessToken(req: Request, res: Response) {
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			const ret = {
+			const ret: IResponseMessage = {
 				message: "An error occurred."
 			};
 
@@ -80,7 +81,7 @@ export async function getAccessToken(req: Request, res: Response) {
 			return;
 		}
 
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Unknown error occurred."
 		};
 

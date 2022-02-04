@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
 import { JwtPayload } from "jsonwebtoken";
-import { ICountryDELETEData, ICountryPOSTData } from "../types/country";
+import { ICountryDELETEData, ICountryPOSTData, ICountriesResponse, ICountryResponse } from "../types/country";
+import { IResponseMessage, IResponseData } from "../types/express";
 import { removeAllScores, removeScoresByCountryId } from "../utils/prisma/scores";
 import { removeAllUsers, removeUserByCountryId } from "../utils/prisma/users";
 import { getCountries, getCountryById, insertCountry, removeAllCountries, removeCountry } from "../utils/prisma/countries";
@@ -14,7 +15,7 @@ export async function getAllCountries(req: Request, res: Response) {
 
 	const data = await getCountries();
 
-	const ret = {
+	const ret: IResponseData<ICountriesResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
 			countries: data,
@@ -31,7 +32,7 @@ export async function getCountry(req: Request, res: Response) {
 	const id = _.parseInt(req.params.countryId, 10); // database's country id
 
 	if(!checkNumber(id)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
 		};
 
@@ -42,7 +43,7 @@ export async function getCountry(req: Request, res: Response) {
 	const data = await getCountryById(id);
 
 	if(_.isNull(data)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Country with specified ID can't be found."
 		};
 
@@ -50,7 +51,7 @@ export async function getCountry(req: Request, res: Response) {
 		return;
 	}
 
-	const ret = {
+	const ret: IResponseData<ICountryResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
 			country: data
@@ -67,7 +68,7 @@ export async function addCountry(decode: JwtPayload, req: Request, res: Response
 	const data: ICountryPOSTData = req.body;
 
 	if(!validateCountryPostData(data)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Invalid POST data."
 		};
 
@@ -78,7 +79,7 @@ export async function addCountry(decode: JwtPayload, req: Request, res: Response
 	const result = await insertCountry([ data ]);
 
 	if(result <= 0) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Data insertion failed."
 		};
 
@@ -86,7 +87,7 @@ export async function addCountry(decode: JwtPayload, req: Request, res: Response
 		return;
 	}
 
-	const ret = {
+	const ret: IResponseMessage = {
 		message: "Data inserted successfully."
 	};
 
@@ -100,7 +101,7 @@ export async function deleteCountry(decode: JwtPayload, req: Request, res: Respo
 	const data: ICountryDELETEData = req.body;
 
 	if(!validateCountryDeleteData(data)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Invalid DELETE data."
 		};
 
@@ -111,7 +112,7 @@ export async function deleteCountry(decode: JwtPayload, req: Request, res: Respo
 	const country = await getCountryById(data.countryId);
 
 	if(_.isNull(country)) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Country with specified ID can't be found."
 		};
 
@@ -122,7 +123,7 @@ export async function deleteCountry(decode: JwtPayload, req: Request, res: Respo
 	const resScores = await removeScoresByCountryId(data.countryId);
 
 	if(resScores < 0) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
 
@@ -133,7 +134,7 @@ export async function deleteCountry(decode: JwtPayload, req: Request, res: Respo
 	const resUsers = await removeUserByCountryId(data.countryId);
 
 	if(resUsers < 0) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
 
@@ -144,7 +145,7 @@ export async function deleteCountry(decode: JwtPayload, req: Request, res: Respo
 	const result = await removeCountry(data.countryId);
 
 	if(result !== 1) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
 
@@ -152,7 +153,7 @@ export async function deleteCountry(decode: JwtPayload, req: Request, res: Respo
 		return;
 	}
 
-	const ret = {
+	const ret: IResponseMessage = {
 		message: "Data deleted successfully."
 	};
 
@@ -168,7 +169,7 @@ export async function resetCountries(decode: JwtPayload, req: Request, res: Resp
 	const countries = await getCountries();
 
 	if(countries.length <= 0) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "No countries to delete."
 		};
 
@@ -179,7 +180,7 @@ export async function resetCountries(decode: JwtPayload, req: Request, res: Resp
 	const resScores = await removeAllScores();
 
 	if(resScores < 0) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
 
@@ -190,7 +191,7 @@ export async function resetCountries(decode: JwtPayload, req: Request, res: Resp
 	const resUsers = await removeAllUsers();
 
 	if(resUsers < 0) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
 
@@ -201,7 +202,7 @@ export async function resetCountries(decode: JwtPayload, req: Request, res: Resp
 	const resCountries = await removeAllCountries();
 
 	if(resCountries < 0) {
-		const ret = {
+		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
 
@@ -209,7 +210,7 @@ export async function resetCountries(decode: JwtPayload, req: Request, res: Resp
 		return;
 	}
 
-	const ret = {
+	const ret: IResponseMessage = {
 		message: "Data deleted successfully."
 	};
 
