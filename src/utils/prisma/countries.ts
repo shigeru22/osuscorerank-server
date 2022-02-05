@@ -11,7 +11,6 @@ export async function getCountries(): Promise<ICountry[]> {
 			select: {
 				countryId: true,
 				countryName: true,
-				osuId: true,
 				recentlyInactive: true,
 				totalInactive: true
 			},
@@ -40,7 +39,6 @@ export async function getCountryById(id: number): Promise<ICountry | null> {
 			select: {
 				countryId: true,
 				countryName: true,
-				osuId: true,
 				recentlyInactive: true,
 				totalInactive: true
 			},
@@ -67,7 +65,6 @@ export async function insertCountry(countries: ICountryPOSTData[]) {
 	try {
 		const data: Prisma.CountriesCreateManyInput[] = countries.map(item => ({
 			countryName: item.countryName,
-			osuId: item.osuId,
 			recentlyInactive: item.recentlyInactive,
 			totalInactive: item.totalInactive
 		}));

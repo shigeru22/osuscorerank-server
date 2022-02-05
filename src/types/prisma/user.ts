@@ -5,6 +5,5 @@ export interface IUser {
 	country: {
 		countryId: number;
 		countryName: string;
-		osuId: number;
 	};
 }

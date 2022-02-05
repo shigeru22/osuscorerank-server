@@ -2,7 +2,6 @@ import { ICountry } from "./prisma/country";
 
 export interface ICountryPOSTData {
 	countryName: string;
-	osuId: number;
 	recentlyInactive: number;
 	totalInactive: number;
 }

@@ -31,8 +31,7 @@ export async function getScores(sort: number): Promise<IGlobalScore[]> {
 						country: {
 							select: {
 								countryId: true,
-								countryName: true,
-								osuId: true
+								countryName: true
 							}
 						}
 					}
@@ -126,8 +125,7 @@ export async function getScoreByUserId(id: number): Promise<IUserScore | null> {
 						country: {
 							select: {
 								countryId: true,
-								countryName: true,
-								osuId: true
+								countryName: true
 							}
 						}
 					}

@@ -31,7 +31,6 @@ export interface IGlobalScoreResponseData extends IScoreResponseData {
 		country: {
 			countryId: number;
 			countryName: string;
-			osuId: number;
 		};
 	};
 }
@@ -60,7 +59,6 @@ export interface ICountryRankingResponse extends IRankingResponse {
 	country: {
 		countryId: number;
 		countryName: string;
-		osuId: number;
 	};
 	rankings: IScoreDeltaResponseData[];
 }

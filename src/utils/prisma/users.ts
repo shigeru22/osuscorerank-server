@@ -15,8 +15,7 @@ export async function getUsers(): Promise<IUser[]> {
 				country: {
 					select: {
 						countryId: true,
-						countryName: true,
-						osuId: true
+						countryName: true
 					}
 				}
 			}
@@ -46,8 +45,7 @@ export async function getUserById(id: number): Promise<IUser | null> {
 				country: {
 					select: {
 						countryId: true,
-						countryName: true,
-						osuId: true
+						countryName: true
 					}
 				}
 			},
@@ -80,8 +78,7 @@ export async function getUserByOsuId(id: number): Promise<IUser | null> {
 				country: {
 					select: {
 						countryId: true,
-						countryName: true,
-						osuId: true
+						countryName: true
 					}
 				}
 			},

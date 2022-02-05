@@ -18,7 +18,6 @@ export interface IGlobalScore extends IScore {
 		country: {
 			countryId: number;
 			countryName: string;
-			osuId: number;
 		};
 	};
 	previousGlobalPpRank: number | null;
@@ -38,7 +37,6 @@ export interface IUserScore extends IScore {
 		country: {
 			countryId: number;
 			countryName: string;
-			osuId: number;
 		};
 	};
 }
