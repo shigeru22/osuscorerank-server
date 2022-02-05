@@ -378,8 +378,8 @@ export async function resetScores(decode: JwtPayload, req: Request, res: Respons
 }
 
 function validateScorePostData(data: IScorePOSTData) {
-	const hasValidTypes = checkNumber(data.userId) && checkNumber(data.score) && checkNumber(data.globalRank);
-	const hasValidData = data.userId > 0 && data.score >= 0 && data.globalRank > 0;
+	const hasValidTypes = checkNumber(data.userId) && checkNumber(data.pp) && checkNumber(data.score) && checkNumber(data.globalRank);
+	const hasValidData = data.userId > 0 && data.pp >= 0 && data.score >= 0 && data.globalRank > 0;
 
 	log(`validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
 
