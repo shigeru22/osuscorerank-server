@@ -12,7 +12,7 @@ model Countries {
   countryId        Int     @id @default(autoincrement())
   countryName      String  @db.VarChar(255)
   recentlyInactive Int
-  totalInactive    Int
+  highestId        Int
   users            Users[]
 }
 
@@ -50,5 +50,5 @@ model Updates {
   webVersion       String   @db.VarChar(255)
   apiVersion       String   @db.VarChar(255)
   recentlyInactive Int
-  totalInactive    Int
+  highestId        Int
 }

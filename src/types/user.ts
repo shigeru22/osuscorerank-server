@@ -10,6 +10,11 @@ export interface IUserDELETEData {
   userId: number;
 }
 
+export interface IUserCountryInsertion {
+  countryId: number;
+  insertion: number;
+}
+
 export interface IUsersResponse {
   users: IUser[];
   length: number;

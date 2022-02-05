@@ -46,7 +46,6 @@ export interface IGlobalScoreDeltaResponseData extends IGlobalScoreResponseData 
 export interface IRankingResponse {
 	inactives: {
 		recentlyInactive: number;
-		totalInactive: number;
 	};
 	total: number;
 }

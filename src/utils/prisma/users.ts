@@ -103,14 +103,8 @@ export async function getUserByOsuId(id: number): Promise<IUser | null> {
 
 export async function insertUser(users: IUserPOSTData[]) {
 	try {
-		const data: Prisma.UsersCreateManyInput[] = users.map(item => ({
-			userName: item.userName,
-			osuId: item.osuId,
-			countryId: item.countryId
-		}));
-
 		const result = await prisma.users.createMany({
-			data: data,
+			data: users,
 			skipDuplicates: true
 		});
 

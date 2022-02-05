@@ -84,8 +84,7 @@ export async function getAllScores(req: Request, res: Response) {
 		data: {
 			rankings: data,
 			inactives: {
-				recentlyInactive: inactives.recentlyInactive,
-				totalInactive: inactives.totalInactive
+				recentlyInactive: inactives.recentlyInactive
 			},
 			total: data.length
 		}
@@ -180,8 +179,7 @@ export async function getCountryScores(req: Request, res: Response) {
 			},
 			rankings: data,
 			inactives: {
-				recentlyInactive: country.recentlyInactive,
-				totalInactive: country.totalInactive
+				recentlyInactive: country.recentlyInactive
 			},
 			total: data.length
 		}
