@@ -13,4 +13,5 @@ This repository provides REST APIs for retrieving inactive users, along with sco
 - [Countries](4-countries.md)
 - [Users](5-users.md)
 - [Scores](6-scores.md)
-- [Updates](7-updates.md) 
+- [Updates](7-updates.md)
+- [About data updates](8-dataup.md)
