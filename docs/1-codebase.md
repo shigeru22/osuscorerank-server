@@ -4,7 +4,7 @@ This section is intended for those who wanted to contribute to the codebase or h
 
 ## Preparing Development Environment (or self-hosting)
 
-To get started, make sure to install Node.js and a database server (e.g. PostgreSQL or MySQL, not tested). Afterwards do these steps:
+To get started, make sure to install [Node.js](https://nodejs.org/en/download) (tested using [v14.17.6](https://nodejs.org/dist/v14.17.6) with [NVM for Windows](https://github.com/coreybutler/nvm-windows)) and a database server (e.g. [PostgreSQL](https://www.postgresql.org/download), tested using v13.3, or [MySQL](https://dev.mysql.com/downloads), not tested). Afterwards do these steps:
 
 1. Clone the repository.
 2. Inside the repository folder, run this command install the dependencies.
