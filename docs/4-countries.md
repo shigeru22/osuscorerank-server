@@ -17,9 +17,7 @@ Retrieves all countries in the database.
     "countries": {
       "countryId": number,
       "countryName": string,
-      "osuId": number,
-      "recentlyInactive": number,
-      "totalInactive": number
+      "recentlyInactive": number
     }[],
     "total": number
   }
@@ -36,30 +34,22 @@ Retrieves all countries in the database.
       {
         "countryId": 1,
         "countryName": "Indonesia",
-        "osuId": 1,
-        "recentlyInactive": 1,
-        "totalInactive": 1
+        "recentlyInactive": 3
       },
       {
         "countryId": 2,
         "countryName": "Singapore",
-        "osuId": 2,
-        "recentlyInactive": 1,
-        "totalInactive": 1
+        "recentlyInactive": 1
       },
       {
         "countryId": 3,
         "countryName": "Japan",
-        "osuId": 3,
-        "recentlyInactive": 1,
-        "totalInactive": 1
+        "recentlyInactive": 1
       },
       {
         "countryId": 4,
         "countryName": "United States",
-        "osuId": 4,
-        "recentlyInactive": 1,
-        "totalInactive": 1
+        "recentlyInactive": 1
       }
     ],
     "total": 4
@@ -88,9 +78,7 @@ Country ID in the database.
     "country": {
       "countryId": number,
       "countryName": string,
-      "osuId": number,
-      "recentlyInactive": number,
-      "totalInactive": number
+      "recentlyInactive": number
     }
   }
 }
@@ -107,9 +95,7 @@ Country ID in the database.
     "country": {
       "countryId": 1,
       "countryName": "Indonesia",
-      "osuId": 1,
-      "recentlyInactive": 1,
-      "totalInactive": 1
+      "recentlyInactive": 3
     }
   }
 }
@@ -145,23 +131,13 @@ Inserts a new country to the database.
 
 ```json
 {
-  "countryName": string,
-  "recentlyInactive": number,
-  "totalInactive": number
+  "countryName": string
 }
 ```
 
 `countryName` **string**
 
 Country Name.
-
-`recentlyInactive` **number**
-
-Recent inactive count. Must be higher or equal to 0.
-
-`totalInactive` **number**
-
-Total inactive count. Must be higher or equal to 0.
 
 ##### Example response (200):
 
@@ -171,9 +147,7 @@ Body:
 
 ```json
 {
-  "countryName": "Malaysia",
-  "recentlyInactive": 0,
-  "totalInactive": 0
+  "countryName": "Malaysia"
 }
 ```
 

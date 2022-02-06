@@ -44,8 +44,7 @@ Sorting criteria. The available options are:
       "delta": number
     }[],
     "inactives": {
-      "recentlyInactive": number,
-      "totalInactive": number
+      "recentlyInactive": number
     },
     "total": number
   }
@@ -110,8 +109,7 @@ Sorting criteria. The available options are:
       // ...
     ],
     "inactives": {
-      "recentlyInactive": 2,
-      "totalInactive": 6
+      "recentlyInactive": 2
     },
     "total": 6
   }
@@ -165,8 +163,7 @@ Sorting criteria. The available options are:
       "delta": number
     },
     "inactives": {
-      "recentlyInactive": number,
-      "totalInactive": number
+      "recentlyInactive": number
     },
     "total": number
   }
@@ -223,8 +220,7 @@ Sorting criteria. The available options are:
       }
     ],
     "inactives": {
-      "recentlyInactive": 1,
-      "totalInactive": 3
+      "recentlyInactive": 1
     },
     "total": 3
   }
