@@ -155,6 +155,58 @@ export async function getScoreByUserId(id: number): Promise<IUserScore | null> {
 	}
 }
 
+export async function getScoresByUserIds(id: number[], sort: number): Promise<IUserScore[]> {
+	try {
+		const scoreSorting: Prisma.Enumerable<Prisma.ScoresOrderByWithRelationInput> = {
+			score: "desc"
+		};
+
+		const ppSorting: Prisma.Enumerable<Prisma.ScoresOrderByWithRelationInput> = {
+			pp: "desc"
+		};
+
+		let sorting = 1;
+		if(!_.isUndefined(sort)) {
+			sorting = sort;
+		}
+
+		const resAllData = await prisma.scores.findMany({
+			select: {
+				scoreId: true,
+				user: {
+					select: {
+						userId: true,
+						userName: true,
+						osuId: true,
+						country: {
+							select: {
+								countryId: true,
+								countryName: true
+							}
+						}
+					}
+				},
+				score: true,
+				pp: true,
+				globalRank: true
+			},
+			orderBy: sorting === 1 ? scoreSorting : ppSorting
+		});
+
+		return resAllData.filter(row => _.includes(id, row.user.userId));
+	}
+	catch (e) {
+		if(e instanceof Prisma.PrismaClientKnownRequestError) {
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+		}
+		else {
+			log("Unknown error occurred while querying data.", LogLevel.ERROR);
+		}
+
+		return [];
+	}
+}
+
 export async function insertScore(scores: IScoreInsertData[]) {
 	try {
 		const data: Prisma.ScoresCreateManyInput[] = scores.map(item => ({

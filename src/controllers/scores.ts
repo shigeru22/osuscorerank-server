@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
 import { JwtPayload } from "jsonwebtoken";
-import { IScorePOSTData, IScoreDELETEData, IGlobalScoreDeltaResponseData, IScoreDeltaResponseData, IGlobalRankingResponse, ICountryRankingResponse, IUserScoreResponse } from "../types/score";
+import { IScorePOSTData, IScoreDELETEData, IGlobalScoreDeltaResponseData, IScoreDeltaResponseData, IGlobalRankingResponse, ICountryRankingResponse, IUserScoreResponse, IUserScoresResponse } from "../types/score";
 import { IScoreInsertData } from "../types/prisma/score";
 import { IResponseMessage, IResponseData } from "../types/express";
 import { getCountryById } from "../utils/prisma/countries";
-import { getScores, getScoresByCountryId, getScoreByUserId, insertScore, removeScore, removeAllScores } from "../utils/prisma/scores";
+import { getScores, getScoresByCountryId, getScoreByUserId, insertScore, removeScore, removeAllScores, getScoresByUserIds } from "../utils/prisma/scores";
 import { getUserById } from "../utils/prisma/users";
 import { getRecentInactives } from "../utils/prisma/updates";
 import { checkNumber } from "../utils/common";
@@ -231,6 +231,69 @@ export async function getUserScore(req: Request, res: Response) {
 		message: "Data retrieved successfully.",
 		data: {
 			score: score
+		}
+	};
+
+	res.status(HTTPStatus.OK).send(JSON.stringify(
+		ret,
+		(key, value) => (typeof value === "bigint" ? value.toString() : value) // return bigint as string
+	));
+}
+
+export async function getMultipleUserScores(req: Request, res: Response) {
+	log("Accessed: getMultipleUserScores", LogLevel.LOG);
+
+	const sortQuery = _.parseInt(req.query.sort as string, 10);
+
+	if(!_.isArray(req.query.users)) {
+		const ret: IResponseMessage = {
+			message: "Invalid users parameter."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+
+	if(req.query.users.length <= 0) {
+		const ret: IResponseMessage = {
+			message: "Invalid array length."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+
+	let sort = 1;
+	if(!_.isUndefined(req.query.sort)) {
+		switch(sortQuery) {
+			case 1: sort = 1; break;
+			case 2: sort = 2; break;
+			default: sort = 1;
+		}
+	}
+
+	const ids = req.query.users.map(item => {
+		if(_.isString(item)) {
+			return _.parseInt(item, 10);
+		}
+		return 0;
+	});
+
+	const scores = await getScoresByUserIds(ids, sort);
+
+	if(scores.length <= 0) {
+		const ret: IResponseMessage = {
+			message: "No users found."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
+	const ret: IResponseData<IUserScoresResponse> = {
+		message: "Data retrieved successfully.",
+		data: {
+			scores: scores
 		}
 	};
 

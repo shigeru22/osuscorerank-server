@@ -7,6 +7,7 @@ const router = Router();
 router.get("/", scores.getAllScores);
 router.get("/country/:countryId", scores.getCountryScores);
 router.get("/user/:userId", scores.getUserScore);
+router.get("/users", scores.getMultipleUserScores);
 
 router.post("/add", verifyToken, scores.addUserScore);
 

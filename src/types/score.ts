@@ -63,5 +63,9 @@ export interface ICountryRankingResponse extends IRankingResponse {
 }
 
 export interface IUserScoreResponse {
-	score: IUserScore
+	score: IUserScore;
+}
+
+export interface IUserScoresResponse {
+	scores: IUserScore[];
 }
