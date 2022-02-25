@@ -331,6 +331,142 @@ User ID in the database.
 }
 ```
 
+## Get multiple users' scores
+
+Retrieves multiple user scores by ID specified in query parameter.
+
+#### GET `/scores/users`
+
+##### Query Parameters
+
+`users` **string**
+
+User ID in the database, in form of arrays.
+Example:
+`[1, 2, 3]` as
+`/scores/users?users=1&users=2&users=3` (must be multiple values) or
+`/scores/users?users[]=1&users[]=2&users[]=3`
+
+`sort` **string** *(optional, defaults to score)*
+
+Sorting criteria. The available options are:
+
+```
+1 = score
+2 = pp
+```
+
+##### Response format:
+
+```
+{
+  "message": string,
+  "data": {
+    "score": {
+      "scoreId": number,
+      "user": {
+        "userId": number,
+        "userName": string,
+        "osuId": number,
+        "country": {
+          "countryId": number,
+          "countryName": string
+        }
+      },
+      "score": string, // bigint, returned as string
+      "pp": number,
+      "globalRank": number
+    },
+    "length": number
+  }
+}
+```
+
+##### Example response (200):
+
+**GET** `/scores/users?users=1&users=2&users=3`
+
+Body:
+
+```json
+{
+  "message": "Data retrieved successfully.",
+  "data": {
+    "scores": [
+      {
+        "scoreId": 2,
+        "user": {
+          "userId": 2,
+          "userName": "Patience",
+          "osuId": 13509913,
+          "country": {
+            "countryId": 2,
+            "countryName": "Singapore"
+          }
+        },
+        "score": "233011877962",
+        "pp": 5074,
+        "globalRank": 45789
+      },
+      {
+        "scoreId": 1,
+        "user": {
+          "userId": 1,
+          "userName": "Shigeru22",
+          "osuId": 2581664,
+          "country": {
+            "countryId": 1,
+            "countryName": "Indonesia"
+          }
+        },
+        "score": "206202433453",
+        "pp": 8641,
+        "globalRank": 3884
+      },
+      {
+        "scoreId": 3,
+        "user": {
+          "userId": 3,
+          "userName": "StylishRENREN",
+          "osuId": 17159233,
+          "country": {
+            "countryId": 3,
+            "countryName": "Japan"
+          }
+        },
+        "score": "155418273729",
+        "pp": 7988,
+        "globalRank": 6110
+      }
+    ]
+  }
+}
+```
+
+##### Example response (400):
+
+**GET** `/scores/users?users[]=test` (Must be number)
+
+Body:
+
+```json
+{
+  "message": "Invalid users parameter."
+}
+```
+
+##### Example response (404):
+
+**GET** `/scores/users?users=10&users=11` (ID not in database)
+
+Body:
+
+```json
+{
+  "message": "No users found."
+}
+```
+
 ## Add user score
 
 Inserts a new score in the database.
