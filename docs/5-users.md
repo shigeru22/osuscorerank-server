@@ -10,7 +10,7 @@ Retrieves all users in the database.
 
 ##### Response format (JSON):
 
-```json
+```
 {
   "message": string,
   "data": {
@@ -83,7 +83,7 @@ User ID in the database.
 
 ##### Response format (JSON):
 
-```json
+```
 {
   "message": string,
   "data": {
@@ -149,7 +149,7 @@ Inserts a new user to the database.
 
 ##### Request body (JSON):
 
-```json
+```
 {
   "userName": string,
   "osuId": number,
@@ -223,7 +223,7 @@ Removes user from the database. Also deletes score related to deleted user.
 
 ##### Request body (JSON):
 
-```json
+```
 {
   "userId": number
 }

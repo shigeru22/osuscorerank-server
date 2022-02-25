@@ -23,7 +23,7 @@ Sorting criteria. The available options are:
 
 ##### Response format (JSON):
 
-```json
+```
 {
   "message": string,
   "data": {
@@ -143,7 +143,7 @@ Sorting criteria. The available options are:
 
 ##### Response format:
 
-```json
+```
 "message": string,
   "data": {
     "country": {
@@ -261,7 +261,7 @@ User ID in the database.
 
 ##### Response format:
 
-```json
+```
 {
   "message": string,
   "data": {
@@ -475,7 +475,7 @@ Inserts a new score in the database.
 
 ##### Request body (JSON):
 
-```json
+```
 {
   "userId": number,
   "score": bigint | number,
@@ -555,7 +555,7 @@ Removes a score from the database. **This will remove score's previous rank data
 
 ##### Request body (JSON):
 
-```json
+```
 {
   "scoreId": 1
 }

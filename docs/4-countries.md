@@ -10,7 +10,7 @@ Retrieves all countries in the database.
 
 ##### Response format (JSON):
 
-```json
+```
 {
   "message": string,
   "data": {
@@ -71,7 +71,7 @@ Country ID in the database.
 
 ##### Response format (JSON):
 
-```json
+```
 {
   "message": string,
   "data": {
@@ -129,7 +129,7 @@ Inserts a new country to the database.
 
 ##### Request body (JSON):
 
-```json
+```
 {
   "countryName": string
 }
@@ -183,7 +183,7 @@ Removes a country from the database. Also deletes users and scores related to th
 
 ##### Request body (JSON):
 
-```json
+```
 {
     "countryId": number
 }

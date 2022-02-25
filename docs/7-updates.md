@@ -10,7 +10,7 @@ Retrieves current versions.
 
 ##### Response format (JSON):
 
-```json
+```
 {
   "message": string,
   "data": {

@@ -23,7 +23,7 @@ Authentication could be done by requesting a token using the following endpoint.
 
 ##### Request body (JSON):
 
-```json
+```
 {
   "clientId": string,
   "clientKey": string
@@ -40,7 +40,7 @@ Client Key.
 
 ##### Response format (JSON):
 
-```json
+```
 {
   "message": string,
   "data": {
