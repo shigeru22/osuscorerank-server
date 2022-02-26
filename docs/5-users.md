@@ -79,6 +79,8 @@ Retrieves all users in the database.
 
 Retrieves a user by ID specified in route parameter.
 
+**Note:** If previously any user is available in the database and can't be found later on, it is considered as back active.
+
 #### GET `/users/{id}`
 
 ##### Route Parameters
