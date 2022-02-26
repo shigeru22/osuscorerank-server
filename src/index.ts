@@ -1,5 +1,6 @@
 import express from "express";
 import env from "dotenv";
+import cors from "cors";
 import _ from "lodash";
 import mainRoute from "./routes/main";
 import scoreRoute from "./routes/scores";
@@ -16,6 +17,7 @@ const PORT = process.env.API_PORT || 5000;
 
 /* middlewares */
 app.use(express.json());
+app.use(cors());
 
 /* routes */
 app.use("/", mainRoute);

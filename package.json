@@ -12,6 +12,7 @@
 	"author": "shigeru22",
 	"license": "MIT",
 	"devDependencies": {
+		"@types/cors": "^2.8.12",
 		"@types/express": "^4.17.13",
 		"@types/jsonwebtoken": "^8.5.8",
 		"@types/lodash": "^4.14.178",
@@ -28,6 +29,7 @@
 	"dependencies": {
 		"@prisma/client": "^3.8.0",
 		"axios": "^0.25.0",
+		"cors": "^2.8.5",
 		"dotenv": "^11.0.0",
 		"express": "^4.17.2",
 		"jsonwebtoken": "^8.5.1",
