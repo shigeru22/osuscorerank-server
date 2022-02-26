@@ -31,6 +31,7 @@ export interface IGlobalScoreResponseData extends IScoreResponseData {
 		country: {
 			countryId: number;
 			countryName: string;
+			countryCode: string;
 		};
 	};
 }
@@ -58,6 +59,7 @@ export interface ICountryRankingResponse extends IRankingResponse {
 	country: {
 		countryId: number;
 		countryName: string;
+		countryCode: string;
 	};
 	rankings: IScoreDeltaResponseData[];
 }

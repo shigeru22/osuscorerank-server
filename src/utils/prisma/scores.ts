@@ -31,7 +31,8 @@ export async function getScores(sort: number): Promise<IGlobalScore[]> {
 						country: {
 							select: {
 								countryId: true,
-								countryName: true
+								countryName: true,
+								countryCode: true
 							}
 						}
 					}
@@ -125,7 +126,8 @@ export async function getScoreByUserId(id: number): Promise<IUserScore | null> {
 						country: {
 							select: {
 								countryId: true,
-								countryName: true
+								countryName: true,
+								countryCode: true
 							}
 						}
 					}
@@ -181,7 +183,8 @@ export async function getScoresByUserIds(id: number[], sort: number): Promise<IU
 						country: {
 							select: {
 								countryId: true,
-								countryName: true
+								countryName: true,
+								countryCode: true
 							}
 						}
 					}
@@ -193,6 +196,7 @@ export async function getScoresByUserIds(id: number[], sort: number): Promise<IU
 			orderBy: sorting === 1 ? scoreSorting : ppSorting
 		});
 
+		/* TODO: simplify using getScores() in controllers */
 		return resAllData.filter(row => _.includes(id, row.user.userId));
 	}
 	catch (e) {

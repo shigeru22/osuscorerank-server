@@ -68,7 +68,8 @@ export async function getAllScores(req: Request, res: Response) {
 			osuId: item.user.osuId,
 			country: {
 				countryId: item.user.country.countryId,
-				countryName: item.user.country.countryName
+				countryName: item.user.country.countryName,
+				countryCode: item.user.country.countryCode
 			}
 		},
 		score: item.score,
@@ -175,7 +176,8 @@ export async function getCountryScores(req: Request, res: Response) {
 		data: {
 			country: {
 				countryId: id,
-				countryName: country.countryName
+				countryName: country.countryName,
+				countryCode: country.countryCode
 			},
 			rankings: data,
 			inactives: {

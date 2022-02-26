@@ -18,6 +18,7 @@ export interface IGlobalScore extends IScore {
 		country: {
 			countryId: number;
 			countryName: string;
+			countryCode: string;
 		};
 	};
 	previousGlobalPpRank: number | null;
@@ -37,6 +38,7 @@ export interface IUserScore extends IScore {
 		country: {
 			countryId: number;
 			countryName: string;
+			countryCode: string;
 		};
 	};
 }

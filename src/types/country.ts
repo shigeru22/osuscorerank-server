@@ -2,6 +2,7 @@ import { ICountry } from "./prisma/country";
 
 export interface ICountryPOSTData {
 	countryName: string;
+	countryCode: string;
 }
 
 export interface ICountryDELETEData {

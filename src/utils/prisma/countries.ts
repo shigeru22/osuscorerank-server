@@ -3,7 +3,6 @@ import { ICountryPOSTData } from "../../types/country";
 import { IUserCountryInsertion } from "../../types/user";
 import { ICountry } from "../../types/prisma/country";
 import { LogLevel, log } from "../log";
-import _ from "lodash";
 
 const prisma = new PrismaClient();
 
@@ -13,6 +12,7 @@ export async function getCountries(): Promise<ICountry[]> {
 			select: {
 				countryId: true,
 				countryName: true,
+				countryCode: true,
 				recentlyInactive: true
 			},
 			orderBy: {
@@ -40,6 +40,7 @@ export async function getCountryById(id: number): Promise<ICountry | null> {
 			select: {
 				countryId: true,
 				countryName: true,
+				countryCode: true,
 				recentlyInactive: true
 			},
 			where: {
@@ -65,6 +66,7 @@ export async function insertCountry(countries: ICountryPOSTData[]) {
 	try {
 		const data: Prisma.CountriesCreateManyInput[] = countries.map(item => ({
 			countryName: item.countryName,
+			countryCode: item.countryCode,
 			recentlyInactive: 0,
 			highestId: 0
 		}));

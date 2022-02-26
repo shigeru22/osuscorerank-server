@@ -5,5 +5,6 @@ export interface IUser {
 	country: {
 		countryId: number;
 		countryName: string;
+		countryCode: string;
 	};
 }

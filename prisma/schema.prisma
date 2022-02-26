@@ -11,6 +11,7 @@ datasource db {
 model Countries {
   countryId        Int     @id @default(autoincrement())
   countryName      String  @db.VarChar(255)
+  countryCode      String  @db.VarChar(8)
   recentlyInactive Int
   highestId        Int
   users            Users[]
