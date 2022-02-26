@@ -218,12 +218,15 @@ export async function resetCountries(decode: JwtPayload, req: Request, res: Resp
 }
 
 function validateCountryPostData(data: ICountryPOSTData) {
-	const hasValidTypes = _.isString(data.countryName);
-	const hasValidData = !_.isEmpty(data.countryName);
+	/* TODO: implement isDefined to all validations */
 
-	log(`validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	const isDefined = !_.isUndefined(data.countryName) && !_.isUndefined(data.countryCode);
+	const hasValidTypes = _.isString(data.countryName) && _.isString(data.countryCode);
+	const hasValidData = isDefined && (!_.isEmpty(data.countryName) && data.countryCode.length === 2);
 
-	return hasValidTypes && hasValidData;
+	log(`validateScorePostData :: isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+
+	return isDefined && hasValidTypes && hasValidData;
 }
 
 function validateCountryDeleteData(data: ICountryDELETEData) {
