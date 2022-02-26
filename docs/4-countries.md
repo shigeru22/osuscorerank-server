@@ -17,6 +17,7 @@ Retrieves all countries in the database.
     "countries": {
       "countryId": number,
       "countryName": string,
+      "countryCode": string,
       "recentlyInactive": number
     }[],
     "total": number
@@ -34,21 +35,25 @@ Retrieves all countries in the database.
       {
         "countryId": 1,
         "countryName": "Indonesia",
+        "countryCode": "ID",
         "recentlyInactive": 3
       },
       {
         "countryId": 2,
         "countryName": "Singapore",
+        "countryCode": "SG",
         "recentlyInactive": 1
       },
       {
         "countryId": 3,
         "countryName": "Japan",
+        "countryCode": "JP",
         "recentlyInactive": 1
       },
       {
         "countryId": 4,
         "countryName": "United States",
+        "countryCode": "US",
         "recentlyInactive": 1
       }
     ],
@@ -78,6 +83,7 @@ Country ID in the database.
     "country": {
       "countryId": number,
       "countryName": string,
+      "countryCode": string,
       "recentlyInactive": number
     }
   }
@@ -95,6 +101,7 @@ Country ID in the database.
     "country": {
       "countryId": 1,
       "countryName": "Indonesia",
+      "countryCode": "ID",
       "recentlyInactive": 3
     }
   }
@@ -131,13 +138,18 @@ Inserts a new country to the database.
 
 ```
 {
-  "countryName": string
+  "countryName": string,
+  "countryCode": string
 }
 ```
 
 `countryName` **string**
 
 Country Name.
+
+`countryCode` **string**
+
+Country Code. Must be 2-letter code in ISO 3166-1 Alpha-2 format for integrity. Full listing [here](https://en.wikipedia.org/w/index.php?title=List_of_ISO_3166_country_codes#Current_ISO_3166_country_codes).
 
 ##### Example response (200):
 
@@ -147,7 +159,8 @@ Body:
 
 ```json
 {
-  "countryName": "Malaysia"
+  "countryName": "Malaysia",
+  "countryCode": "MY"
 }
 ```
 

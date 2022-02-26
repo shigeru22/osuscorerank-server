@@ -35,7 +35,8 @@ Sorting criteria. The available options are:
         "osuId": number,
         "country": {
           "countryId": number,
-          "countryName": string
+          "countryName": string,
+          "countryCode": string
         }
       },
       "score": string, // bigint, returned as string
@@ -66,7 +67,8 @@ Sorting criteria. The available options are:
           "osuId": 2927048,
           "country": {
             "countryId": 4,
-            "countryName": "United States"
+            "countryName": "United States",
+            "countryCode": "US"
           }
         },
         "score": "970375021269",
@@ -82,7 +84,8 @@ Sorting criteria. The available options are:
           "osuId": 11320627,
           "country": {
             "countryId": 1,
-            "countryName": "Indonesia"
+            "countryName": "Indonesia",
+            "countryCode": "ID"
           }
         },
         "score": "350279198497",
@@ -98,7 +101,8 @@ Sorting criteria. The available options are:
           "osuId": 13509913,
           "country": {
             "countryId": 2,
-            "countryName": "Singapore"
+            "countryName": "Singapore",
+            "countryCode": "SG"
           }
         },
         "score": "233011877962",
@@ -109,7 +113,7 @@ Sorting criteria. The available options are:
       // ...
     ],
     "inactives": {
-      "recentlyInactive": 2
+      "recentlyInactive": 6
     },
     "total": 6
   }
@@ -148,7 +152,8 @@ Sorting criteria. The available options are:
   "data": {
     "country": {
       "countryId": number,
-      "countryName": string
+      "countryName": string,
+      "countryCode": string
     },
     "rankings": {
       "scoreId": number,
@@ -179,7 +184,8 @@ Sorting criteria. The available options are:
   "data": {
     "country": {
       "countryId": 1,
-      "countryName": "Indonesia"
+      "countryName": "Indonesia",
+      "countryCode": "ID"
     },
     "rankings": [
       {
@@ -220,7 +226,7 @@ Sorting criteria. The available options are:
       }
     ],
     "inactives": {
-      "recentlyInactive": 1
+      "recentlyInactive": 3
     },
     "total": 3
   }
@@ -273,7 +279,8 @@ User ID in the database.
         "osuId": number,
         "country": {
           "countryId": number,
-          "countryName": string
+          "countryName": string,
+          "countryCode": string
         }
       },
       "score": string, // bigint, returned as string
@@ -300,7 +307,8 @@ User ID in the database.
         "osuId": 2581664,
         "country": {
           "countryId": 1,
-          "countryName": "Indonesia"
+          "countryName": "Indonesia",
+          "countryCode": "ID"
         }
       },
       "score": "206202433453",
@@ -333,7 +341,9 @@ User ID in the database.
 
 ## Get multiple users' scores
 
-Retrieves multiple user scores by ID specified in query parameter.
+Retrieves multiple user scores by ID specified in query parameter. Also sorts them into a ranking list.
+
+**Note:** If any user is not found in the database, it's considered as back active and wouldn't be returned in scores array.
 
 #### GET `/scores/users`
 
@@ -370,7 +380,8 @@ Sorting criteria. The available options are:
         "osuId": number,
         "country": {
           "countryId": number,
-          "countryName": string
+          "countryName": string,
+          "countryCode": string
         }
       },
       "score": string, // bigint, returned as string
@@ -401,7 +412,8 @@ Body:
           "osuId": 13509913,
           "country": {
             "countryId": 2,
-            "countryName": "Singapore"
+            "countryName": "Singapore",
+            "countryCode": "SG"
           }
         },
         "score": "233011877962",
@@ -416,7 +428,8 @@ Body:
           "osuId": 2581664,
           "country": {
             "countryId": 1,
-            "countryName": "Indonesia"
+            "countryName": "Indonesia",
+            "countryCode": "ID"
           }
         },
         "score": "206202433453",
@@ -431,7 +444,8 @@ Body:
           "osuId": 17159233,
           "country": {
             "countryId": 3,
-            "countryName": "Japan"
+            "countryName": "Japan",
+            "countryCode": "JP"
           }
         },
         "score": "155418273729",

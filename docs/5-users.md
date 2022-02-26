@@ -20,7 +20,8 @@ Retrieves all users in the database.
       "osuId": number,
       "country": {
         "countryId": number,
-        "countryName": string
+        "countryName": string,
+        "countryCode": string
       }
     }[],
     "length": number
@@ -32,39 +33,44 @@ Retrieves all users in the database.
 
 ```json
 {
-  "message": "Data retrieved successfully.",
-  "data": {
-    "users": [
-      {
-        "userId": 1,
-        "userName": "Shigeru22",
-        "osuId": 2581664,
-        "country": {
-          "countryId": 1,
-          "countryName": "Indonesia"
-        }
-      },
-      {
-        "userId": 2,
-        "userName": "Patience",
-        "osuId": 13509913,
-        "country": {
-          "countryId": 2,
-          "countryName": "Singapore"
-        }
-      },
-      {
-        "userId": 3,
-        "userName": "StylishRENREN",
-        "osuId": 17159233,
-        "country": {
-          "countryId": 3,
-          "countryName": "Japan"
-        }
-      },
-      // ...
-    ],
-    "length": 6
+  {
+    "message": "Data retrieved successfully.",
+    "data": {
+      "users": [
+        {
+          "userId": 1,
+          "userName": "Shigeru22",
+          "osuId": 2581664,
+          "country": {
+            "countryId": 1,
+            "countryName": "Indonesia",
+            "countryCode": "ID"
+          }
+        },
+        {
+          "userId": 2,
+          "userName": "Patience",
+          "osuId": 13509913,
+          "country": {
+            "countryId": 2,
+            "countryName": "Singapore",
+            "countryCode": "SG"
+          }
+        },
+        {
+          "userId": 3,
+          "userName": "StylishRENREN",
+          "osuId": 17159233,
+          "country": {
+            "countryId": 3,
+            "countryName": "Japan",
+            "countryCode": "JP"
+          }
+        },
+        // ...
+      ],
+      "length": 6
+    }
   }
 }
 ```
@@ -93,7 +99,8 @@ User ID in the database.
       "osuId": number,
       "country": {
         "countryId": number,
-        "countryName": string
+        "countryName": string,
+        "countryCode": string
       }
     }
   }
@@ -114,7 +121,8 @@ User ID in the database.
       "osuId": 2581664,
       "country": {
         "countryId": 1,
-        "countryName": "Indonesia"
+        "countryName": "Indonesia",
+        "countryCode": "ID"
       }
     }
   }
