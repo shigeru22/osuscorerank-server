@@ -7,19 +7,33 @@ This section is intended for those who wanted to contribute to the codebase or h
 To get started, make sure to install [Node.js](https://nodejs.org/en/download) (tested using [v14.17.6](https://nodejs.org/dist/v14.17.6) with [NVM for Windows](https://github.com/coreybutler/nvm-windows)) and a database server (e.g. [PostgreSQL](https://www.postgresql.org/download), tested using v13.3, or [MySQL](https://dev.mysql.com/downloads), not tested). Afterwards do these steps:
 
 1. Clone the repository.
-2. Inside the repository folder, run this command install the dependencies.
-`npm install`
-This will install the dependencies (modules) used for the project.
+2. Inside the repository folder, run this command install the dependencies used for the project.
+
+    ```shell
+    $ npm install
+    ```
+
 3. Duplicate `.env-template` at the root folder and rename it as `.env`.
 4. Open `.env` and modify the values in square brackets. The file provides documentation for those.
 5. Start the database server, and run this command to synchronize the database with the provided schema.
-`npx prisma db push`
+
+    ```shell
+    $ npx prisma db push
+    ```
+
 6. Fetch the data required from osu! API (TBD). Alternatively, you can create a dummy data using TypeScript and Prisma Client, which types have been generated from the previous step. Documentation for those can be opened from this [link](https://www.prisma.io/docs/concepts/components/prisma-client/crud).
 7. Run the API server in development mode using this command.
-`npm run dev`
+
+    ```shell
+    $ npm run dev
+    ```
 
 Before pushing changes or creating a pull request, make sure ESLint checks are passed in the project's repository. You can do this by executing this command.
-`npx eslint .`
+
+```shell
+npx eslint .
+```
+
 Alternatively, using Visual Studio Code, [ESLint extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) can be installed for realtime checking and linting.
 
 ## Project Structuring
