@@ -102,7 +102,7 @@ async function fetchApiData(countryCode: string) {
 			if(!fs.existsSync("./dist")) {
 				fs.mkdirSync("./dist");
 			}
-			fs.writeFileSync("./dist/rankings.json", JSON.stringify(temp, null, 2)); // TODO: add as country object and update as neccessary
+			fs.writeFileSync("./dist/rankings.json", JSON.stringify(temp, null, 2));
 
 			log("Rankings saved to /dist/rankings.json.");
 		}

@@ -100,7 +100,7 @@ export async function getScoreRanking(countryCode: string, token: string) {
 
 			/* disable this since looping require cursor */
 			// eslint-disable-next-line no-await-in-loop
-			const response = await axios.get<IRankingsGETResponse<IRankingsCursor>>(`${ OSU_API_ENDPOINT }/rankings/osu/performance?country=${ countryCode }&page=${ page }`, { // TODO: update API links
+			const response = await axios.get<IRankingsGETResponse<IRankingsCursor>>(`${ OSU_API_ENDPOINT }/rankings/osu/performance?country=${ countryCode }&page=${ page }`, {
 				headers: {
 					"Content-Type": "application/json",
 					"Authorization": `Bearer ${ token }`
