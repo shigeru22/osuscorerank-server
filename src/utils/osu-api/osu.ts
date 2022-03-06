@@ -88,7 +88,7 @@ export async function revokeAccessToken(token: string) {
 	}
 }
 
-export async function getScoreRanking(token: string) {
+export async function getScoreRanking(countryCode: string, token: string) {
 	try {
 		let loop = true;
 		let page = 1;
@@ -100,7 +100,7 @@ export async function getScoreRanking(token: string) {
 
 			/* disable this since looping require cursor */
 			// eslint-disable-next-line no-await-in-loop
-			const response = await axios.get<IRankingsGETResponse<IRankingsCursor>>(`${ OSU_API_ENDPOINT }/rankings/osu/score?page=${ page }`, {
+			const response = await axios.get<IRankingsGETResponse<IRankingsCursor>>(`${ OSU_API_ENDPOINT }/rankings/osu/performance?country=${ countryCode }&page=${ page }`, { // TODO: update API links
 				headers: {
 					"Content-Type": "application/json",
 					"Authorization": `Bearer ${ token }`
@@ -115,7 +115,7 @@ export async function getScoreRanking(token: string) {
 
 					/* prevent abuse by limiting rate */
 					// eslint-disable-next-line no-await-in-loop
-					await sleep(1500);
+					await sleep(1000);
 
 					process.stdout.clearLine(0);
 					process.stdout.cursorTo(0);
