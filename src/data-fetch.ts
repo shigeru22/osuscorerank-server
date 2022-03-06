@@ -78,17 +78,31 @@ async function fetchApiData(countryCode: string) {
 	const startTime = new Date();
 
 	log("Retrieving rankings...");
-	const rankings = await getScoreRanking(token);
+	const rankings = await getScoreRanking(countryCode, token);
 
 	if(_.isNull(rankings)) {
 		log("Failed to retrieve rankings. Exiting.", LogLevel.ERROR);
 	}
 	else {
 		try {
+			console.log("Rankings retrieved successfully.");
+			console.log("Writing to /dist/rankings.json...");
+
+			const data = {
+				[countryCode]: rankings
+			};
+
+			let temp = {};
+			if(fs.existsSync("./dist/rankings.json")) {
+				temp = JSON.parse(fs.readFileSync("./dist/rankings.json", "utf8"));
+			}
+
+			temp = Object.assign(temp, data);
+
 			if(!fs.existsSync("./dist")) {
 				fs.mkdirSync("./dist");
 			}
-			fs.writeFileSync("./dist/rankings.json", JSON.stringify(rankings, null, 2));
+			fs.writeFileSync("./dist/rankings.json", JSON.stringify(temp, null, 2)); // TODO: add as country object and update as neccessary
 
 			log("Rankings saved to /dist/rankings.json.");
 		}
