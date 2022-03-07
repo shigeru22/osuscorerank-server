@@ -53,3 +53,14 @@ export interface IScoreInsertData {
 	previousGlobalPpRank: number | null;
 	previousGlobalScoreRank: number | null;
 }
+
+export interface IScoreUpdateData {
+	userId: number;
+	score: number;
+	pp: number;
+	globalRank: number;
+	previousPpRank: number;
+	previousScoreRank: number;
+	previousGlobalPpRank: number;
+	previousGlobalScoreRank: number;
+}

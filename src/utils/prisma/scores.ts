@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import _ from "lodash";
-import { IGlobalScore, ICountryScore, IUserScore, IScoreInsertData } from "../../types/prisma/score";
+import { IGlobalScore, ICountryScore, IUserScore, IScoreInsertData, IScoreUpdateData } from "../../types/prisma/score";
 import { LogLevel, log } from "../log";
 
 const prisma = new PrismaClient();
@@ -50,17 +50,17 @@ export async function getScores(sort: number): Promise<IGlobalScore[]> {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`scores :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while querying data.", LogLevel.ERROR);
+			log("scores :: Unknown error occurred while querying data.", LogLevel.ERROR);
 		}
 
 		return [];
 	}
 }
 
-export async function getScoresByCountryId(id: number, sort: number): Promise<ICountryScore[]> {
+export async function getScoresByCountryId(id: number, sort = 1): Promise<ICountryScore[]> {
 	try {
 		const scoreSorting: Prisma.Enumerable<Prisma.ScoresOrderByWithRelationInput> = {
 			score: "desc"
@@ -69,11 +69,6 @@ export async function getScoresByCountryId(id: number, sort: number): Promise<IC
 		const ppSorting: Prisma.Enumerable<Prisma.ScoresOrderByWithRelationInput> = {
 			pp: "desc"
 		};
-
-		let sorting = 1;
-		if(!_.isUndefined(sort)) {
-			sorting = sort;
-		}
 
 		const result = await prisma.scores.findMany({
 			select: {
@@ -96,17 +91,17 @@ export async function getScoresByCountryId(id: number, sort: number): Promise<IC
 					countryId: id
 				}
 			},
-			orderBy: sorting === 1 ? scoreSorting : ppSorting
+			orderBy: sort === 1 ? scoreSorting : ppSorting
 		});
 
 		return result;
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`scores :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while querying data.", LogLevel.ERROR);
+			log("scores :: Unknown error occurred while querying data.", LogLevel.ERROR);
 		}
 
 		return [];
@@ -147,17 +142,17 @@ export async function getScoreByUserId(id: number): Promise<IUserScore | null> {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`scores :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while querying data.", LogLevel.ERROR);
+			log("scores :: Unknown error occurred while querying data.", LogLevel.ERROR);
 		}
 
 		return null;
 	}
 }
 
-export async function getScoresByUserIds(id: number[], sort: number): Promise<IUserScore[]> {
+export async function getScoresByUserIds(id: number[], sort = 1): Promise<IUserScore[]> {
 	try {
 		const scoreSorting: Prisma.Enumerable<Prisma.ScoresOrderByWithRelationInput> = {
 			score: "desc"
@@ -166,11 +161,6 @@ export async function getScoresByUserIds(id: number[], sort: number): Promise<IU
 		const ppSorting: Prisma.Enumerable<Prisma.ScoresOrderByWithRelationInput> = {
 			pp: "desc"
 		};
-
-		let sorting = 1;
-		if(!_.isUndefined(sort)) {
-			sorting = sort;
-		}
 
 		const resAllData = await prisma.scores.findMany({
 			select: {
@@ -193,7 +183,7 @@ export async function getScoresByUserIds(id: number[], sort: number): Promise<IU
 				pp: true,
 				globalRank: true
 			},
-			orderBy: sorting === 1 ? scoreSorting : ppSorting
+			orderBy: sort === 1 ? scoreSorting : ppSorting
 		});
 
 		/* TODO: simplify using getScores() in controllers */
@@ -201,22 +191,22 @@ export async function getScoresByUserIds(id: number[], sort: number): Promise<IU
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`scores :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while querying data.", LogLevel.ERROR);
+			log("scores :: Unknown error occurred while querying data.", LogLevel.ERROR);
 		}
 
 		return [];
 	}
 }
 
-export async function insertScore(scores: IScoreInsertData[]) {
+export async function insertScore(scores: IScoreInsertData[], silent = false) {
 	try {
 		const data: Prisma.ScoresCreateManyInput[] = scores.map(item => ({
 			userId: item.userId,
 			score: item.score,
-			pp: item.pp,
+			pp: item.pp, // FIXME: check for floating numbers
 			globalRank: item.globalRank,
 			previousPpRank: item.previousPpRank,
 			previousScoreRank: item.previousScoreRank,
@@ -229,28 +219,72 @@ export async function insertScore(scores: IScoreInsertData[]) {
 			skipDuplicates: true
 		});
 
-		if(result.count > 0) {
-			log(`users: Inserted ${ result.count } rows.`, LogLevel.LOG);
-		}
-		else {
-			log("users: Failed to insert rows.");
+		if(!silent) {
+			if(result.count > 0) {
+				log(`scores: Inserted ${ result.count } rows.`, LogLevel.LOG);
+			}
+			else {
+				log("scores: Failed to insert rows.");
+			}
 		}
 
 		return result.count;
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`scores :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while inserting data.", LogLevel.ERROR);
+			log("scores :: Unknown error occurred while inserting data.", LogLevel.ERROR);
 		}
 
 		return 0;
 	}
 }
 
-export async function removeScore(id: number) {
+export async function updateScore(score: IScoreUpdateData, silent = false) {
+	try {
+		const data: Prisma.ScoresUpdateInput = {
+			score: score.score,
+			pp: score.pp,
+			globalRank: score.globalRank,
+			previousPpRank: score.previousPpRank,
+			previousScoreRank: score.previousScoreRank,
+			previousGlobalPpRank: score.previousGlobalPpRank,
+			previousGlobalScoreRank: score.previousGlobalScoreRank
+		};
+
+		const result = await prisma.scores.updateMany({
+			data: data,
+			where: {
+				userId: score.userId
+			}
+		});
+
+		if(!silent) {
+			if(result.count > 0) {
+				log("scores: Updated 1 row.", LogLevel.LOG);
+			}
+			else {
+				log("scores: Failed to update row.", LogLevel.ERROR);
+			}
+		}
+
+		return result.count;
+	}
+	catch (e) {
+		if(e instanceof Prisma.PrismaClientKnownRequestError) {
+			log(`scores :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+		}
+		else {
+			log("scores :: Unknown error occurred while updating data.", LogLevel.ERROR);
+		}
+
+		return 0;
+	}
+}
+
+export async function removeScore(id: number, silent = false) {
 	try {
 		const score = await prisma.scores.findMany({
 			where: {
@@ -270,27 +304,33 @@ export async function removeScore(id: number) {
 		});
 
 		if(result.scoreId === score[0].scoreId) {
-			log("scores: Deleted 1 row.", LogLevel.LOG);
+			if(!silent) {
+				log("scores: Deleted 1 row.", LogLevel.LOG);
+			}
+
 			return 1;
 		}
 		else {
-			log("Invalid deleted user record.", LogLevel.ERROR);
+			if(!silent) {
+				log("Invalid deleted user record.", LogLevel.ERROR);
+			}
+
 			return -1;
 		}
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`scores :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while deleting data.", LogLevel.ERROR);
+			log("scores :: Unknown error occurred while deleting data.", LogLevel.ERROR);
 		}
 
 		return 0;
 	}
 }
 
-export async function removeScoresByCountryId(id: number) {
+export async function removeScoresByCountryId(id: number, silent = false) {
 	try {
 		const scores = await prisma.scores.findMany({
 			where: {
@@ -310,11 +350,17 @@ export async function removeScoresByCountryId(id: number) {
 			});
 
 			if(result.count <= 0) {
-				log("Failed to delete scores.", LogLevel.ERROR);
+				if(!silent) {
+					log("Failed to delete scores.", LogLevel.ERROR);
+				}
+
 				return -1;
 			}
 
-			log(`scores: Deleted ${ result.count } rows.`, LogLevel.LOG);
+			if(!silent) {
+				log(`scores: Deleted ${ result.count } rows.`, LogLevel.LOG);
+			}
+
 			return result.count;
 		}
 
@@ -322,10 +368,10 @@ export async function removeScoresByCountryId(id: number) {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`scores :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while deleting data.", LogLevel.ERROR);
+			log("scores :: Unknown error occurred while deleting data.", LogLevel.ERROR);
 		}
 
 		return 0;
@@ -352,10 +398,10 @@ export async function removeAllScores() {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`scores :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while deleting data.", LogLevel.ERROR);
+			log("scores :: Unknown error occurred while deleting data.", LogLevel.ERROR);
 		}
 
 		return 0;

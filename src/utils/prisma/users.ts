@@ -26,10 +26,10 @@ export async function getUsers(): Promise<IUser[]> {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`users :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while querying data.", LogLevel.ERROR);
+			log("users :: Unknown error occurred while querying data.", LogLevel.ERROR);
 		}
 
 		return [];
@@ -60,10 +60,10 @@ export async function getUserById(id: number): Promise<IUser | null> {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`users :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while querying data.", LogLevel.ERROR);
+			log("users :: Unknown error occurred while querying data.", LogLevel.ERROR);
 		}
 
 		return null;
@@ -94,45 +94,82 @@ export async function getUserByOsuId(id: number): Promise<IUser | null> {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`users :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while querying data.", LogLevel.ERROR);
+			log("users :: Unknown error occurred while querying data.", LogLevel.ERROR);
 		}
 
 		return null;
 	}
 }
 
-export async function insertUser(users: IUserPOSTData[]) {
+export async function insertUser(users: IUserPOSTData[], silent = false) {
 	try {
 		const result = await prisma.users.createMany({
 			data: users,
 			skipDuplicates: true
 		});
 
-		if(result.count > 0) {
-			log(`users: Inserted ${ result.count } rows.`, LogLevel.LOG);
-		}
-		else {
-			log("users: Failed to insert rows.", LogLevel.ERROR);
+		if(!silent) {
+			if(result.count > 0) {
+				log(`users: Inserted ${ result.count } rows.`, LogLevel.LOG);
+			}
+			else {
+				log("users: Failed to insert rows.", LogLevel.ERROR);
+			}
 		}
 
 		return result.count;
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`users :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while inserting data.", LogLevel.ERROR);
+			log("users :: Unknown error occurred while inserting data.", LogLevel.ERROR);
 		}
 
 		return 0;
 	}
 }
 
-export async function removeUser(id: number) {
+export async function updateUser(user: IUserPOSTData, silent = false) {
+	try {
+		const result = await prisma.users.updateMany({
+			data: {
+				userName: user.userName,
+				countryId: user.countryId
+			},
+			where: {
+				osuId: user.osuId
+			}
+		});
+
+		if(!silent) {
+			if(result.count > 0) {
+				log("users: Updated 1 row.", LogLevel.LOG);
+			}
+			else {
+				log("users: Failed to insert rows.", LogLevel.ERROR);
+			}
+		}
+
+		return result.count;
+	}
+	catch (e) {
+		if(e instanceof Prisma.PrismaClientKnownRequestError) {
+			log(`users :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+		}
+		else {
+			log("users :: Unknown error occurred while updating data.", LogLevel.ERROR);
+		}
+
+		return 0;
+	}
+}
+
+export async function removeUser(id: number, silent = false) {
 	try {
 		const user = await prisma.users.findMany({
 			where: {
@@ -146,33 +183,42 @@ export async function removeUser(id: number) {
 		}
 
 		const result = await prisma.users.delete({
+			include: {
+				scores: true
+			},
 			where: {
 				userId: id
 			}
 		});
 
 		if(result.userId === id) {
-			log("users: Deleted 1 row.", LogLevel.LOG);
+			if(!silent) {
+				log("users: Deleted 1 row.", LogLevel.LOG);
+			}
+
 			return 1;
 		}
 		else {
-			log("Invalid deleted user record.", LogLevel.ERROR);
+			if(!silent) {
+				log("Invalid deleted user record.", LogLevel.ERROR);
+			}
+
 			return 0;
 		}
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`users :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while deleting data.", LogLevel.ERROR);
+			log("users :: Unknown error occurred while deleting data.", LogLevel.ERROR);
 		}
 
 		return 0;
 	}
 }
 
-export async function removeUserByCountryId(id: number) {
+export async function removeUserByCountryId(id: number, silent = false) {
 	try {
 		const users = await prisma.users.findMany({
 			where: {
@@ -188,11 +234,17 @@ export async function removeUserByCountryId(id: number) {
 			});
 
 			if(result.count <= 0) {
-				log("Invalid deleted user record.", LogLevel.ERROR);
+				if(!silent) {
+					log("Invalid deleted user record.", LogLevel.ERROR);
+				}
+
 				return -1;
 			}
 
-			log(`users: Deleted ${ result.count } rows.`, LogLevel.LOG);
+			if(!silent) {
+				log(`users: Deleted ${ result.count } rows.`, LogLevel.LOG);
+			}
+
 			return result.count;
 		}
 
@@ -200,10 +252,10 @@ export async function removeUserByCountryId(id: number) {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`users :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while inserting data.", LogLevel.ERROR);
+			log("users :: Unknown error occurred while deleting data.", LogLevel.ERROR);
 		}
 
 		return 0;
@@ -230,10 +282,10 @@ export async function removeAllUsers() {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`users :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while inserting data.", LogLevel.ERROR);
+			log("users :: Unknown error occurred while deleting data.", LogLevel.ERROR);
 		}
 
 		return 0;

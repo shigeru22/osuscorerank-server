@@ -62,7 +62,35 @@ export async function getCountryById(id: number): Promise<ICountry | null> {
 	}
 }
 
-export async function insertCountry(countries: ICountryPOSTData[]) {
+export async function getCountryByCode(countryCode: string): Promise<ICountry | null> {
+	try {
+		const result = await prisma.countries.findFirst({
+			select: {
+				countryId: true,
+				countryName: true,
+				countryCode: true,
+				recentlyInactive: true
+			},
+			where: {
+				countryCode: countryCode.toUpperCase()
+			}
+		});
+
+		return result;
+	}
+	catch (e) {
+		if(e instanceof Prisma.PrismaClientKnownRequestError) {
+			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+		}
+		else {
+			log("Unknown error occurred while querying row data.", LogLevel.ERROR);
+		}
+
+		return null;
+	}
+}
+
+export async function insertCountry(countries: ICountryPOSTData[], silent = false) {
 	try {
 		const data: Prisma.CountriesCreateManyInput[] = countries.map(item => ({
 			countryName: item.countryName,
@@ -76,11 +104,13 @@ export async function insertCountry(countries: ICountryPOSTData[]) {
 			skipDuplicates: true
 		});
 
-		if(result.count > 0) {
-			log(`countries: Inserted ${ result.count } rows.`, LogLevel.LOG);
-		}
-		else {
-			log("countries: Failed to insert rows.", LogLevel.LOG);
+		if(!silent) {
+			if(result.count > 0) {
+				log(`countries: Inserted ${ result.count } rows.`, LogLevel.LOG);
+			}
+			else {
+				log("countries: Failed to insert rows.", LogLevel.LOG);
+			}
 		}
 
 		return result.count;
@@ -97,7 +127,7 @@ export async function insertCountry(countries: ICountryPOSTData[]) {
 	}
 }
 
-export async function increaseInactiveCount(insertionData: IUserCountryInsertion[]) {
+export async function increaseInactiveCount(insertionData: IUserCountryInsertion[], silent = false) {
 	try {
 		let result = 0;
 
@@ -119,11 +149,17 @@ export async function increaseInactiveCount(insertionData: IUserCountryInsertion
 		}
 
 		if(result > 0) {
-			log(`countries: Updated ${ result } row.`, LogLevel.LOG);
+			if(!silent) {
+				log(`countries: Updated ${ result } row.`, LogLevel.LOG);
+			}
+
 			return result;
 		}
 		else {
-			log("countries: Failed to update row.", LogLevel.ERROR);
+			if(!silent) {
+				log("countries: Failed to update row.", LogLevel.ERROR);
+			}
+
 			return 0;
 		}
 	}
@@ -139,7 +175,7 @@ export async function increaseInactiveCount(insertionData: IUserCountryInsertion
 	}
 }
 
-export async function removeCountry(id: number) {
+export async function removeCountry(id: number, silent = false) {
 	try {
 		const country = await prisma.countries.findMany({
 			where: {
@@ -159,11 +195,17 @@ export async function removeCountry(id: number) {
 		});
 
 		if(result.countryId === id) {
-			log("countries: Deleted 1 row.", LogLevel.LOG);
+			if(!silent) {
+				log("countries: Deleted 1 row.", LogLevel.LOG);
+			}
+
 			return 1;
 		}
 		else {
-			log("Invalid deleted country record.", LogLevel.ERROR);
+			if(!silent) {
+				log("Invalid deleted country record.", LogLevel.ERROR);
+			}
+
 			return 0;
 		}
 	}
