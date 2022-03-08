@@ -5,6 +5,7 @@ import inquirer from "inquirer";
 import fs from "fs";
 import _ from "lodash";
 import { getAccessToken, getScoreRanking, revokeAccessToken } from "./utils/osu-api/osu";
+import { importDataFromFile } from "./utils/fetch/import";
 import { LogLevel, log } from "./utils/log";
 import { checkNumber } from "./utils/common";
 import { version } from "../package.json";
@@ -129,8 +130,8 @@ async function fetchApiData(countryCode: string) {
 	log(`Country rankings fetched in ${ ((endTime.getTime() / 1000) - (startTime.getTime() / 1000)).toFixed(3) } seconds.`);
 }
 
-function importData() {
-	console.log("Import data");
+async function importData() {
+	await importDataFromFile("./dist/rankings.json");
 }
 
 async function fetchLatestData() {
