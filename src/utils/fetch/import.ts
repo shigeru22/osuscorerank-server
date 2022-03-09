@@ -34,6 +34,8 @@ export async function importDataFromFile(path: string) {
 
 	/* populate users */
 	const users: IUserScoreData[] = [];
+	const activeUsers: IUserScoreData[] = [];
+
 	for(const prop in data) {
 		const stats: IUserStatistics[] = data[prop];
 		stats.forEach(stat => {
@@ -42,6 +44,16 @@ export async function importDataFromFile(path: string) {
 			if(!_.isNull(country)) { // TODO: handle not found country changes
 				if(!stat.user.is_active) {
 					users.push({
+						userName: stat.user.username,
+						osuId: stat.user.id,
+						countryId: country.countryId,
+						score: stat.total_score,
+						pp: stat.pp,
+						globalRank: stat.global_rank
+					});
+				}
+				else {
+					activeUsers.push({
 						userName: stat.user.username,
 						osuId: stat.user.id,
 						countryId: country.countryId,
@@ -60,6 +72,7 @@ export async function importDataFromFile(path: string) {
 	}
 
 	await insertOrUpdateUsers(users);
+	await deleteUsers(activeUsers);
 	await updateScores(users);
 
 	console.log("Import task completed successfully.");
@@ -120,7 +133,9 @@ async function insertOrUpdateUsers(users: IUserScoreData[]) {
 	});
 
 	console.log("Data insert and update complete.");
+}
 
+async function deleteUsers(users: IUserScoreData[]) {
 	console.log("Checking for active users. Please wait.");
 
 	const currentUsers = await getUsers();
@@ -130,7 +145,7 @@ async function insertOrUpdateUsers(users: IUserScoreData[]) {
 		process.stdout.write(`Determining active users (${ index + 1 }/${ users.length })...`);
 
 		const dbUserId = _.findIndex(currentUsers, current => current.osuId === user.osuId);
-		if(dbUserId < 0) {
+		if(dbUserId >= 0) {
 			activeOsuIds.push(user.osuId);
 		}
 
@@ -156,7 +171,14 @@ async function insertOrUpdateUsers(users: IUserScoreData[]) {
 		}
 	});
 
-	await Promise.all(deleteUserRequestData);
+	const deleteUserResults = await Promise.all(deleteUserRequestData);
+
+	deleteUserResults.forEach(res => {
+		if(res === 0) {
+			console.log("An error occurred while deleting user. Exiting...");
+			process.exit(1);
+		}
+	});
 
 	console.log("Active user deletion complete.");
 }
