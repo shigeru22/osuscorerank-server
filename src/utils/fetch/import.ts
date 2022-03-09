@@ -1,13 +1,14 @@
 import fs from "fs";
 import _ from "lodash";
 import { log, LogLevel } from "../log";
-import { getCountryByCode } from "../prisma/countries";
+import { getCountryByCode, updateInactiveCount } from "../prisma/countries";
 import { getUserByOsuId, getUsers, insertUser, removeUser, updateUser } from "../prisma/users";
+import { getScores, insertScore, updateScore } from "../prisma/scores";
+import { insertUpdate } from "../prisma/updates";
 import { ICountry } from "../../types/prisma/country";
 import { IUserStatistics } from "../../types/osu/osu-structures";
 import { IUser } from "../../types/prisma/user";
-import { IUserScoreData } from "../../types/user";
-import { getScores, insertScore, updateScore } from "../prisma/scores";
+import { IUserCountryInsertion, IUserScoreData } from "../../types/user";
 
 export async function importDataFromFile(path: string) {
 	if(!fs.existsSync(path)) {
@@ -17,7 +18,7 @@ export async function importDataFromFile(path: string) {
 	}
 
 	console.log(`Importing data from ${ path }.`);
-	const data = JSON.parse(fs.readFileSync(path, "utf8"));
+	const data = JSON.parse(fs.readFileSync(path, "utf8")); // TODO: handle invalid file contents
 
 	/* process by country ids */
 	const countriesRequestData: Promise<ICountry | null>[] = [];
@@ -71,9 +72,22 @@ export async function importDataFromFile(path: string) {
 		process.exit(0);
 	}
 
-	await insertOrUpdateUsers(users);
+	const newInactiveUsers = await insertOrUpdateUsers(users);
 	await deleteUsers(activeUsers);
 	await updateScores(users);
+	await updateCountryInactives(newInactiveUsers);
+
+	console.log("Triggering update...");
+
+	const updateResult = await insertUpdate({
+		apiVersion: "0.1.0",
+		webVersion: "0.1.0"
+	});
+
+	if(updateResult === 0) {
+		console.log("An error occurred while inserting update data. Exiting...");
+		process.exit(1);
+	}
 
 	console.log("Import task completed successfully.");
 }
@@ -91,8 +105,10 @@ async function insertOrUpdateUsers(users: IUserScoreData[]) {
 	const insertUserRequestData: Promise<number>[] = [];
 	const updateUserRequestData: Promise<number>[] = [];
 
+	const newInactiveUsers: IUserScoreData[] = [];
+
 	users.forEach((user, index) => {
-		process.stdout.write(`Determining users to insert or update (${ index + 1 } / ${ users.length })...`);
+		process.stdout.write(`Determining users to insert or update (${ index + 1 }/${ users.length })...`);
 
 		if(_.isNull(userData[index])) {
 			/* TODO: increase inactive count for that country */
@@ -101,6 +117,7 @@ async function insertOrUpdateUsers(users: IUserScoreData[]) {
 				osuId: user.osuId,
 				countryId: user.countryId
 			} ], true));
+			newInactiveUsers.push(user);
 		}
 		else {
 			updateUserRequestData.push(updateUser({
@@ -133,6 +150,8 @@ async function insertOrUpdateUsers(users: IUserScoreData[]) {
 	});
 
 	console.log("Data insert and update complete.");
+
+	return newInactiveUsers;
 }
 
 async function deleteUsers(users: IUserScoreData[]) {
@@ -252,4 +271,37 @@ async function updateScores(users: IUserScoreData[]) {
 	});
 
 	console.log("Data insert and update complete.");
+}
+
+async function updateCountryInactives(users: IUserScoreData[]) {
+	console.log("Determining inactive users. This will take some time.");
+
+	const insertionData: IUserCountryInsertion[] = [];
+	users.forEach((user, index) => {
+		process.stdout.write(`Processing user (${ index + 1 }/${ users.length })...`);
+
+		const dataIndex = _.findIndex(insertionData, data => data.countryId === user.countryId);
+		if(dataIndex < 0) {
+			insertionData.push({
+				countryId: user.countryId,
+				insertion: 1
+			});
+		}
+		else {
+			insertionData[dataIndex].insertion++;
+		}
+
+		process.stdout.clearLine(0);
+		process.stdout.cursorTo(0);
+	});
+
+	console.log("Updating country recent inactive count...");
+
+	const result = await updateInactiveCount(insertionData);
+	if(result === 0) {
+		console.log("An error occurred while updating country. Exiting...");
+		process.exit(1);
+	}
+
+	console.log("Country inactives update complete.");
 }

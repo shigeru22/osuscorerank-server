@@ -127,26 +127,29 @@ export async function insertCountry(countries: ICountryPOSTData[], silent = fals
 	}
 }
 
-export async function increaseInactiveCount(insertionData: IUserCountryInsertion[], silent = false) {
+export async function updateInactiveCount(insertionData: IUserCountryInsertion[], silent = false) {
 	try {
-		let result = 0;
-
+		const countryUpdateData = [];
 		const len = insertionData.length;
 		for(let i = 0; i < len; i++) {
-			// eslint-disable-next-line no-await-in-loop
-			await prisma.countries.update({
+			countryUpdateData.push(prisma.countries.update({
 				data: {
-					recentlyInactive: {
-						increment: insertionData[i].insertion
-					}
+					recentlyInactive: insertionData[i].insertion
 				},
 				where: {
 					countryId: insertionData[i].countryId
 				}
-			});
-
-			result++;
+			}));
 		}
+
+		let result = 0;
+		const transaction = await prisma.$transaction(countryUpdateData);
+
+		transaction.forEach((item, index) => {
+			if(item.recentlyInactive === insertionData[index].insertion) {
+				result++;
+			}
+		});
 
 		if(result > 0) {
 			if(!silent) {
