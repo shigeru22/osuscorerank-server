@@ -22,10 +22,10 @@ export async function getLatestUpdate() {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`updates :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while querying data.", LogLevel.ERROR);
+			log("updates :: Unknown error occurred while querying data.", LogLevel.ERROR);
 		}
 
 		return null;
@@ -48,45 +48,60 @@ export async function getRecentInactives() {
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`updates :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while querying data.", LogLevel.ERROR);
+			log("updates :: Unknown error occurred while querying data.", LogLevel.ERROR);
 		}
 
 		return null;
 	}
 }
 
-export async function insertUpdate(data: IUpdatePOSTData) {
+export async function insertUpdate(data: IUpdatePOSTData, silent = false) {
 	try {
 		const lastUpdate = await prisma.updates.findFirst();
-		const users = await prisma.users.findMany({
+		const user = await prisma.users.findFirst({
 			orderBy: {
 				userId: "desc"
 			}
 		});
 
+		const highestId = !_.isNull(user) ? user.userId : 0;
+
 		const update: Prisma.UpdatesCreateInput = {
 			date: new Date(),
 			apiVersion: data.apiVersion,
 			webVersion: data.webVersion,
-			recentlyInactive: !_.isNull(lastUpdate) ? users.length - lastUpdate.highestId : users.length !== 0 ? users.length : 0,
-			highestId: users.length !== 0 ? users[0].userId : 0
+			recentlyInactive: !_.isNull(lastUpdate) ? highestId - lastUpdate.highestId : highestId,
+			highestId
 		};
 
-		await prisma.updates.create({
+		const result = await prisma.updates.create({
 			data: update
 		});
 
-		return 1;
+		if(result.apiVersion === data.apiVersion) {
+			if(!silent) {
+				log("updates: Added 1 row.", LogLevel.LOG);
+			}
+
+			return 1;
+		}
+		else {
+			if(!silent) {
+				log("Invalid record created.", LogLevel.ERROR);
+			}
+
+			return 0;
+		}
 	}
 	catch (e) {
 		if(e instanceof Prisma.PrismaClientKnownRequestError) {
-			log(`Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
+			log(`updates :: Prisma Client returned error code ${ e.code }. See documentation for details.`, LogLevel.ERROR);
 		}
 		else {
-			log("Unknown error occurred while querying data.", LogLevel.ERROR);
+			log("updates :: Unknown error occurred while querying data.", LogLevel.ERROR);
 		}
 
 		return 0;

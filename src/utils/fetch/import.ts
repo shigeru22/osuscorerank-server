@@ -80,9 +80,9 @@ export async function importDataFromFile(path: string) {
 	console.log("Triggering update...");
 
 	const updateResult = await insertUpdate({
-		apiVersion: "0.1.0",
+		apiVersion: "0.1.0", // TODO: update from GitHub API
 		webVersion: "0.1.0"
-	});
+	}, true);
 
 	if(updateResult === 0) {
 		console.log("An error occurred while inserting update data. Exiting...");
