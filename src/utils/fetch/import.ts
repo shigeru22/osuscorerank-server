@@ -6,9 +6,9 @@ import { getUserByOsuId, getUsers, insertUser, removeUser, updateUser } from "..
 import { getScores, insertScore, updateScore } from "../prisma/scores";
 import { insertUpdate } from "../prisma/updates";
 import { ICountry } from "../../types/prisma/country";
-import { IUserStatistics } from "../../types/osu/osu-structures";
 import { IUser } from "../../types/prisma/user";
 import { IUserCountryInsertion, IUserScoreData } from "../../types/user";
+import { IUserStatsFile } from "../../types/fetch/userstat-file";
 
 export async function importDataFromFile(path: string) {
 	if(!fs.existsSync(path)) {
@@ -18,7 +18,9 @@ export async function importDataFromFile(path: string) {
 	}
 
 	console.log(`Importing data from ${ path }.`);
-	const data = JSON.parse(fs.readFileSync(path, "utf8")); // TODO: handle invalid file contents
+	const data: IUserStatsFile = JSON.parse(fs.readFileSync(path, "utf8"));
+
+	validateImportedData(data);
 
 	/* process by country ids */
 	const countriesRequestData: Promise<ICountry | null>[] = [];
@@ -38,7 +40,7 @@ export async function importDataFromFile(path: string) {
 	const activeUsers: IUserScoreData[] = [];
 
 	for(const prop in data) {
-		const stats: IUserStatistics[] = data[prop];
+		const stats = data[prop];
 		stats.forEach(stat => {
 			const country = countries[_.findIndex(countryCodes, code => code.toLowerCase() === stat.user.country_code.toLowerCase())];
 
@@ -68,7 +70,7 @@ export async function importDataFromFile(path: string) {
 	}
 
 	if(users.length <= 0) {
-		console.log("Nothing to process. Exiting...");
+		console.log("No user to process. Exiting...");
 		process.exit(0);
 	}
 
@@ -304,4 +306,19 @@ async function updateCountryInactives(users: IUserScoreData[]) {
 	}
 
 	console.log("Country inactives update complete.");
+}
+
+function validateImportedData(data: IUserStatsFile) {
+	console.log("Validating imported data. Please wait...");
+
+	for(const prop in data) {
+		if(_.isUndefined(data[prop]) || Object.keys(data[prop]).length <= 0) {
+			console.log("Invalid data found: Country prop must not be empty.");
+			process.exit(1);
+		}
+
+		/* TODO: validate individual props? */ // since data is freshly fetched from osu! API, there shouldn't be any errors
+	}
+
+	console.log("Imported data validated successfully.");
 }
