@@ -182,16 +182,21 @@ export async function removeUser(id: number, silent = false) {
 			return 0;
 		}
 
-		const result = await prisma.users.delete({
-			include: {
-				scores: true
-			},
+		const resScore = prisma.scores.deleteMany({
 			where: {
 				userId: id
 			}
 		});
 
-		if(result.userId === id) {
+		const resUser = prisma.users.delete({
+			where: {
+				userId: id
+			}
+		});
+
+		const transaction = await prisma.$transaction([ resScore, resUser ]);
+
+		if(transaction[1].userId === id) {
 			if(!silent) {
 				log("users: Deleted 1 row.", LogLevel.LOG);
 			}
