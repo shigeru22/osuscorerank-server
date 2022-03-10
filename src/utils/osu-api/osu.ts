@@ -134,8 +134,6 @@ export async function getScoreRanking(countryCode: string, token: string) {
 				process.stdout.write(`[WARN] Response data:\n${ JSON.stringify(response.data) }\n`);
 				return null;
 			}
-
-			if(page > 1) break; // limit to this
 		}
 		while(loop);
 
