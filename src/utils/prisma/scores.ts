@@ -206,7 +206,7 @@ export async function insertScore(scores: IScoreInsertData[], silent = false) {
 		const data: Prisma.ScoresCreateManyInput[] = scores.map(item => ({
 			userId: item.userId,
 			score: item.score,
-			pp: item.pp, // FIXME: check for floating numbers
+			pp: _.parseInt(item.pp.toFixed(0), 10),
 			globalRank: item.globalRank,
 			previousPpRank: item.previousPpRank,
 			previousScoreRank: item.previousScoreRank,
