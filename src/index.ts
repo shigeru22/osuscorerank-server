@@ -3,6 +3,7 @@ import env from "dotenv";
 import cors from "cors";
 import _ from "lodash";
 import mainRoute from "./routes/main";
+import countryRoute from "./routes/countries";
 import { LogLevel, log } from "./utils/log";
 
 env.config();
@@ -16,6 +17,7 @@ app.use(cors());
 
 /* routes */
 app.use("/", mainRoute);
+app.use("/countries", countryRoute);
 
 /* environment check */
 function checkEnv() {
