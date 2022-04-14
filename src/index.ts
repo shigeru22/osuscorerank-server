@@ -2,12 +2,6 @@ import express from "express";
 import env from "dotenv";
 import cors from "cors";
 import _ from "lodash";
-import mainRoute from "./routes/main";
-import scoreRoute from "./routes/scores";
-import userRoute from "./routes/users";
-import countryRoute from "./routes/countries";
-import authRoute from "./routes/auth";
-import updateRoute from "./routes/updates";
 import { LogLevel, log } from "./utils/log";
 
 env.config();
@@ -20,12 +14,6 @@ app.use(express.json());
 app.use(cors());
 
 /* routes */
-app.use("/", mainRoute);
-app.use("/scores", scoreRoute);
-app.use("/users", userRoute);
-app.use("/countries", countryRoute);
-app.use("/auth", authRoute);
-app.use("/updates", updateRoute);
 
 /* environment check */
 function checkEnv() {

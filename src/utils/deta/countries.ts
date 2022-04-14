@@ -1,0 +1,1 @@
+import { Deta } from "deta";

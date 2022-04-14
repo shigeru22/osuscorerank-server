@@ -4,7 +4,7 @@
 	"description": "API for osu! Inactive User Score Rankings",
 	"main": "index.ts",
 	"scripts": {
-		"dev": "nodemon src/index.ts",
+		"dev": "nodemon --exec npx ts-node src/index.ts",
 		"fetch": "ts-node ./src/data-fetch.ts",
 		"build": "tsc",
 		"start": "node ./dist/index.js"
