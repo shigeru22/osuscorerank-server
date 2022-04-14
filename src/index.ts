@@ -2,6 +2,7 @@ import express from "express";
 import env from "dotenv";
 import cors from "cors";
 import _ from "lodash";
+import mainRoute from "./routes/main";
 import { LogLevel, log } from "./utils/log";
 
 env.config();
@@ -14,9 +15,12 @@ app.use(express.json());
 app.use(cors());
 
 /* routes */
+app.use("/", mainRoute);
 
 /* environment check */
 function checkEnv() {
+	log("Checking environment variables...", LogLevel.LOG);
+
 	const port = _.isUndefined(process.env.API_PORT) ? undefined : _.parseInt(process.env.API_PORT, 10);
 	const dev = _.isUndefined(process.env.DEVELOPMENT) ? undefined : _.parseInt(process.env.DEVELOPMENT, 10);
 
@@ -54,6 +58,7 @@ function checkEnv() {
 		log("Running in development mode.", LogLevel.WARN);
 	}
 
+	log("Environment variable checks completed.", LogLevel.LOG);
 	return true;
 }
 
