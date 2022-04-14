@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "nodemon --exec npx ts-node src/index.ts",
 		"fetch": "ts-node ./src/data-fetch.ts",
-		"build": "tsc",
+		"build": "tsc && cd client && npm install && npm run build",
 		"start": "node ./dist/index.js"
 	},
 	"author": "shigeru22",
