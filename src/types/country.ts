@@ -3,6 +3,10 @@ export interface ICountryPOSTData {
 	countryCode: string;
 }
 
+export interface ICountryDELETEData {
+	countryId: number;
+}
+
 export interface ICountryItemData {
 	countryName: string;
 	countryCode: string;
@@ -21,7 +25,7 @@ export interface ICountryItemDetailData extends ICountryItemData {
 }
 
 export interface ICountryResponse {
-	countries: ICountryItemData;
+	country: ICountryItemData;
 }
 
 export interface ICountriesResponse {
