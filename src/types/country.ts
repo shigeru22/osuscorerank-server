@@ -7,19 +7,23 @@ export interface ICountryDELETEData {
 	countryId: number;
 }
 
-export interface ICountryItemData {
+export interface ICountryData {
 	countryName: string;
 	countryCode: string;
 	recentlyInactive: number;
 	highestId: number;
 }
 
-export interface ICountryItemKeyData {
-	key: number;
-	item: ICountryItemData;
+export interface ICountryItemData extends ICountryData {
+	countryId: number;
 }
 
-export interface ICountryItemDetailData extends ICountryItemData {
+export interface ICountryItemKeyData {
+	key: number;
+	item: ICountryData;
+}
+
+export interface ICountryItemDetailData extends ICountryData {
 	key: string;
 	dateAdded: Date | string;
 }
@@ -30,5 +34,5 @@ export interface ICountryResponse {
 
 export interface ICountriesResponse {
 	countries: ICountryItemData[];
-	total: number;
+	length: number;
 }

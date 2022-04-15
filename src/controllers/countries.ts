@@ -18,12 +18,13 @@ export async function getAllCountries(deta: Deta, req: Request, res: Response, n
 		message: "Data retrieved successfully.",
 		data: {
 			countries: data.map(item => ({
+				countryId: parseInt(item.key, 10),
 				countryName: item.countryName,
 				countryCode: item.countryCode,
 				recentlyInactive: item.recentlyInactive,
 				highestId: item.highestId
 			})),
-			total: data.length
+			length: data.length
 		}
 	};
 
@@ -58,6 +59,7 @@ export async function getCountry(deta: Deta, req: Request, res: Response, next: 
 		message: "Data retrieved successfully.",
 		data: {
 			country: {
+				countryId: parseInt(data.key, 10),
 				countryCode: data.countryCode,
 				countryName: data.countryName,
 				recentlyInactive: data.recentlyInactive,
@@ -101,6 +103,7 @@ export async function addCountry(deta: Deta, req: Request, res: Response, next: 
 	res.status(HTTPStatus.OK).json(ret);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function deleteCountry(deta: Deta, req: Request, res: Response, next: NextFunction) {
 	log("Accessed: addCountry", LogLevel.LOG);
 	const data: ICountryDELETEData = req.body;
@@ -150,7 +153,7 @@ function validateCountryPostData(data: ICountryPOSTData) {
 	const hasValidTypes = _.isString(data.countryName) && _.isString(data.countryCode);
 	const hasValidData = isDefined && (!_.isEmpty(data.countryName) && data.countryCode.length === 2);
 
-	log(`validateScorePostData :: isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`validateCountryPostData :: isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
 
 	return isDefined && hasValidTypes && hasValidData;
 }
@@ -159,7 +162,7 @@ function validateCountryDeleteData(data: ICountryDELETEData) {
 	const hasValidTypes = checkNumber(data.countryId);
 	const hasValidData = data.countryId > 0;
 
-	log(`validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`validateCountryDeleteData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
 
 	return hasValidTypes && hasValidData;
 }

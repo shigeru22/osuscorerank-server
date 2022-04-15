@@ -1,6 +1,6 @@
 import _ from "lodash";
 import Deta from "deta/dist/types/deta";
-import { ICountryPOSTData, ICountryItemData, ICountryItemDetailData } from "../../types/country";
+import { ICountryPOSTData, ICountryItemDetailData } from "../../types/country";
 import { IUserCountryInsertion } from "../../types/user";
 import { log, LogLevel } from "../log";
 
@@ -80,17 +80,8 @@ export async function getCountryByCode(deta: Deta, code: string) {
 	}
 }
 
-export async function insertCountry(deta: Deta, countries: ICountryPOSTData, silent = false) {
+export async function insertCountry(deta: Deta, country: ICountryPOSTData, silent = false) {
 	const db = deta.Base(DB_NAME);
-
-	const data: ICountryItemData = {
-		countryName: countries.countryName,
-		countryCode: countries.countryCode,
-		recentlyInactive: 0,
-		highestId: 0
-	};
-
-	const date = new Date();
 
 	try {
 		let currentLastId = 0;
@@ -101,11 +92,13 @@ export async function insertCountry(deta: Deta, countries: ICountryPOSTData, sil
 			}
 		}
 
+		const date = new Date();
+
 		await db.put({
-			countryName: data.countryName,
-			countryCode: data.countryCode,
-			recentlyInactive: data.recentlyInactive,
-			highestId: data.highestId,
+			countryName: country.countryName,
+			countryCode: country.countryCode,
+			recentlyInactive: 0,
+			highestId: 0,
 			dateAdded: date.toISOString()
 		}, (currentLastId + 1).toString());
 
