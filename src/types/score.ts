@@ -27,16 +27,6 @@ export interface IScoreItemData extends IScoreData {
   scoreId: number;
 }
 
-export interface IScoreKeyData {
-  key: number;
-  item: IScoreData;
-}
-
-export interface IScoreDetailData extends IScoreData {
-	key: string;
-	dateAdded: Date | string;
-}
-
 export interface IScoreResponse {
 	score: IScoreItemData;
 }

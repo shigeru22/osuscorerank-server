@@ -1,6 +1,7 @@
 import _ from "lodash";
 import Deta from "deta/dist/types/deta";
-import { IScoreData, IScoreDetailData, IScorePOSTData } from "../../types/score";
+import { IScoreDetailData } from "../../types/deta/score";
+import { IScoreData, IScorePOSTData } from "../../types/score";
 import { getCountryByKey } from "./countries";
 import { getUserByKey } from "./users";
 import { LogLevel, log } from "../log";

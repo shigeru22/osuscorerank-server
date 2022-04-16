@@ -1,6 +1,7 @@
 import _ from "lodash";
 import Deta from "deta/dist/types/deta";
-import { IUserData, IUserDetailData, IUserPOSTData } from "../../types/user";
+import { IUserDetailData } from "../../types/deta/user";
+import { IUserData, IUserPOSTData } from "../../types/user";
 import { getCountryByKey } from "./countries";
 import { LogLevel, log } from "../log";
 

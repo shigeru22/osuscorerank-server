@@ -18,16 +18,6 @@ export interface ICountryItemData extends ICountryData {
 	countryId: number;
 }
 
-export interface ICountryItemKeyData {
-	key: number;
-	item: ICountryData;
-}
-
-export interface ICountryItemDetailData extends ICountryData {
-	key: string;
-	dateAdded: Date | string;
-}
-
 export interface ICountryResponse {
 	country: ICountryItemData;
 }

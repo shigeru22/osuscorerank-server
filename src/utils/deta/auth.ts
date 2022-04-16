@@ -1,7 +1,8 @@
 import { randomBytes } from "crypto";
 import Deta from "deta/dist/types/deta";
 import _ from "lodash";
-import { IClientData, IClientDetailData } from "../../types/auth";
+import { IClientDetailData } from "../../types/deta/auth";
+import { IClientData } from "../../types/auth";
 import { LogLevel, log } from "../log";
 
 const DB_NAME = "client-auth";

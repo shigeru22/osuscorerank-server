@@ -22,16 +22,6 @@ export interface IUserItemData extends IUserData {
   userId: number;
 }
 
-export interface IUserKeyData {
-  key: number;
-  item: IUserData;
-}
-
-export interface IUserDetailData extends IUserData {
-	key: string;
-	dateAdded: Date | string;
-}
-
 export interface IUserCountryInsertion {
   countryId: number;
   insertion: number;
