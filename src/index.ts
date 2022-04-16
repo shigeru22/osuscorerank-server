@@ -6,6 +6,7 @@ import { getNotFoundMessage } from "./controllers/main";
 import mainRoute from "./routes/main";
 import countryRoute from "./routes/countries";
 import userRoute from "./routes/users";
+import scoreRoute from "./routes/scores";
 import authRoute from "./routes/auth";
 import { LogLevel, log } from "./utils/log";
 
@@ -22,6 +23,7 @@ app.use(cors());
 app.use("/api/", mainRoute);
 app.use("/api/countries", countryRoute);
 app.use("/api/users", userRoute);
+app.use("/api/scores", scoreRoute);
 app.use("/api/auth", authRoute);
 
 app.use("/api/*", getNotFoundMessage);
