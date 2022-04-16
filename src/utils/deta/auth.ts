@@ -48,7 +48,7 @@ export async function insertClient(deta: Deta, id: string, name: string) {
 		const data: IClientData = {
 			clientId: id,
 			clientName: name,
-			clientKey: randomBytes(64).toString("hex")
+			clientKey: randomBytes(32).toString("hex")
 		};
 
 		const date = new Date();
