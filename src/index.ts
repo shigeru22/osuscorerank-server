@@ -2,6 +2,7 @@ import express from "express";
 import env from "dotenv";
 import cors from "cors";
 import _ from "lodash";
+import { getNotFoundMessage } from "./controllers/main";
 import mainRoute from "./routes/main";
 import countryRoute from "./routes/countries";
 import userRoute from "./routes/users";
@@ -20,11 +21,10 @@ app.use(cors());
 app.use("/api/", mainRoute);
 app.use("/api/countries", countryRoute);
 app.use("/api/users", userRoute);
-app.use("/api/*", (req, res) => {
-	res.send("API endpoint returned 404.");
-});
 
-app.get("*", (req, res) => {
+app.use("/api/*", getNotFoundMessage);
+
+app.use("*", (req, res) => {
 	res.send("React endpoint goes here");
 });
 

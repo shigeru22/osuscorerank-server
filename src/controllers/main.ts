@@ -21,6 +21,16 @@ export function getGreeting(req: Request, res: Response) {
 	res.status(HTTPStatus.OK).json(ret);
 }
 
+export function getNotFoundMessage(req: Request, res: Response) {
+	log("Accessed: getGreeting()", LogLevel.LOG);
+
+	const ret: IResponseMessage = {
+		message: "API endpoint not found."
+	};
+
+	res.status(HTTPStatus.NOT_FOUND).json(ret);
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function addDummyData(deta: Deta, req: Request, res: Response, next: NextFunction) {
 	log("Accessed: getGreeting()", LogLevel.LOG);
