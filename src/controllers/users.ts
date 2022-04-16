@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import Deta from "deta/dist/types/deta";
 import _ from "lodash";
 import { IResponseData, IResponseMessage } from "../types/express";
 import { IUserDELETEData, IUserPOSTData, IUserResponse, IUsersResponse } from "../types/user";
@@ -10,10 +9,10 @@ import { checkNumber } from "../utils/common";
 import { getCountryByKey } from "../utils/deta/countries";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function getAllUsers(deta: Deta, req: Request, res: Response, next: NextFunction) {
+export async function getAllUsers(req: Request, res: Response, next: NextFunction) {
 	log("Accessed: getAllUsers", LogLevel.LOG);
 
-	const data = await getUsers(deta);
+	const data = await getUsers(res.locals.deta);
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
@@ -40,10 +39,10 @@ export async function getAllUsers(deta: Deta, req: Request, res: Response, next:
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function getUser(deta: Deta, req: Request, res: Response, next: NextFunction) {
+export async function getUser(req: Request, res: Response, next: NextFunction) {
 	log("Accessed: getUser", LogLevel.LOG);
 
-	const id = _.parseInt(req.params.userId, 10); // database's country id
+	const id = _.parseInt(req.params.userId, 10); // database's user id
 	if(!checkNumber(id) || id <= 0) {
 		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
@@ -53,7 +52,7 @@ export async function getUser(deta: Deta, req: Request, res: Response, next: Nex
 		return;
 	}
 
-	const data = await getUserByKey(deta, id);
+	const data = await getUserByKey(res.locals.deta, id);
 	if(_.isNull(data)) {
 		const ret: IResponseMessage = {
 			message: "User with specified ID can't be found."
@@ -79,8 +78,8 @@ export async function getUser(deta: Deta, req: Request, res: Response, next: Nex
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function addUser(deta: Deta, req: Request, res: Response, next: NextFunction) {
-	log("Accessed: addUser", LogLevel.LOG);
+export async function addUser(req: Request, res: Response, next: NextFunction) {
+	log(`Accessed: addUser, clientId: ${ res.locals.decode.clientId }`, LogLevel.LOG);
 	const data: IUserPOSTData = req.body;
 
 	if(!validateUserPostData(data)) {
@@ -93,7 +92,7 @@ export async function addUser(deta: Deta, req: Request, res: Response, next: Nex
 	}
 
 	{
-		const user = await getUserByOsuId(deta, data.osuId);
+		const user = await getUserByOsuId(res.locals.deta, data.osuId);
 		if(!_.isNull(user)) {
 			const ret: IResponseMessage = {
 				message: "The specified osu! ID has been exist by another user."
@@ -105,7 +104,7 @@ export async function addUser(deta: Deta, req: Request, res: Response, next: Nex
 	}
 
 	{
-		const country = await getCountryByKey(deta, data.countryId);
+		const country = await getCountryByKey(res.locals.deta, data.countryId);
 		if(_.isNull(country)) {
 			const ret: IResponseMessage = {
 				message: "Country with specified ID can't be found."
@@ -116,7 +115,7 @@ export async function addUser(deta: Deta, req: Request, res: Response, next: Nex
 		}
 	}
 
-	const result = await insertUser(deta, data);
+	const result = await insertUser(res.locals.deta, data);
 
 	if(!result) {
 		const ret: IResponseMessage = {
@@ -135,8 +134,8 @@ export async function addUser(deta: Deta, req: Request, res: Response, next: Nex
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function deleteUser(deta: Deta, req: Request, res: Response, next: NextFunction) {
-	log("Accessed: addCountry", LogLevel.LOG);
+export async function deleteUser(req: Request, res: Response, next: NextFunction) {
+	log(`Accessed: addCountry, ${ res.locals.decode.clientId }`, LogLevel.LOG);
 	const data: IUserDELETEData = req.body;
 
 	if(!validateUserDeleteData(data)) {
@@ -149,7 +148,7 @@ export async function deleteUser(deta: Deta, req: Request, res: Response, next: 
 	}
 
 	{
-		const user = await getUserByKey(deta, data.userId);
+		const user = await getUserByKey(res.locals.deta, data.userId);
 		if(_.isNull(user)) {
 			const ret: IResponseMessage = {
 				message: "User with specified ID can't be found."
@@ -162,7 +161,7 @@ export async function deleteUser(deta: Deta, req: Request, res: Response, next: 
 
 	/* TODO: remove scores by user id */
 
-	const result = await removeUser(deta, data.userId);
+	const result = await removeUser(res.locals.deta, data.userId);
 	if(!result) {
 		const ret: IResponseMessage = {
 			message: "Data deletion failed."

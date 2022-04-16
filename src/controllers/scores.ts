@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import Deta from "deta/dist/types/deta";
 import _ from "lodash";
 import { IResponseData, IResponseMessage } from "../types/express";
 import { IScoreDELETEData, IScorePOSTData, IScoreResponse, IScoresResponse } from "../types/score";
@@ -10,10 +9,10 @@ import { checkNumber } from "../utils/common";
 import { getUserByKey } from "../utils/deta/users";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function getAllScores(deta: Deta, req: Request, res: Response, next: NextFunction) {
+export async function getAllScores(req: Request, res: Response, next: NextFunction) {
 	log("Accessed: getAllUsers", LogLevel.LOG);
 
-	const data = await getScores(deta);
+	const data = await getScores(res.locals.deta);
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
@@ -40,7 +39,7 @@ export async function getAllScores(deta: Deta, req: Request, res: Response, next
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function getCountryScores(deta: Deta, req: Request, res: Response, next: NextFunction) {
+export async function getCountryScores(req: Request, res: Response, next: NextFunction) {
 	log("Accessed: getCountryScores", LogLevel.LOG);
 
 	const id = _.parseInt(req.params.countryId, 10);
@@ -53,7 +52,7 @@ export async function getCountryScores(deta: Deta, req: Request, res: Response, 
 		return;
 	}
 
-	const data = await getScoresByCountryId(deta, id);
+	const data = await getScoresByCountryId(res.locals.deta, id);
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
@@ -80,7 +79,7 @@ export async function getCountryScores(deta: Deta, req: Request, res: Response, 
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function getScore(deta: Deta, req: Request, res: Response, next: NextFunction) {
+export async function getScore(req: Request, res: Response, next: NextFunction) {
 	log("Accessed: getScore", LogLevel.LOG);
 
 	const id = _.parseInt(req.params.scoreId, 10);
@@ -93,7 +92,7 @@ export async function getScore(deta: Deta, req: Request, res: Response, next: Ne
 		return;
 	}
 
-	const data = await getScoreByKey(deta, id);
+	const data = await getScoreByKey(res.locals.deta, id);
 	if(_.isNull(data)) {
 		const ret: IResponseMessage = {
 			message: "Score with specified ID can't be found."
@@ -119,7 +118,7 @@ export async function getScore(deta: Deta, req: Request, res: Response, next: Ne
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function getUserScore(deta: Deta, req: Request, res: Response, next: NextFunction) {
+export async function getUserScore(req: Request, res: Response, next: NextFunction) {
 	log("Accessed: getUserScore", LogLevel.LOG);
 
 	const id = _.parseInt(req.params.userId, 10);
@@ -132,7 +131,7 @@ export async function getUserScore(deta: Deta, req: Request, res: Response, next
 		return;
 	}
 
-	const data = await getScoreByUserId(deta, id);
+	const data = await getScoreByUserId(res.locals.deta, id);
 	if(_.isNull(data)) {
 		const ret: IResponseMessage = {
 			message: "Score with specified ID can't be found."
@@ -158,7 +157,7 @@ export async function getUserScore(deta: Deta, req: Request, res: Response, next
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function getMultipleUserScores(deta: Deta, req: Request, res: Response, next: NextFunction) {
+export async function getMultipleUserScores(req: Request, res: Response, next: NextFunction) {
 	log("Accessed: getMultipleUserScores", LogLevel.LOG);
 
 	const sortQuery = _.parseInt(req.query.sort as string, 10);
@@ -205,7 +204,7 @@ export async function getMultipleUserScores(deta: Deta, req: Request, res: Respo
 		return 0;
 	});
 
-	const data = await getScores(deta, sort);
+	const data = await getScores(res.locals.deta, sort);
 	data.filter(row => _.includes(ids, _.parseInt(row.key, 10)));
 
 	const ret: IResponseData<IScoresResponse> = {
@@ -225,8 +224,8 @@ export async function getMultipleUserScores(deta: Deta, req: Request, res: Respo
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function addScore(deta: Deta, req: Request, res: Response, next: NextFunction) {
-	log("Accessed: addScore", LogLevel.LOG);
+export async function addScore(req: Request, res: Response, next: NextFunction) {
+	log(`Accessed: addScore, ${ res.locals.decode.clientId }`, LogLevel.LOG);
 	const data: IScorePOSTData = req.body;
 
 	if(!validateScorePostData(data)) {
@@ -239,7 +238,7 @@ export async function addScore(deta: Deta, req: Request, res: Response, next: Ne
 	}
 
 	{
-		const user = await getUserByKey(deta, data.userId);
+		const user = await getUserByKey(res.locals.deta, data.userId);
 		if(_.isNull(user)) {
 			const ret: IResponseMessage = {
 				message: "User with specified ID can't be found."
@@ -250,7 +249,7 @@ export async function addScore(deta: Deta, req: Request, res: Response, next: Ne
 		}
 	}
 
-	const result = await insertScore(deta, data);
+	const result = await insertScore(res.locals.deta, data);
 
 	if(!result) {
 		const ret: IResponseMessage = {
@@ -269,8 +268,8 @@ export async function addScore(deta: Deta, req: Request, res: Response, next: Ne
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function deleteScore(deta: Deta, req: Request, res: Response, next: NextFunction) {
-	log("Accessed: deleteScore", LogLevel.LOG);
+export async function deleteScore(req: Request, res: Response, next: NextFunction) {
+	log(`Accessed: deleteScore, ${ res.locals.decode.clientId }`, LogLevel.LOG);
 	const data: IScoreDELETEData = req.body;
 
 	if(!validateScoreDeleteData(data)) {
@@ -283,7 +282,7 @@ export async function deleteScore(deta: Deta, req: Request, res: Response, next:
 	}
 
 	{
-		const score = await getScoreByKey(deta, data.scoreId);
+		const score = await getScoreByKey(res.locals.deta, data.scoreId);
 		if(_.isNull(score)) {
 			const ret: IResponseMessage = {
 				message: "Score with specified ID can't be found."
@@ -294,7 +293,7 @@ export async function deleteScore(deta: Deta, req: Request, res: Response, next:
 		}
 	}
 
-	const result = await removeScore(deta, data.scoreId);
+	const result = await removeScore(res.locals.deta, data.scoreId);
 	if(!result) {
 		const ret: IResponseMessage = {
 			message: "Data deletion failed."

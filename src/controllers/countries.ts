@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import Deta from "deta/dist/types/deta";
 import _ from "lodash";
 import { ICountriesResponse, ICountryDELETEData, ICountryPOSTData, ICountryResponse } from "../types/country";
 import { IResponseData, IResponseMessage } from "../types/express";
@@ -9,10 +8,10 @@ import { LogLevel, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function getAllCountries(deta: Deta, req: Request, res: Response, next: NextFunction) {
+export async function getAllCountries(req: Request, res: Response, next: NextFunction) {
 	log("Accessed: getAllCountries", LogLevel.LOG);
 
-	const data = await getCountries(deta);
+	const data = await getCountries(res.locals.deta);
 
 	const ret: IResponseData<ICountriesResponse> = {
 		message: "Data retrieved successfully.",
@@ -32,7 +31,7 @@ export async function getAllCountries(deta: Deta, req: Request, res: Response, n
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function getCountry(deta: Deta, req: Request, res: Response, next: NextFunction) {
+export async function getCountry(req: Request, res: Response, next: NextFunction) {
 	log("Accessed: getAllCountries", LogLevel.LOG);
 
 	const id = _.parseInt(req.params.countryId, 10); // database's country id
@@ -45,7 +44,7 @@ export async function getCountry(deta: Deta, req: Request, res: Response, next: 
 		return;
 	}
 
-	const data = await getCountryByKey(deta, id);
+	const data = await getCountryByKey(res.locals.deta, id);
 	if(_.isNull(data)) {
 		const ret: IResponseMessage = {
 			message: "Country with specified ID can't be found."
@@ -72,8 +71,8 @@ export async function getCountry(deta: Deta, req: Request, res: Response, next: 
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function addCountry(deta: Deta, req: Request, res: Response, next: NextFunction) {
-	log("Accessed: addCountry", LogLevel.LOG);
+export async function addCountry(req: Request, res: Response, next: NextFunction) {
+	log(`Accessed: addCountry, clientId: ${ res.locals.decode.clientId }`, LogLevel.LOG);
 	const data: ICountryPOSTData = req.body;
 
 	if(!validateCountryPostData(data)) {
@@ -85,8 +84,7 @@ export async function addCountry(deta: Deta, req: Request, res: Response, next: 
 		return;
 	}
 
-	const result = await insertCountry(deta, data);
-
+	const result = await insertCountry(res.locals.deta, data);
 	if(!result) {
 		const ret: IResponseMessage = {
 			message: "Data insertion failed."
@@ -104,8 +102,8 @@ export async function addCountry(deta: Deta, req: Request, res: Response, next: 
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function deleteCountry(deta: Deta, req: Request, res: Response, next: NextFunction) {
-	log("Accessed: addCountry", LogLevel.LOG);
+export async function deleteCountry(req: Request, res: Response, next: NextFunction) {
+	log(`Accessed: deleteCountry, clientId: ${ res.locals.decode.clientId }`, LogLevel.LOG);
 	const data: ICountryDELETEData = req.body;
 
 	if(!validateCountryDeleteData(data)) {
@@ -117,7 +115,7 @@ export async function deleteCountry(deta: Deta, req: Request, res: Response, nex
 		return;
 	}
 
-	const country = await getCountryByKey(deta, data.countryId);
+	const country = await getCountryByKey(res.locals.deta, data.countryId);
 	if(_.isNull(country)) {
 		const ret: IResponseMessage = {
 			message: "Country with specified ID can't be found."
@@ -129,7 +127,7 @@ export async function deleteCountry(deta: Deta, req: Request, res: Response, nex
 
 	/* TODO: remove scores and users by country id */
 
-	const result = await removeCountry(deta, data.countryId);
+	const result = await removeCountry(res.locals.deta, data.countryId);
 	if(!result) {
 		const ret: IResponseMessage = {
 			message: "Data deletion failed."
