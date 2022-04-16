@@ -70,7 +70,7 @@ export async function getUserByOsuId(deta: Deta, id: number) {
 			return null;
 		}
 		else if(fetchResult.length > 1) {
-			log(`getCountryByCode :: Queried ${ id } with more than 1 rows. Fix the repeating occurences and try again.`, LogLevel.ERROR);
+			log(`getUserByOsuId :: Queried ${ id } with more than 1 rows. Fix the repeating occurences and try again.`, LogLevel.ERROR);
 			return null;
 		}
 
