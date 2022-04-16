@@ -7,42 +7,12 @@ import { getCountryByKey } from "./countries";
 
 const DB_NAME = "osu-scores";
 
-export async function getScores(deta: Deta, sort: "id" | "score" | "pp" | "date" = "score") {
+export async function getScores(deta: Deta, sort: "id" | "score" | "pp" | "date" = "score", desc = false) {
 	const db = deta.Base(DB_NAME);
 
 	try {
 		const fetchResult = (await db.fetch()).items as unknown as IScoreDetailData[];
-		if(sort === "id") {
-			fetchResult.sort((a, b) => {
-				const idA = _.parseInt(a.key, 10);
-				const idB = _.parseInt(b.key, 10);
-
-				return idA - idB;
-			});
-		}
-		else if(sort === "score") {
-			fetchResult.sort((a, b) => {
-				/* this might hit more than Number.MAX_SAFE_INTEGER value, but usable for now */
-
-				const scoreA = _.isString(a.score) ? _.parseInt(a.score) : _.isNumber(a.score) ? a.score : Number(a.score);
-				const scoreB = _.isString(b.score) ? _.parseInt(b.score) : _.isNumber(b.score) ? b.score : Number(b.score);
-
-				return scoreA - scoreB;
-			});
-		}
-		else if(sort === "pp") {
-			fetchResult.sort((a, b) => a.pp - b.pp);
-		}
-		else {
-			fetchResult.sort((a, b) => {
-				const dateA: Date = typeof(a.dateAdded) === "string" ? new Date(a.dateAdded) : a.dateAdded;
-				const dateB: Date = typeof(b.dateAdded) === "string" ? new Date(b.dateAdded) : b.dateAdded;
-
-				return dateA.getTime() - dateB.getTime();
-			});
-		}
-
-		return fetchResult;
+		return sortScores(fetchResult, sort, desc);
 	}
 	catch (e) {
 		if(_.isError(e)) {
@@ -56,29 +26,19 @@ export async function getScores(deta: Deta, sort: "id" | "score" | "pp" | "date"
 	}
 }
 
-export async function getScoresByCountryId(deta: Deta, id: number, sort: "id" | "date" = "id") {
+export async function getScoresByCountryId(deta: Deta, id: number, sort: "id" | "score" | "pp" | "date" = "score", desc = false) {
 	const db = deta.Base(DB_NAME);
 
 	try {
+		const country = await getCountryByKey(deta, id);
+		if(_.isNull(country)) {
+			log("getScoresByCountryId :: Country with specified ID not found.", LogLevel.ERROR);
+			return [];
+		}
+
 		const fetchResult = (await db.fetch({ user: { country: { countryId: id } } })).items as unknown as IScoreDetailData[];
-		if(sort === "date") {
-			fetchResult.sort((a, b) => {
-				const dateA: Date = typeof(a.dateAdded) === "string" ? new Date(a.dateAdded) : a.dateAdded;
-				const dateB: Date = typeof(b.dateAdded) === "string" ? new Date(b.dateAdded) : b.dateAdded;
-
-				return dateA.getTime() - dateB.getTime();
-			});
-		}
-		else {
-			fetchResult.sort((a, b) => {
-				const keyA = parseInt(a.key, 10);
-				const keyB = parseInt(b.key, 10);
-
-				return keyA - keyB;
-			});
-		}
-
-		return fetchResult;
+		log(`getScoresByCountryId :: ${ JSON.stringify(fetchResult) }`, LogLevel.LOG);
+		return sortScores(fetchResult, sort, desc);
 	}
 	catch (e) {
 		if(_.isError(e)) {
@@ -298,4 +258,36 @@ export async function removeScore(deta: Deta, key: number, silent = false) {
 
 		return false;
 	}
+}
+
+function sortScores(data: IScoreDetailData[], sort: "id" | "score" | "pp" | "date", desc = false) {
+	const temp = [ ...data ];
+
+	temp.sort((a, b) => {
+		let compA = 0;
+		let compB = 0;
+
+		if(sort === "id") {
+			compA = _.parseInt(a.key, 10);
+			compB = _.parseInt(b.key, 10);
+		}
+		else if(sort === "score") {
+			/* this might hit more than Number.MAX_SAFE_INTEGER value, but usable for now */
+
+			compA = _.isString(a.score) ? _.parseInt(a.score) : _.isNumber(a.score) ? a.score : Number(a.score);
+			compB = _.isString(b.score) ? _.parseInt(b.score) : _.isNumber(b.score) ? b.score : Number(b.score);
+		}
+		else if(sort === "pp") {
+			compA = a.pp;
+			compB = b.pp;
+		}
+		else {
+			compA = (typeof(a.dateAdded) === "string" ? new Date(a.dateAdded) : a.dateAdded).getTime();
+			compB = (typeof(b.dateAdded) === "string" ? new Date(b.dateAdded) : b.dateAdded).getTime();
+		}
+
+		return desc ? compB - compA : compA - compB;
+	});
+
+	return [ ...temp ];
 }

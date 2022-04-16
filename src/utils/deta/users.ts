@@ -65,7 +65,7 @@ export async function getUserByOsuId(deta: Deta, id: number) {
 	const db = deta.Base(DB_NAME);
 
 	try {
-		const fetchResult = (await db.fetch({ osuId: id.toString() })) as unknown as IUserDetailData[];
+		const fetchResult = (await db.fetch({ osuId: id.toString() })).items as unknown as IUserDetailData[];
 		if(fetchResult.length <= 0) {
 			return null;
 		}
