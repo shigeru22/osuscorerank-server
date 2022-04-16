@@ -19,7 +19,8 @@ export function verifyProjectKey(req: Request, res: Response, next: NextFunction
 	const deta = Deta(key);
 
 	try {
-		return next(deta);
+		res.locals.deta = deta;
+		return next();
 	}
 	catch (e) {
 		if(_.isError(e)) {

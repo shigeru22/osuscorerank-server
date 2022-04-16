@@ -46,7 +46,8 @@ export function verifyToken(req: Request, res: Response, next: NextFunction) {
 
 	try {
 		const decode = jwt.verify(accessToken, secret);
-		return next(decode);
+		res.locals.decode = decode;
+		return next();
 	}
 	catch (e) {
 		if(_.isError(e)) {
@@ -55,7 +56,7 @@ export function verifyToken(req: Request, res: Response, next: NextFunction) {
 					message: "Token expired. Please try again."
 				};
 
-				log(`verifyToken() :: ${ e.name }: ${ e.message }`, LogLevel.ERROR);
+				log(`verifyToken() :: ${ e.name }: ${ e.message }\n${ e.stack }`, LogLevel.ERROR);
 				return res.status(HTTPStatus.UNAUTHORIZED).json(ret);
 			}
 			else if(e.name === "JsonWebTokenError") {
@@ -63,7 +64,7 @@ export function verifyToken(req: Request, res: Response, next: NextFunction) {
 					message: "Authentication failed. Check your access token and try again."
 				};
 
-				log(`verifyToken() :: ${ e.name }: ${ e.message }`, LogLevel.ERROR);
+				log(`verifyToken() :: ${ e.name }: ${ e.message }\n${ e.stack }`, LogLevel.ERROR);
 				return res.status(HTTPStatus.UNAUTHORIZED).json(ret);
 			}
 
