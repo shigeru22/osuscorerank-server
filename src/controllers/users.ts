@@ -20,6 +20,7 @@ export async function getAllUsers(deta: Deta, req: Request, res: Response, next:
 		};
 
 		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
 	}
 
 	const ret: IResponseData<IUsersResponse> = {
