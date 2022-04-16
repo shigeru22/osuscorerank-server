@@ -17,9 +17,16 @@ app.use(express.json());
 app.use(cors());
 
 /* routes */
-app.use("/", mainRoute);
-app.use("/countries", countryRoute);
-app.use("/users", userRoute);
+app.use("/api/", mainRoute);
+app.use("/api/countries", countryRoute);
+app.use("/api/users", userRoute);
+app.use("/api/*", (req, res) => {
+	res.send("API endpoint returned 404.");
+});
+
+app.get("*", (req, res) => {
+	res.send("React endpoint goes here");
+});
 
 /* environment check */
 function checkEnv() {
