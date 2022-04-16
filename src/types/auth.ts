@@ -4,6 +4,7 @@ export interface IClientPOSTData {
 }
 
 export interface IClientData {
+	clientId: string;
 	clientName: string;
 	clientKey: string;
 }
