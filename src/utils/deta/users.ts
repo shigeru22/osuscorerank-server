@@ -98,6 +98,14 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 			return false;
 		}
 
+		let currentLastId = 0;
+		{
+			const rows = await getUsers(deta, "id");
+			if(rows.length > 0) {
+				currentLastId = parseInt(rows[rows.length - 1].key, 10);
+			}
+		}
+
 		const data: IUserData = {
 			userName: user.userName,
 			osuId: user.osuId,
@@ -115,7 +123,7 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 			osuId: data.osuId,
 			country: data.country,
 			dateAdded: date.toISOString()
-		}, (1).toString()); // TODO: implement get all data function
+		}, (currentLastId + 1).toString());
 
 		if(!silent) {
 			log(`insertUser :: ${ DB_NAME }: Deleted 1 row.`, LogLevel.LOG);
