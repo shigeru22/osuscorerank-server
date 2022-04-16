@@ -22,7 +22,7 @@ export function getGreeting(req: Request, res: Response) {
 }
 
 export function getNotFoundMessage(req: Request, res: Response) {
-	log("Accessed: getGreeting()", LogLevel.LOG);
+	log("Accessed: getNotFoundMessage()", LogLevel.LOG);
 
 	const ret: IResponseMessage = {
 		message: "API endpoint not found."
@@ -33,7 +33,7 @@ export function getNotFoundMessage(req: Request, res: Response) {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function addDummyData(deta: Deta, req: Request, res: Response, next: NextFunction) {
-	log("Accessed: getGreeting()", LogLevel.LOG);
+	log("Accessed: addDummyData()", LogLevel.LOG);
 
 	if(_.isUndefined(process.env.TOKEN_SECRET)) {
 		const ret: IResponseMessage = {
