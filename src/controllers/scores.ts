@@ -2,12 +2,12 @@ import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
 import { IResponseData, IResponseMessage } from "../types/express";
 import { IScoreDELETEData, IScorePOSTData, IScoreResponse, IScoresResponse } from "../types/score";
+import { getCountryByKey } from "../utils/deta/countries";
+import { getUserByKey } from "../utils/deta/users";
 import { getScoreByKey, getScoreByUserId, getScores, insertScore, removeScore } from "../utils/deta/scores";
 import { HTTPStatus } from "../utils/http";
 import { LogLevel, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
-import { getUserByKey } from "../utils/deta/users";
-import { getCountryByKey } from "../utils/deta/countries";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getAllScores(req: Request, res: Response, next: NextFunction) {

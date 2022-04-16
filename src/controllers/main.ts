@@ -4,12 +4,12 @@ import Deta from "deta/dist/types/deta";
 import _ from "lodash";
 import { IResponseMessage } from "../types/express";
 import { IDummyPOSTData } from "../types/main";
-import { HTTPStatus } from "../utils/http";
-import { LogLevel, log } from "../utils/log";
 import { insertClient } from "../utils/deta/auth";
 import { insertCountry } from "../utils/deta/countries";
 import { insertUser } from "../utils/deta/users";
 import { insertScore } from "../utils/deta/scores";
+import { HTTPStatus } from "../utils/http";
+import { LogLevel, log } from "../utils/log";
 
 export function getGreeting(req: Request, res: Response) {
 	log("Accessed: getGreeting()", LogLevel.LOG);

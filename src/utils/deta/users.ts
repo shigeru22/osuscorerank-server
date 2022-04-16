@@ -1,8 +1,8 @@
 import _ from "lodash";
 import Deta from "deta/dist/types/deta";
 import { IUserData, IUserDetailData, IUserPOSTData } from "../../types/user";
-import { LogLevel, log } from "../log";
 import { getCountryByKey } from "./countries";
+import { LogLevel, log } from "../log";
 
 const DB_NAME = "osu-users";
 

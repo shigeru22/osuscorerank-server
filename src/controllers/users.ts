@@ -2,11 +2,11 @@ import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
 import { IResponseData, IResponseMessage } from "../types/express";
 import { IUserDELETEData, IUserPOSTData, IUserResponse, IUsersResponse } from "../types/user";
+import { getCountryByKey } from "../utils/deta/countries";
 import { getUserByKey, getUserByOsuId, getUsers, insertUser, removeUser } from "../utils/deta/users";
 import { HTTPStatus } from "../utils/http";
 import { LogLevel, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
-import { getCountryByKey } from "../utils/deta/countries";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getAllUsers(req: Request, res: Response, next: NextFunction) {

@@ -1,10 +1,10 @@
+import { createHmac, timingSafeEqual } from "crypto";
 import { NextFunction, Request, Response } from "express";
 import Deta from "deta/dist/types/deta";
 import _ from "lodash";
-import { createHmac, timingSafeEqual } from "crypto";
 import jwt from "jsonwebtoken";
-import { IClientPOSTData, IAuthenticationResponse } from "../types/auth";
 import { IResponseMessage, IResponseData } from "../types/express";
+import { IClientPOSTData, IAuthenticationResponse } from "../types/auth";
 import { getClientById } from "../utils/deta/auth";
 import { HTTPStatus } from "../utils/http";
 import { LogLevel, log } from "../utils/log";

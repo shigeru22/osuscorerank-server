@@ -1,9 +1,9 @@
 import _ from "lodash";
 import Deta from "deta/dist/types/deta";
 import { IScoreData, IScoreDetailData, IScorePOSTData } from "../../types/score";
+import { getCountryByKey } from "./countries";
 import { getUserByKey } from "./users";
 import { LogLevel, log } from "../log";
-import { getCountryByKey } from "./countries";
 
 const DB_NAME = "osu-scores";
 
