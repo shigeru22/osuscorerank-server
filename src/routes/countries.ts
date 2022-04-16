@@ -8,8 +8,8 @@ const router = Router();
 router.get("/", verifyProjectKey, countries.getAllCountries);
 router.get("/:countryId", verifyProjectKey, countries.getCountry);
 
-router.post("/add", [ verifyProjectKey, verifyToken ], countries.addCountry);
+router.post("/add", [ verifyToken, verifyProjectKey ], countries.addCountry);
 
-router.delete("/delete", [ verifyProjectKey, verifyToken ], countries.deleteCountry);
+router.delete("/delete", [ verifyToken, verifyProjectKey ], countries.deleteCountry);
 
 export default router;

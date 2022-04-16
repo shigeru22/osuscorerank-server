@@ -10,8 +10,8 @@ router.get("/country/:countryId", verifyProjectKey, scores.getCountryScores);
 router.get("/user/:userId", verifyProjectKey, scores.getUserScore);
 router.get("/users", verifyProjectKey, scores.getMultipleUserScores);
 
-router.post("/add", [ verifyProjectKey, verifyToken ], scores.addScore);
+router.post("/add", [ verifyToken, verifyProjectKey ], scores.addScore);
 
-router.delete("/delete", [ verifyProjectKey, verifyToken ], scores.deleteScore);
+router.delete("/delete", [ verifyToken, verifyProjectKey ], scores.deleteScore);
 
 export default router;
