@@ -1,5 +1,3 @@
-import { IUser } from "./prisma/user";
-
 export interface IUserPOSTData {
   userName: string;
   osuId: number;
@@ -10,13 +8,28 @@ export interface IUserDELETEData {
   userId: number;
 }
 
-export interface IUserScoreData {
-  userName: string;
-  osuId: number;
-  countryId: number;
-  score: number;
-  pp: number;
-  globalRank: number;
+export interface IUserData {
+	userName: string;
+	osuId: number;
+	country: {
+		countryId: number;
+		countryName: string;
+		countryCode: string;
+	};
+}
+
+export interface IUserItemData extends IUserData {
+  userId: number;
+}
+
+export interface IUserKeyData {
+  key: number;
+  item: IUserData;
+}
+
+export interface IUserDetailData extends IUserData {
+	key: string;
+	dateAdded: Date | string;
 }
 
 export interface IUserCountryInsertion {
@@ -24,11 +37,11 @@ export interface IUserCountryInsertion {
   insertion: number;
 }
 
-export interface IUsersResponse {
-  users: IUser[];
-  length: number;
+export interface IUserResponse {
+  user: IUserItemData;
 }
 
-export interface IUserResponse {
-  user: IUser;
+export interface IUsersResponse {
+  users: IUserItemData[];
+  length: number;
 }
