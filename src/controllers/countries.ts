@@ -19,7 +19,7 @@ export async function getAllCountries(req: Request, res: Response, next: NextFun
 		message: "Data retrieved successfully.",
 		data: {
 			countries: data.map(item => ({
-				countryId: parseInt(item.key, 10),
+				countryId: _.parseInt(item.key, 10),
 				countryName: item.countryName,
 				countryCode: item.countryCode,
 				recentlyInactive: item.recentlyInactive,
@@ -64,7 +64,7 @@ export async function getCountry(req: Request, res: Response, next: NextFunction
 		message: "Data retrieved successfully.",
 		data: {
 			country: {
-				countryId: parseInt(data.key, 10),
+				countryId: _.parseInt(data.key, 10),
 				countryCode: data.countryCode,
 				countryName: data.countryName,
 				recentlyInactive: data.recentlyInactive,

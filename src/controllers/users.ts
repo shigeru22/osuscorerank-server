@@ -28,7 +28,7 @@ export async function getAllUsers(req: Request, res: Response, next: NextFunctio
 		message: "Data retrieved successfully.",
 		data: {
 			users: data.map(item => ({
-				userId: parseInt(item.key, 10),
+				userId: _.parseInt(item.key, 10),
 				userName: item.userName,
 				osuId: item.osuId,
 				country: item.country
@@ -72,7 +72,7 @@ export async function getUser(req: Request, res: Response, next: NextFunction) {
 		message: "Data retrieved successfully.",
 		data: {
 			user: {
-				userId: parseInt(data.key, 10),
+				userId: _.parseInt(data.key, 10),
 				userName: data.userName,
 				osuId: data.osuId,
 				country: data.country

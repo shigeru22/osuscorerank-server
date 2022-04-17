@@ -114,7 +114,7 @@ export async function insertCountry(deta: Deta, country: ICountryPOSTData, silen
 		{
 			const rows = await getCountries(deta, "id");
 			if(rows.length > 0) {
-				currentLastId = parseInt(rows[rows.length - 1].key, 10);
+				currentLastId = _.parseInt(rows[rows.length - 1].key, 10);
 			}
 		}
 

@@ -28,8 +28,8 @@ export async function getUsers(deta: Deta, sort: "id" | "date" = "id") {
 		}
 		else {
 			fetchResult.sort((a, b) => {
-				const keyA = parseInt(a.key, 10);
-				const keyB = parseInt(b.key, 10);
+				const keyA = _.parseInt(a.key, 10);
+				const keyB = _.parseInt(b.key, 10);
 
 				return keyA - keyB;
 			});
@@ -120,7 +120,7 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 		{
 			const rows = await getUsers(deta, "id");
 			if(rows.length > 0) {
-				currentLastId = parseInt(rows[rows.length - 1].key, 10);
+				currentLastId = _.parseInt(rows[rows.length - 1].key, 10);
 			}
 		}
 
@@ -128,7 +128,7 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 			userName: user.userName,
 			osuId: user.osuId,
 			country: {
-				countryId: parseInt(country.key, 10),
+				countryId: _.parseInt(country.key, 10),
 				countryName: country.countryName,
 				countryCode: country.countryCode
 			}
