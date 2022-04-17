@@ -6,7 +6,7 @@ import fs from "fs";
 import _ from "lodash";
 import { getAccessToken, getScoreRanking, revokeAccessToken } from "./utils/osu-api/osu";
 import { importDataFromFile } from "./utils/fetch/import";
-import { LogLevel, log } from "./utils/log";
+import { LogSeverity, log } from "./utils/log";
 import { checkNumber } from "./utils/common";
 import { version } from "../package.json";
 
@@ -59,30 +59,30 @@ async function parseArguments() {
 }
 
 async function fetchApiData(countryCode: string) {
-	log("Checking for environment variables...");
+	log("Checking for environment variables...", "fetchApiData", LogSeverity.LOG);
 	if(_.isUndefined(process.env.OSU_CLIENT_ID) || _.isUndefined(process.env.OSU_CLIENT_SECRET)) {
-		log("OSU_CLIENT_ID or OSU_CLIENT_SECRET must not be empty. Exiting.", LogLevel.ERROR);
+		log("OSU_CLIENT_ID or OSU_CLIENT_SECRET must not be empty. Exiting.", "fetchApiData", LogSeverity.ERROR);
 		return;
 	}
 
 	const clientId = _.parseInt(process.env.OSU_CLIENT_ID, 10);
 	if(!checkNumber(clientId)) {
-		log("OSU_CLIENT_ID must be number. Exiting.", LogLevel.ERROR);
+		log("OSU_CLIENT_ID must be number. Exiting.", "fetchApiData", LogSeverity.ERROR);
 		return;
 	}
 
-	log("Retrieving access token...");
+	log("Retrieving access token...", "fetchApiData", LogSeverity.LOG);
 	const token = await getAccessToken(clientId, process.env.OSU_CLIENT_SECRET);
 
-	log(`Access token: ${ token }`, LogLevel.DEBUG);
+	log(`Access token: ${ token }`, "fetchApiData", LogSeverity.DEBUG);
 
 	const startTime = new Date();
 
-	log("Retrieving rankings...");
+	log("Retrieving rankings...", "fetchApiData", LogSeverity.LOG);
 	const rankings = await getScoreRanking(countryCode, token);
 
 	if(_.isNull(rankings)) {
-		log("Failed to retrieve rankings. Exiting.", LogLevel.ERROR);
+		log("Failed to retrieve rankings. Exiting.", "fetchApiData", LogSeverity.ERROR);
 	}
 	else {
 		try {
@@ -105,29 +105,29 @@ async function fetchApiData(countryCode: string) {
 			}
 			fs.writeFileSync("./dist/rankings.json", JSON.stringify(temp, null, 2));
 
-			log("Rankings saved to /dist/rankings.json.");
+			log("Rankings saved to /dist/rankings.json.", "fetchApiData", LogSeverity.LOG);
 		}
 		catch (e) {
 			if(_.isError(e)) {
-				log(`Error while writing file: ${ e.message }`, LogLevel.WARN);
+				log(`Error while writing file: ${ e.message }`, "fetchApiData", LogSeverity.WARN);
 			}
 			else {
-				log("Unknown error occurred.", LogLevel.WARN);
+				log("Unknown error occurred.", "fetchApiData", LogSeverity.WARN);
 			}
 		}
 	}
 
-	log("Revoking access token...");
+	log("Revoking access token...", "fetchApiData", LogSeverity.LOG);
 	if(await revokeAccessToken(token)) {
-		log("Access token revoked successfully.");
+		log("Access token revoked successfully.", "fetchApiData", LogSeverity.LOG);
 	}
 	else {
-		log("Unable to revoke access token.", LogLevel.WARN);
+		log("Unable to revoke access token.", "fetchApiData", LogSeverity.WARN);
 	}
 
 	const endTime = new Date();
 
-	log(`Country rankings fetched in ${ ((endTime.getTime() / 1000) - (startTime.getTime() / 1000)).toFixed(3) } seconds.`);
+	log(`Country rankings fetched in ${ ((endTime.getTime() / 1000) - (startTime.getTime() / 1000)).toFixed(3) } seconds.`, "fetchApiData", LogSeverity.LOG);
 }
 
 async function importData() {
@@ -216,10 +216,10 @@ async function main() {
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`Error occurred.\n${ e.name }: ${ e.message }`, LogLevel.ERROR);
+			log(`Error occurred.\n${ e.name }: ${ e.message }`, "main", LogSeverity.ERROR);
 		}
 		else {
-			log("Unknown error occurred. Exiting...", LogLevel.ERROR);
+			log("Unknown error occurred. Exiting...", "main", LogSeverity.ERROR);
 		}
 
 		process.exit(1);

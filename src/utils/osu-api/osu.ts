@@ -4,12 +4,14 @@ import { IClientCredentialsPOSTRequest, IClientCredentialsPOSTResponse, IRanking
 import { IRankingsCursor, IUserStatistics } from "../../types/osu/osu-structures";
 import { sleep } from "../common";
 import { HTTPStatus } from "../http";
-import { LogLevel, log } from "../log";
+import { LogSeverity, log } from "../log";
 
 const OSU_API_OAUTH_ENDPOINT = "https://osu.ppy.sh/oauth/token";
 const OSU_API_ENDPOINT = "https://osu.ppy.sh/api/v2";
 
 export async function getAccessToken(clientId: number, clientSecret: string) {
+	log("Access token requested.", "getAccessToken", LogSeverity.LOG);
+
 	try {
 		const request: IClientCredentialsPOSTRequest = {
 			client_id: clientId,
@@ -24,27 +26,28 @@ export async function getAccessToken(clientId: number, clientSecret: string) {
 			return response.data.access_token;
 		}
 		else {
-			log(`API returned status ${ response.status }`, LogLevel.WARN);
-			log(`Response data:\n${ JSON.stringify(response.data) }`, LogLevel.WARN);
+			log(`API returned status ${ response.status }`, "getAccessToken", LogSeverity.WARN);
+			log(`Response data:\n${ JSON.stringify(response.data) }`, "getAccessToken", LogSeverity.DEBUG);
 		}
 
+		log("Retrieved access token. Returning token as string.", "getAccessToken", LogSeverity.LOG);
 		return !_.isUndefined(response.data.access_token) ? response.data.access_token : "";
 	}
 	catch (e) {
 		if(axios.isAxiosError(e)) {
 			if(!_.isUndefined(e.response)) {
-				log(`API returned status ${ e.response.status }.`, LogLevel.ERROR);
-				log(`Response data:\n${ JSON.stringify(e.response.data) }`, LogLevel.ERROR);
+				log(`API returned status ${ e.response.status }.`, "getAccessToken", LogSeverity.ERROR);
+				log(`Response data:\n${ JSON.stringify(e.response.data) }`, "getAccessToken", LogSeverity.DEBUG);
 			}
 			else {
-				log("API returned undefined status code.", LogLevel.ERROR);
+				log("API returned undefined status code.", "getAccessToken", LogSeverity.ERROR);
 			}
 		}
 		else if(_.isError(e)) {
-			log(`Error while retrieving score data: ${ e.message }`, LogLevel.ERROR);
+			log(`An error occurred while requesting osu! access token. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getAccessToken", LogSeverity.ERROR);
 		}
 		else {
-			log("Unknown error occurred while retrieving score ranking data.", LogLevel.ERROR);
+			log("Unknown error occurred while retrieving osu! access token.", "getAccessToken", LogSeverity.ERROR);
 		}
 
 		return "";
@@ -52,6 +55,8 @@ export async function getAccessToken(clientId: number, clientSecret: string) {
 }
 
 export async function revokeAccessToken(token: string) {
+	log("Access token revokation requested.", "revokeAccessToken", LogSeverity.LOG);
+
 	try {
 		const response = await axios.delete(`${ OSU_API_ENDPOINT }/oauth/tokens/current`, {
 			headers: {
@@ -60,8 +65,8 @@ export async function revokeAccessToken(token: string) {
 		});
 
 		if(response.status !== HTTPStatus.NO_CONTENT) {
-			log(`[WARN] API returned status ${ response.status }`, LogLevel.WARN);
-			log(`[WARN] Response data:\n${ JSON.stringify(response.data) }`, LogLevel.WARN);
+			log(`API returned status ${ response.status }`, "revokeAccessToken", LogSeverity.WARN);
+			log(`Response data:\n${ JSON.stringify(response.data) }`, "revokeAccessToken", LogSeverity.DEBUG);
 			return false;
 		}
 
@@ -70,18 +75,18 @@ export async function revokeAccessToken(token: string) {
 	catch (e) {
 		if(axios.isAxiosError(e)) {
 			if(!_.isUndefined(e.response)) {
-				log(`[ERROR] API returned status ${ e.response.status }.`, LogLevel.ERROR);
-				log(`[ERROR] Response data:\n${ JSON.stringify(e.response.data) }`, LogLevel.ERROR);
+				log(`API returned status ${ e.response.status }.`, "revokeAccessToken", LogSeverity.ERROR);
+				log(`Response data:\n${ JSON.stringify(e.response.data) }`, "revokeAccessToken", LogSeverity.DEBUG);
 			}
 			else {
-				log("[ERROR] API returned undefined status code.", LogLevel.ERROR);
+				log("API returned undefined status code.", "revokeAccessToken", LogSeverity.ERROR);
 			}
 		}
 		else if(_.isError(e)) {
-			log(`[ERROR] Error while revoking access token: ${ e.message }`, LogLevel.ERROR);
+			log(`An error occurred while revoking osu! access token. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getAccessToken", LogSeverity.ERROR);
 		}
 		else {
-			log("[ERROR] Unknown error occurred while revoking access token.", LogLevel.ERROR);
+			log("Unknown error occurred while revoking osu! access token.", "getAccessToken", LogSeverity.ERROR);
 		}
 
 		return false;
@@ -96,7 +101,7 @@ export async function getScoreRanking(countryCode: string, token: string) {
 		let ret: IUserStatistics[] = [];
 
 		do {
-			process.stdout.write(`[INFO] Requesting rankings (page: ${ page })...`);
+			process.stdout.write(`[LOG] getScoreRanking :: Requesting rankings (page: ${ page })...`);
 
 			/* disable this since looping require cursor */
 			// eslint-disable-next-line no-await-in-loop
@@ -125,13 +130,13 @@ export async function getScoreRanking(countryCode: string, token: string) {
 				}
 			}
 			else if(response.status === HTTPStatus.UNAUTHORIZED) {
-				process.stdout.write("[WARN] Token expired or invalid. Retrying...");
+				process.stdout.write("[WARN] getScoreRanking :: Token expired or invalid. Requesting access token...");
 
 				/* TODO: refresh access token */
 			}
 			else {
-				process.stdout.write(`[WARN] API returned status ${ response.status }\n`);
-				process.stdout.write(`[WARN] Response data:\n${ JSON.stringify(response.data) }\n`);
+				process.stdout.write(`[WARN] getScoreRanking :: API returned status ${ response.status }.\n`);
+				process.stdout.write(`[DEBUG] getScoreRanking :: Response data:\n${ JSON.stringify(response.data) }\n`);
 				return null;
 			}
 		}
@@ -142,18 +147,18 @@ export async function getScoreRanking(countryCode: string, token: string) {
 	catch (e) {
 		if(axios.isAxiosError(e)) {
 			if(!_.isUndefined(e.response)) {
-				log(`[ERROR] API returned status ${ e.response.status }.`, LogLevel.ERROR);
-				log(`[ERROR] Response data:\n${ e.response.data }`, LogLevel.ERROR);
+				log(`API returned status ${ e.response.status }.`, "getScoreRanking", LogSeverity.ERROR);
+				log(`Response data:\n${ e.response.data }`, "getScoreRanking", LogSeverity.DEBUG);
 			}
 			else {
-				log("[ERROR] API returned undefined status code.", LogLevel.ERROR);
+				log("API returned undefined status code.", "getScoreRanking", LogSeverity.ERROR);
 			}
 		}
 		else if(_.isError(e)) {
-			log(`[ERROR] Error while retrieving score data: ${ e.message }`, LogLevel.ERROR);
+			log(`An error occurred while retrieving score data. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getAccessToken", LogSeverity.ERROR);
 		}
 		else {
-			log("[ERROR] Unknown error occurred while retrieving score ranking data.", LogLevel.ERROR);
+			log("Unknown error occurred while retrieving score data.", "getAccessToken", LogSeverity.ERROR);
 		}
 
 		return null;

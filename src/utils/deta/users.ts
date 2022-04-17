@@ -3,7 +3,7 @@ import Deta from "deta/dist/types/deta";
 import { IUserDetailData } from "../../types/deta/user";
 import { IUserData, IUserPOSTData } from "../../types/user";
 import { getCountryByKey } from "./countries";
-import { LogLevel, log } from "../log";
+import { LogSeverity, log } from "../log";
 
 const DB_NAME = "osu-users";
 
@@ -12,6 +12,12 @@ export async function getUsers(deta: Deta, sort: "id" | "date" = "id") {
 
 	try {
 		const fetchResult = (await db.fetch()).items as unknown as IUserDetailData[];
+
+		if(fetchResult.length <= 0) {
+			log(`${ DB_NAME }: No data returned from database.`, "getUsers", LogSeverity.WARN);
+			return [];
+		}
+
 		if(sort === "date") {
 			fetchResult.sort((a, b) => {
 				const dateA: Date = typeof(a.dateAdded) === "string" ? new Date(a.dateAdded) : a.dateAdded;
@@ -29,14 +35,15 @@ export async function getUsers(deta: Deta, sort: "id" | "date" = "id") {
 			});
 		}
 
+		log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getUsers", LogSeverity.WARN);
 		return fetchResult;
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`getUsers :: ${ e.name }: ${ e.message }\n${ e.stack }`, LogLevel.ERROR);
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getUsers", LogSeverity.ERROR);
 		}
 		else {
-			log("getUsers :: Unknown error occurred.", LogLevel.ERROR);
+			log("Unknown error occurred while querying database.", "getUsers", LogSeverity.ERROR);
 		}
 
 		return [];
@@ -48,14 +55,22 @@ export async function getUserByKey(deta: Deta, key: number) {
 
 	try {
 		const fetchResult = (await db.get(key.toString())) as unknown as IUserDetailData;
+
+		if(_.isNull(fetchResult)) {
+			log(`${ DB_NAME }: No data returned from database.`, "getUserByKey", LogSeverity.WARN);
+		}
+		else {
+			log(`${ DB_NAME }: Returned 1 row.`, "getCountries", LogSeverity.LOG);
+		}
+
 		return fetchResult;
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`getUserByKey :: ${ e.name }: ${ e.message }\n${ e.stack }`, LogLevel.ERROR);
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getUserByKey", LogSeverity.ERROR);
 		}
 		else {
-			log("getUserByKey :: Unknown error occurred.", LogLevel.ERROR);
+			log("Unknown error occurred while querying database.", "getUserByKey", LogSeverity.ERROR);
 		}
 
 		return null;
@@ -68,21 +83,23 @@ export async function getUserByOsuId(deta: Deta, id: number) {
 	try {
 		const fetchResult = (await db.fetch({ osuId: id.toString() })).items as unknown as IUserDetailData[];
 		if(fetchResult.length <= 0) {
+			log(`${ DB_NAME }: No data returned from database.`, "getUserByOsuId", LogSeverity.WARN);
 			return null;
 		}
 		else if(fetchResult.length > 1) {
-			log(`getUserByOsuId :: Queried ${ id } with more than 1 rows. Fix the repeating occurences and try again.`, LogLevel.ERROR);
+			log(`${ DB_NAME }: Queried ${ id } with more than 1 rows. Fix the repeating occurences and try again.`, "getUserByOsuId", LogSeverity.ERROR);
 			return null;
 		}
 
+		log(`${ DB_NAME }: Returned 1 row.`, "getUserByOsuId", LogSeverity.LOG);
 		return fetchResult[0];
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`getUserByOsuId :: ${ e.name }: ${ e.message }\n${ e.stack }`, LogLevel.ERROR);
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getUserByOsuId", LogSeverity.ERROR);
 		}
 		else {
-			log("getUserByOsuId :: Unknown error occurred.", LogLevel.ERROR);
+			log("Unknown error occurred while querying database.", "getUserByOsuId", LogSeverity.ERROR);
 		}
 
 		return null;
@@ -95,7 +112,7 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 	try {
 		const country = await getCountryByKey(deta, user.countryId);
 		if(_.isNull(country)) {
-			log("insertUser :: Country not found.", LogLevel.ERROR);
+			log("Null country returned. See above log (if any) for details.", "insertUser", LogSeverity.ERROR);
 			return false;
 		}
 
@@ -127,17 +144,17 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 		}, (currentLastId + 1).toString());
 
 		if(!silent) {
-			log(`insertUser :: ${ DB_NAME }: Deleted 1 row.`, LogLevel.LOG);
+			log(`${ DB_NAME }: Deleted 1 row.`, "insertUser", LogSeverity.LOG);
 		}
 
 		return true;
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`insertUser :: ${ e.name }: ${ e.message }\n${ e.stack }`, LogLevel.ERROR);
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "insertUser", LogSeverity.ERROR);
 		}
 		else {
-			log("insertUser :: Unknown error occurred.", LogLevel.ERROR);
+			log("Unknown error occurred while querying database.", "insertUser", LogSeverity.ERROR);
 		}
 
 		return false;
@@ -150,13 +167,13 @@ export async function updateUser(deta: Deta, user: IUserPOSTData, silent = false
 	try {
 		const fetchedUser = await getUserByOsuId(deta, user.osuId);
 		if(_.isNull(fetchedUser)) {
-			log("updateUser :: Null user returned. See above log for details.", LogLevel.ERROR);
+			log("Null user returned. See above log (if any) for details.", "updateUser", LogSeverity.ERROR);
 			return false;
 		}
 
 		const fetchedCountry = await getCountryByKey(deta, user.countryId);
 		if(_.isNull(fetchedCountry)) {
-			log("updateUser :: Null country returned. See above log (if any) for details.", LogLevel.ERROR);
+			log("Null country returned. See above log (if any) for details.", "updateUser", LogSeverity.ERROR);
 			return false;
 		}
 
@@ -170,17 +187,17 @@ export async function updateUser(deta: Deta, user: IUserPOSTData, silent = false
 		}, fetchedUser.key);
 
 		if(!silent) {
-			log(`updateUser :: ${ DB_NAME }: Updated 1 row.`, LogLevel.LOG);
+			log(`${ DB_NAME }: Updated 1 row.`, "updateUser", LogSeverity.LOG);
 		}
 
 		return true;
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`updateUser :: ${ e.name }: ${ e.message }\n${ e.stack }`, LogLevel.ERROR);
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "updateUser", LogSeverity.ERROR);
 		}
 		else {
-			log("updateUser :: Unknown error occurred.", LogLevel.ERROR);
+			log("Unknown error occurred while querying database.", "updateUser", LogSeverity.ERROR);
 		}
 
 		return false;
@@ -194,17 +211,17 @@ export async function removeUser(deta: Deta, key: number, silent = false) {
 		await db.delete(key.toString());
 
 		if(!silent) {
-			log(`removeUser :: ${ DB_NAME }: Deleted 1 row.`, LogLevel.LOG);
+			log(`${ DB_NAME }: Deleted 1 row.`, "removeUser", LogSeverity.LOG);
 		}
 
 		return true;
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`removeUser :: ${ e.name }: ${ e.message }\n${ e.stack }`, LogLevel.ERROR);
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "removeUser", LogSeverity.ERROR);
 		}
 		else {
-			log("removeUser :: Unknown error occurred.", LogLevel.ERROR);
+			log("Unknown error occurred while querying database.", "removeUser", LogSeverity.ERROR);
 		}
 
 		return false;

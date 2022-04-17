@@ -6,18 +6,20 @@ import { getCountryByKey } from "../utils/deta/countries";
 import { getUserByKey } from "../utils/deta/users";
 import { getScoreByKey, getScoreByUserId, getScores, insertScore, removeScore } from "../utils/deta/scores";
 import { HTTPStatus } from "../utils/http";
-import { LogLevel, log } from "../utils/log";
+import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getAllScores(req: Request, res: Response, next: NextFunction) {
-	log("Accessed: getAllUsers", LogLevel.LOG);
+	log("Function accessed.", "getAllScores", LogSeverity.LOG);
 
 	let sort: "id" | "score" | "pp" | "date" = "score";
 	{
 		if(!_.isUndefined(req.query.sort)) {
 			const id = _.parseInt(req.query.sort as string, 10);
 			if(_.isNaN(id) || (id < 1 || id > 4)) {
+				log("Invalid sort parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+
 				const ret: IResponseMessage = {
 					message: "Invalid sort parameter."
 				};
@@ -38,6 +40,8 @@ export async function getAllScores(req: Request, res: Response, next: NextFuncti
 	{
 		if(!_.isUndefined(req.query.desc)) {
 			if(!_.isString(req.query.desc) || !(req.query.desc === "true" || req.query.desc === "false")) {
+				log("Invalid desc parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+
 				const ret: IResponseMessage = {
 					message: "Invalid desc parameter."
 				};
@@ -62,6 +66,8 @@ export async function getAllScores(req: Request, res: Response, next: NextFuncti
 		return;
 	}
 
+	log("Scores data retrieved successfully. Sending data response.", "getAllScores", LogSeverity.LOG);
+
 	const ret: IResponseData<IScoresResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
@@ -80,13 +86,15 @@ export async function getAllScores(req: Request, res: Response, next: NextFuncti
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getCountryScores(req: Request, res: Response, next: NextFunction) {
-	log("Accessed: getCountryScores", LogLevel.LOG);
+	log("Function accessed.", "getCountryScores", LogSeverity.LOG);
 
 	let sort: "id" | "score" | "pp" | "date" = "score";
 	{
 		if(!_.isUndefined(req.query.sort)) {
 			const id = _.parseInt(req.query.sort as string, 10);
 			if(_.isNaN(id) || (id < 1 || id > 4)) {
+				log("Invalid sort parameter. Sending error response.", "getCountryScores", LogSeverity.WARN);
+
 				const ret: IResponseMessage = {
 					message: "Invalid sort parameter."
 				};
@@ -107,6 +115,8 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 	{
 		if(!_.isUndefined(req.query.desc)) {
 			if(!_.isString(req.query.desc) || !(req.query.desc === "true" || req.query.desc === "false")) {
+				log("Invalid desc parameter. Sending error response.", "getCountryScores", LogSeverity.WARN);
+
 				const ret: IResponseMessage = {
 					message: "Invalid desc parameter."
 				};
@@ -123,6 +133,8 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 
 	const id = _.parseInt(req.params.countryId, 10);
 	if(!checkNumber(id) || id <= 0) {
+		log("Invalid ID parameter. Sending error response.", "getCountryScores", LogSeverity.WARN);
+
 		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
 		};
@@ -153,6 +165,8 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 		return;
 	}
 
+	log("Country scores data retrieved successfully. Sending data response.", "getMultipleUserScores", LogSeverity.LOG);
+
 	const ret: IResponseData<IScoresResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
@@ -171,10 +185,12 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getScore(req: Request, res: Response, next: NextFunction) {
-	log("Accessed: getScore", LogLevel.LOG);
+	log("Function accessed.", "getScore", LogSeverity.LOG);
 
 	const id = _.parseInt(req.params.scoreId, 10);
 	if(!checkNumber(id) || id <= 0) {
+		log("Invalid ID parameter. Sending error message.", "getScore", LogSeverity.WARN);
+
 		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
 		};
@@ -193,6 +209,8 @@ export async function getScore(req: Request, res: Response, next: NextFunction) 
 		return;
 	}
 
+	log("Score data retrieved successfully. Sending data response.", "getMultipleUserScores", LogSeverity.LOG);
+
 	const ret: IResponseData<IScoreResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
@@ -210,10 +228,12 @@ export async function getScore(req: Request, res: Response, next: NextFunction) 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getUserScore(req: Request, res: Response, next: NextFunction) {
-	log("Accessed: getUserScore", LogLevel.LOG);
+	log("Function accessed.", "getUserScore", LogSeverity.LOG);
 
 	const id = _.parseInt(req.params.userId, 10);
 	if(!checkNumber(id) || id <= 0) {
+		log("Invalid ID parameter. Sending error response.", "getUserScore", LogSeverity.WARN);
+
 		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
 		};
@@ -232,6 +252,8 @@ export async function getUserScore(req: Request, res: Response, next: NextFuncti
 		return;
 	}
 
+	log("Score data retrieved successfully. Sending data response.", "getMultipleUserScores", LogSeverity.LOG);
+
 	const ret: IResponseData<IScoreResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
@@ -249,10 +271,12 @@ export async function getUserScore(req: Request, res: Response, next: NextFuncti
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getMultipleUserScores(req: Request, res: Response, next: NextFunction) {
-	log("Accessed: getMultipleUserScores", LogLevel.LOG);
+	log("Function accessed.", "getMultipleUserScores", LogSeverity.LOG);
 
 	const sortQuery = _.parseInt(req.query.sort as string, 10);
 	if(!_.isArray(req.query.users)) {
+		log("Invalid users parameter. Sending error response.", "getMultipleUserScores", LogSeverity.WARN);
+
 		const ret: IResponseMessage = {
 			message: "Invalid users parameter."
 		};
@@ -262,6 +286,8 @@ export async function getMultipleUserScores(req: Request, res: Response, next: N
 	}
 
 	if(req.query.users.length <= 0) {
+		log("Invalid array length. Sending error response.", "getMultipleUserScores", LogSeverity.WARN);
+
 		const ret: IResponseMessage = {
 			message: "Invalid array length."
 		};
@@ -273,6 +299,8 @@ export async function getMultipleUserScores(req: Request, res: Response, next: N
 	let sort: "id" | "score" | "pp" | "date" = "id";
 	if(!_.isUndefined(req.query.sort)) {
 		if(sortQuery < 1 || sortQuery > 4) {
+			log("Invalid sort parameter. Sending error response.", "getMultipleUserScores", LogSeverity.WARN);
+
 			const ret: IResponseMessage = {
 				message: "Invalid sort parameter."
 			};
@@ -292,6 +320,8 @@ export async function getMultipleUserScores(req: Request, res: Response, next: N
 	{
 		if(!_.isUndefined(req.query.desc)) {
 			if(!_.isString(req.query.desc) || !(req.query.desc === "true" || req.query.desc === "false")) {
+				log("Invalid desc parameter. Sending error response.", "getMultipleUserScores", LogSeverity.WARN);
+
 				const ret: IResponseMessage = {
 					message: "Invalid desc parameter."
 				};
@@ -315,6 +345,8 @@ export async function getMultipleUserScores(req: Request, res: Response, next: N
 
 	const data = (await getScores(res.locals.deta, sort, desc)).filter(row => _.includes(ids, _.parseInt(row.key, 10)));
 
+	log("Score data retrieved successfully. Sending data response.", "getMultipleUserScores", LogSeverity.LOG);
+
 	const ret: IResponseData<IScoresResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
@@ -333,7 +365,7 @@ export async function getMultipleUserScores(req: Request, res: Response, next: N
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function addScore(req: Request, res: Response, next: NextFunction) {
-	log(`Accessed: addScore, ${ res.locals.decode.clientId }`, LogLevel.LOG);
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "addScore", LogSeverity.LOG);
 	const data: IScorePOSTData = req.body;
 
 	if(!validateScorePostData(data)) {
@@ -368,6 +400,8 @@ export async function addScore(req: Request, res: Response, next: NextFunction) 
 		return;
 	}
 
+	log("Score data inserted successfully. Sending success response.", "addScore", LogSeverity.LOG);
+
 	const ret: IResponseMessage = {
 		message: "Data inserted successfully."
 	};
@@ -377,7 +411,7 @@ export async function addScore(req: Request, res: Response, next: NextFunction) 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function deleteScore(req: Request, res: Response, next: NextFunction) {
-	log(`Accessed: deleteScore, ${ res.locals.decode.clientId }`, LogLevel.LOG);
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "deleteScore", LogSeverity.LOG);
 	const data: IScoreDELETEData = req.body;
 
 	if(!validateScoreDeleteData(data)) {
@@ -411,6 +445,8 @@ export async function deleteScore(req: Request, res: Response, next: NextFunctio
 		return;
 	}
 
+	log("Score data deleted successfully. Sending success response.", "removeScore", LogSeverity.LOG);
+
 	const ret: IResponseMessage = {
 		message: "Data deleted successfully."
 	};
@@ -425,7 +461,10 @@ function validateScorePostData(data: IScorePOSTData) {
 	const hasValidTypes = _.isNumber(data.userId) && _.isNumber(data.score) && _.isNumber(data.pp);
 	const hasValidData = isDefined && (checkNumber(data.userId) && checkNumber(data.score) && checkNumber(data.pp));
 
-	log(`validateUserPostData :: isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateScorePostData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateScorePostData", LogSeverity.WARN);
+	}
 
 	return isDefined && hasValidTypes && hasValidData;
 }
@@ -435,7 +474,10 @@ function validateScoreDeleteData(data: IScoreDELETEData) {
 	const hasValidTypes = _.isNumber(data.scoreId);
 	const hasValidData = isDefined && (checkNumber(data.scoreId));
 
-	log(`validateUserPostData :: isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateScoreDeleteData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateScoreDeleteData", LogSeverity.WARN);
+	}
 
 	return isDefined && hasValidTypes && hasValidData;
 }

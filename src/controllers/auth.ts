@@ -7,12 +7,14 @@ import { IResponseMessage, IResponseData } from "../types/express";
 import { IClientPOSTData, IAuthenticationResponse } from "../types/auth";
 import { getClientById } from "../utils/deta/auth";
 import { HTTPStatus } from "../utils/http";
-import { LogLevel, log } from "../utils/log";
+import { LogSeverity, log } from "../utils/log";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getAccessToken(deta: Deta, req: Request, res: Response, next: NextFunction) {
 	try {
 		if(_.isUndefined(process.env.TOKEN_SECRET)) {
+			log("TOKEN_SECRET is not yet defined. See .env-template for details.", "addDummyData", LogSeverity.ERROR);
+
 			const ret: IResponseMessage = {
 				message: "Secret is not defined. Please contact system administrator."
 			};
@@ -48,6 +50,8 @@ export async function getAccessToken(deta: Deta, req: Request, res: Response, ne
 
 			const equal = timingSafeEqual(Buffer.from(hashedRequestKey, "utf8"), Buffer.from(hashedClientKey, "utf8"));
 			if(!equal) {
+				log("Invalid secret given. Sending error response.", "addDummyData", LogSeverity.WARN);
+
 				const ret: IResponseMessage = {
 					message: "Invalid client credentials."
 				};
@@ -59,6 +63,8 @@ export async function getAccessToken(deta: Deta, req: Request, res: Response, ne
 
 		const token = jwt.sign({ clientId: client.key }, process.env.TOKEN_SECRET, { expiresIn: "1d" });
 
+		log(`Access token generated for client id: ${ client.clientId }. Sending token response.`, "getAccessToken", LogSeverity.LOG);
+
 		const ret: IResponseData<IAuthenticationResponse> = {
 			message: "Authentication success.",
 			data: {
@@ -67,7 +73,6 @@ export async function getAccessToken(deta: Deta, req: Request, res: Response, ne
 			}
 		};
 
-		log(`getAccessToken :: Access token generated for ${ client.clientName }.`, LogLevel.LOG);
 		res.status(HTTPStatus.OK).json(ret);
 	}
 	catch (e) {
@@ -76,7 +81,9 @@ export async function getAccessToken(deta: Deta, req: Request, res: Response, ne
 				message: "An error occurred."
 			};
 
-			log(`getAccessToken :: ${ e.name }: ${ e.message }\n${ e.stack }`, LogLevel.ERROR);
+			/* TODO: add expired token error handling */
+
+			log(`${ e.name }: ${ e.message }\n${ e.stack }`, "getAccessToken", LogSeverity.ERROR);
 
 			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
 			return;
@@ -94,7 +101,10 @@ function validateClientPostData(data: IClientPOSTData) {
 	const hasValidTypes = _.isString(data.clientId) && _.isString(data.clientKey);
 	const hasValidData = !_.isEmpty(data.clientId) && (!_.isEmpty(data.clientKey) && data.clientKey.length === 64);
 
-	log(`validateClientPostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateClientPostData", LogSeverity.DEBUG);
+	if(!hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateClientPostData", LogSeverity.WARN);
+	}
 
 	return hasValidTypes && hasValidData;
 }

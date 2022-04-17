@@ -5,12 +5,12 @@ import { IUserDELETEData, IUserPOSTData, IUserResponse, IUsersResponse } from ".
 import { getCountryByKey } from "../utils/deta/countries";
 import { getUserByKey, getUserByOsuId, getUsers, insertUser, removeUser } from "../utils/deta/users";
 import { HTTPStatus } from "../utils/http";
-import { LogLevel, log } from "../utils/log";
+import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getAllUsers(req: Request, res: Response, next: NextFunction) {
-	log("Accessed: getAllUsers", LogLevel.LOG);
+	log("Function accessed.", "getAllUsers", LogSeverity.LOG);
 
 	const data = await getUsers(res.locals.deta);
 	if(data.length <= 0) {
@@ -21,6 +21,8 @@ export async function getAllUsers(req: Request, res: Response, next: NextFunctio
 		res.status(HTTPStatus.NOT_FOUND).json(ret);
 		return;
 	}
+
+	log("Users data retrieved successfully. Sending data response.", "getAllUsers", LogSeverity.LOG);
 
 	const ret: IResponseData<IUsersResponse> = {
 		message: "Data retrieved successfully.",
@@ -40,10 +42,12 @@ export async function getAllUsers(req: Request, res: Response, next: NextFunctio
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getUser(req: Request, res: Response, next: NextFunction) {
-	log("Accessed: getUser", LogLevel.LOG);
+	log("Function accessed.", "getUser", LogSeverity.LOG);
 
 	const id = _.parseInt(req.params.userId, 10); // database's user id
 	if(!checkNumber(id) || id <= 0) {
+		log("Invalid ID parameter. Sending error response.", "getAllUsers", LogSeverity.WARN);
+
 		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
 		};
@@ -62,6 +66,8 @@ export async function getUser(req: Request, res: Response, next: NextFunction) {
 		return;
 	}
 
+	log("User data retrieved successfully. Sending data response.", "getUser", LogSeverity.LOG);
+
 	const ret: IResponseData<IUserResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
@@ -79,7 +85,7 @@ export async function getUser(req: Request, res: Response, next: NextFunction) {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function addUser(req: Request, res: Response, next: NextFunction) {
-	log(`Accessed: addUser, clientId: ${ res.locals.decode.clientId }`, LogLevel.LOG);
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "addUser", LogSeverity.LOG);
 	const data: IUserPOSTData = req.body;
 
 	if(!validateUserPostData(data)) {
@@ -126,6 +132,8 @@ export async function addUser(req: Request, res: Response, next: NextFunction) {
 		return;
 	}
 
+	log("User data inserted successfully. Sending data response.", "addUser", LogSeverity.LOG);
+
 	const ret: IResponseMessage = {
 		message: "Data inserted successfully."
 	};
@@ -135,7 +143,7 @@ export async function addUser(req: Request, res: Response, next: NextFunction) {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function deleteUser(req: Request, res: Response, next: NextFunction) {
-	log(`Accessed: addCountry, ${ res.locals.decode.clientId }`, LogLevel.LOG);
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "deleteUser", LogSeverity.LOG);
 	const data: IUserDELETEData = req.body;
 
 	if(!validateUserDeleteData(data)) {
@@ -171,6 +179,8 @@ export async function deleteUser(req: Request, res: Response, next: NextFunction
 		return;
 	}
 
+	log("User data deleted successfully. Sending data response.", "deleteUser", LogSeverity.LOG);
+
 	const ret: IResponseMessage = {
 		message: "Data deleted successfully."
 	};
@@ -185,7 +195,10 @@ function validateUserPostData(data: IUserPOSTData) {
 	const hasValidTypes = _.isString(data.userName) && _.isNumber(data.osuId) && _.isNumber(data.countryId);
 	const hasValidData = isDefined && (!_.isEmpty(data.userName) && checkNumber(data.osuId) && checkNumber(data.countryId));
 
-	log(`validateUserPostData :: isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateUserPostData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateUserPostData", LogSeverity.WARN);
+	}
 
 	return isDefined && hasValidTypes && hasValidData;
 }
@@ -197,7 +210,10 @@ function validateUserDeleteData(data: IUserDELETEData) {
 	const hasValidTypes = _.isNumber(data.userId);
 	const hasValidData = isDefined && (checkNumber(data.userId));
 
-	log(`validateUserDeleteData :: isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateUserDeleteData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateUserDeleteData", LogSeverity.WARN);
+	}
 
 	return isDefined && hasValidTypes && hasValidData;
 }

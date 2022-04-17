@@ -3,7 +3,7 @@ import Deta from "deta/dist/types/deta";
 import { ICountryItemDetailData } from "../../types/deta/country";
 import { ICountryPOSTData } from "../../types/country";
 import { IUserCountryInsertion } from "../../types/user";
-import { log, LogLevel } from "../log";
+import { log, LogSeverity } from "../log";
 
 const DB_NAME = "osu-countries";
 
@@ -21,14 +21,21 @@ export async function getCountries(deta: Deta, sort: "id" | "date" = "date") {
 			});
 		}
 
+		if(fetchResult.length <= 0) {
+			log(`${ DB_NAME }: No data returned from database.`, "getCountries", LogSeverity.WARN);
+		}
+		else {
+			log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getCountries", LogSeverity.LOG);
+		}
+
 		return fetchResult;
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`getCountries :: ${ e.name }: ${ e.message }\n${ e.stack }`);
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getCountries", LogSeverity.ERROR);
 		}
 		else {
-			log("getCountries :: Unknown error occurred.");
+			log("Unknown error occurred while querying database.", "getCountries", LogSeverity.ERROR);
 		}
 
 		return [];
@@ -40,14 +47,22 @@ export async function getCountryByKey(deta: Deta, key: number) {
 
 	try {
 		const fetchResult = (await db.get(key.toString())) as unknown as ICountryItemDetailData;
+
+		if(_.isNull(fetchResult)) {
+			log(`${ DB_NAME }: No data returned from database.`, "getCountryByKey", LogSeverity.WARN);
+		}
+		else {
+			log(`${ DB_NAME }: Returned 1 row.`, "getCountryByKey", LogSeverity.LOG);
+		}
+
 		return fetchResult;
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`getCountry :: ${ e.name }: ${ e.message }\n${ e.stack }`);
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getCountryByKey", LogSeverity.ERROR);
 		}
 		else {
-			log("getCountry :: Unknown error occurred.");
+			log("Unknown error occurred while querying database.", "getCountryByKey", LogSeverity.ERROR);
 		}
 
 		return null;
@@ -60,21 +75,23 @@ export async function getCountryByCode(deta: Deta, code: string) {
 	try {
 		const fetchResult = (await db.fetch({ countryCode: code })).items as unknown as ICountryItemDetailData[];
 		if(fetchResult.length <= 0) {
+			log(`${ DB_NAME }: No data returned from database.`, "getCountryByCode", LogSeverity.WARN);
 			return null;
 		}
 		else if(fetchResult.length > 1) {
-			log(`getCountryByCode :: Queried ${ code } with more than 1 rows. Fix the repeating occurences and try again.`, LogLevel.ERROR);
+			log(`${ DB_NAME }: Queried ${ code } with more than 1 rows. Fix the repeating occurences and try again.`, "getCountryByCode", LogSeverity.ERROR);
 			return null;
 		}
 
+		log(`${ DB_NAME }: Returned 1 row.`, "getCountryByCode", LogSeverity.LOG);
 		return fetchResult[0];
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`getCountryByCode :: ${ e.name }: ${ e.message }\n${ e.stack }`);
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getCountryByCode", LogSeverity.ERROR);
 		}
 		else {
-			log("getCountryByCode :: Unknown error occurred.");
+			log("Unknown error occurred while querying database.", "getCountryByCode", LogSeverity.ERROR);
 		}
 
 		return null;
@@ -104,17 +121,17 @@ export async function insertCountry(deta: Deta, country: ICountryPOSTData, silen
 		}, (currentLastId + 1).toString());
 
 		if(!silent) {
-			log(`insertCountry :: ${ DB_NAME }: Inserted 1 row.`, LogLevel.LOG);
+			log(`${ DB_NAME }: Inserted 1 row.`, "insertCountry", LogSeverity.LOG);
 		}
 
 		return true;
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`insertCountry :: ${ e.name }: ${ e.message }\n${ e.stack }`);
+			log(`An error occurred while inserting data to database.. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "insertCountry", LogSeverity.ERROR);
 		}
 		else {
-			log("insertCountry :: Unknown error occurred.");
+			log("Unknown error occurred while inserting data to database.", "insertCountry", LogSeverity.ERROR);
 		}
 
 		return false;
@@ -132,17 +149,17 @@ export async function updateInactiveCount(deta: Deta, countriesData: IUserCountr
 		await Promise.all(updateRequest);
 
 		if(!silent) {
-			log(`updateInactiveCount :: ${ DB_NAME }: Updated ${ countriesData.length } rows.`, LogLevel.LOG);
+			log(`${ DB_NAME }: Updated ${ countriesData.length } row${ countriesData.length !== 1 ? "s" : "" }.`, "updateInactiveCount", LogSeverity.LOG);
 		}
 
 		return true;
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`updateInactiveCount :: ${ e.name }: ${ e.message }\n${ e.stack }`);
+			log(`An error occurred while updating data in database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "updateInactiveCount", LogSeverity.ERROR);
 		}
 		else {
-			log("updateInactiveCount :: Unknown error occurred.");
+			log("Unknown error occurred while updating data in database.", "updateInactiveCount", LogSeverity.ERROR);
 		}
 
 		return false;
@@ -156,17 +173,17 @@ export async function removeCountry(deta: Deta, key: number, silent = false) {
 		await db.delete(key.toString());
 
 		if(!silent) {
-			log(`removeCountry :: ${ DB_NAME }: Deleted 1 row.`, LogLevel.LOG);
+			log(`${ DB_NAME }: Deleted 1 row.`, "removeCountry", LogSeverity.LOG);
 		}
 
 		return true;
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`removeCountry :: ${ e.name }: ${ e.message }\n${ e.stack }`);
+			log(`An error occurred while removing data from database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "removeCountry", LogSeverity.ERROR);
 		}
 		else {
-			log("removeCountry :: Unknown error occurred.");
+			log("Unknown error occurred while removing data from database.", "removeCountry", LogSeverity.ERROR);
 		}
 
 		return false;

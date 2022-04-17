@@ -4,14 +4,16 @@ import { IResponseData, IResponseMessage } from "../types/express";
 import { ICountriesResponse, ICountryDELETEData, ICountryPOSTData, ICountryResponse } from "../types/country";
 import { getCountries, getCountryByKey, insertCountry, removeCountry } from "../utils/deta/countries";
 import { HTTPStatus } from "../utils/http";
-import { LogLevel, log } from "../utils/log";
+import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getAllCountries(req: Request, res: Response, next: NextFunction) {
-	log("Accessed: getAllCountries", LogLevel.LOG);
+	log("Function accessed.", "getAllCountries", LogSeverity.LOG);
 
 	const data = await getCountries(res.locals.deta);
+
+	log("Countries data retrieved successfully. Sending data response.", "getAllCountries", LogSeverity.LOG);
 
 	const ret: IResponseData<ICountriesResponse> = {
 		message: "Data retrieved successfully.",
@@ -32,10 +34,12 @@ export async function getAllCountries(req: Request, res: Response, next: NextFun
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getCountry(req: Request, res: Response, next: NextFunction) {
-	log("Accessed: getAllCountries", LogLevel.LOG);
+	log("Function accessed.", "getCountry", LogSeverity.LOG);
 
 	const id = _.parseInt(req.params.countryId, 10); // database's country id
 	if(!checkNumber(id) || id <= 0) {
+		log("Invalid ID parameter. Sending error response.", "getCountry", LogSeverity.WARN);
+
 		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
 		};
@@ -53,6 +57,8 @@ export async function getCountry(req: Request, res: Response, next: NextFunction
 		res.status(HTTPStatus.NOT_FOUND).json(ret);
 		return;
 	}
+
+	log("Country data retrieved successfully. Sending data response.", "getCountry", LogSeverity.LOG);
 
 	const ret: IResponseData<ICountryResponse> = {
 		message: "Data retrieved successfully.",
@@ -72,7 +78,7 @@ export async function getCountry(req: Request, res: Response, next: NextFunction
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function addCountry(req: Request, res: Response, next: NextFunction) {
-	log(`Accessed: addCountry, clientId: ${ res.locals.decode.clientId }`, LogLevel.LOG);
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "addCountry", LogSeverity.LOG);
 	const data: ICountryPOSTData = req.body;
 
 	if(!validateCountryPostData(data)) {
@@ -94,6 +100,8 @@ export async function addCountry(req: Request, res: Response, next: NextFunction
 		return;
 	}
 
+	log("Country data inserted successfully. Sending success response.", "addCountry", LogSeverity.LOG);
+
 	const ret: IResponseMessage = {
 		message: "Data inserted successfully."
 	};
@@ -103,7 +111,7 @@ export async function addCountry(req: Request, res: Response, next: NextFunction
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function deleteCountry(req: Request, res: Response, next: NextFunction) {
-	log(`Accessed: deleteCountry, clientId: ${ res.locals.decode.clientId }`, LogLevel.LOG);
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "deleteCountry", LogSeverity.LOG);
 	const data: ICountryDELETEData = req.body;
 
 	if(!validateCountryDeleteData(data)) {
@@ -137,6 +145,8 @@ export async function deleteCountry(req: Request, res: Response, next: NextFunct
 		return;
 	}
 
+	log("Country data deleted successfully. Sending success response.", "deleteCountry", LogSeverity.LOG);
+
 	const ret: IResponseMessage = {
 		message: "Data deleted successfully."
 	};
@@ -151,7 +161,10 @@ function validateCountryPostData(data: ICountryPOSTData) {
 	const hasValidTypes = _.isString(data.countryName) && _.isString(data.countryCode);
 	const hasValidData = isDefined && (!_.isEmpty(data.countryName) && data.countryCode.length === 2);
 
-	log(`validateCountryPostData :: isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateCountryPostData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateCountryPostData", LogSeverity.WARN);
+	}
 
 	return isDefined && hasValidTypes && hasValidData;
 }
@@ -160,7 +173,10 @@ function validateCountryDeleteData(data: ICountryDELETEData) {
 	const hasValidTypes = checkNumber(data.countryId);
 	const hasValidData = data.countryId > 0;
 
-	log(`validateCountryDeleteData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateCountryDeleteData", LogSeverity.DEBUG);
+	if(!hasValidTypes || !hasValidData) {
+		log("Invalid DELETE data found.", "validateCountryDeleteData", LogSeverity.WARN);
+	}
 
 	return hasValidTypes && hasValidData;
 }

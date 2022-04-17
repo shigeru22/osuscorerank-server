@@ -9,10 +9,10 @@ import { insertCountry } from "../utils/deta/countries";
 import { insertUser } from "../utils/deta/users";
 import { insertScore } from "../utils/deta/scores";
 import { HTTPStatus } from "../utils/http";
-import { LogLevel, log } from "../utils/log";
+import { LogSeverity, log } from "../utils/log";
 
 export function getGreeting(req: Request, res: Response) {
-	log("Accessed: getGreeting()", LogLevel.LOG);
+	log("Function accessed. Sending greeting message.", "getGreeting", LogSeverity.LOG);
 
 	const ret: IResponseMessage = {
 		message: "Hello, world!"
@@ -22,7 +22,7 @@ export function getGreeting(req: Request, res: Response) {
 }
 
 export function getNotFoundMessage(req: Request, res: Response) {
-	log("Accessed: getNotFoundMessage()", LogLevel.LOG);
+	log("API endpoint not found. Sending error message.", "getNotFoundMessage", LogSeverity.LOG);
 
 	const ret: IResponseMessage = {
 		message: "API endpoint not found."
@@ -33,9 +33,11 @@ export function getNotFoundMessage(req: Request, res: Response) {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function addDummyData(deta: Deta, req: Request, res: Response, next: NextFunction) {
-	log("Accessed: addDummyData()", LogLevel.LOG);
+	log("Function accessed.", "addDummyData", LogSeverity.LOG);
 
 	if(_.isUndefined(process.env.TOKEN_SECRET)) {
+		log("TOKEN_SECRET is not yet defined. See .env-template for details.", "addDummyData", LogSeverity.ERROR);
+
 		const ret: IResponseMessage = {
 			message: "Secret is not defined. Please contact system administrator."
 		};
@@ -47,7 +49,7 @@ export async function addDummyData(deta: Deta, req: Request, res: Response, next
 	const data: IDummyPOSTData = req.body;
 	if(!validateDummyPostData(data)) {
 		const ret: IResponseMessage = {
-			message: "Invalid POST Data."
+			message: "Invalid POST data."
 		};
 
 		res.status(HTTPStatus.BAD_REQUEST).json(ret);
@@ -60,6 +62,8 @@ export async function addDummyData(deta: Deta, req: Request, res: Response, next
 
 		const equal = timingSafeEqual(Buffer.from(hashedRequestSecret, "utf8"), Buffer.from(hashedClientSecret, "utf8"));
 		if(!equal) {
+			log("Invalid secret given. Sending error response.", "addDummyData", LogSeverity.WARN);
+
 			const ret: IResponseMessage = {
 				message: "Invalid credentials."
 			};
@@ -123,6 +127,8 @@ export async function addDummyData(deta: Deta, req: Request, res: Response, next
 		return;
 	}
 
+	log("All dummy data inserted successfully. Sending success response.", "addDummyData", LogSeverity.LOG);
+
 	const ret: IResponseMessage = {
 		message: "Dummy data inserted successfully."
 	};
@@ -135,7 +141,10 @@ function validateDummyPostData(data: IDummyPOSTData) {
 	const hasValidTypes = _.isString(data.secret);
 	const hasValidData = isDefined && (!_.isEmpty(data.secret));
 
-	log(`validateDummyPostData :: isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateDummyPostData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateDummyPostData", LogSeverity.WARN);
+	}
 
 	return isDefined && hasValidTypes && hasValidData;
 }
