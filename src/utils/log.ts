@@ -7,7 +7,7 @@ export enum LogSeverity {
 	ERROR
 }
 
-const severityString = [ "DEBUG", "INFO", "LOG", "WARN", "ERROR" ];
+const severityString = [ "DEBUG", "LOG", "WARN", "ERROR" ];
 
 export function log(message: string, source: string, severity?: LogSeverity) {
 	if(typeof(process.env.DEVELOPMENT) === "undefined" || process.env.DEVELOPMENT !== "1") {
