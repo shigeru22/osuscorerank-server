@@ -455,8 +455,6 @@ export async function deleteScore(req: Request, res: Response, next: NextFunctio
 }
 
 function validateScorePostData(data: IScorePOSTData) {
-	/* TODO: implement isDefined to all validations */
-
 	const isDefined = !_.isUndefined(data.userId) && !_.isUndefined(data.score) && !_.isUndefined(data.pp);
 	const hasValidTypes = _.isNumber(data.userId) && _.isNumber(data.score) && _.isNumber(data.pp);
 	const hasValidData = isDefined && (checkNumber(data.userId) && checkNumber(data.score) && checkNumber(data.pp));

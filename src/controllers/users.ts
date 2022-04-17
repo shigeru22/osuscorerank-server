@@ -189,8 +189,6 @@ export async function deleteUser(req: Request, res: Response, next: NextFunction
 }
 
 function validateUserPostData(data: IUserPOSTData) {
-	/* TODO: implement isDefined to all validations */
-
 	const isDefined = !_.isUndefined(data.userName) && !_.isUndefined(data.osuId) && !_.isUndefined(data.countryId);
 	const hasValidTypes = _.isString(data.userName) && _.isNumber(data.osuId) && _.isNumber(data.countryId);
 	const hasValidData = isDefined && (!_.isEmpty(data.userName) && checkNumber(data.osuId) && checkNumber(data.countryId));
@@ -204,8 +202,6 @@ function validateUserPostData(data: IUserPOSTData) {
 }
 
 function validateUserDeleteData(data: IUserDELETEData) {
-	/* TODO: implement isDefined to all validations */
-
 	const isDefined = !_.isUndefined(data.userId);
 	const hasValidTypes = _.isNumber(data.userId);
 	const hasValidData = isDefined && (checkNumber(data.userId));

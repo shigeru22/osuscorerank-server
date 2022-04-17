@@ -155,8 +155,6 @@ export async function deleteCountry(req: Request, res: Response, next: NextFunct
 }
 
 function validateCountryPostData(data: ICountryPOSTData) {
-	/* TODO: implement isDefined to all validations */
-
 	const isDefined = !_.isUndefined(data.countryName) && !_.isUndefined(data.countryCode);
 	const hasValidTypes = _.isString(data.countryName) && _.isString(data.countryCode);
 	const hasValidData = isDefined && (!_.isEmpty(data.countryName) && data.countryCode.length === 2);
@@ -170,13 +168,14 @@ function validateCountryPostData(data: ICountryPOSTData) {
 }
 
 function validateCountryDeleteData(data: ICountryDELETEData) {
+	const isDefined = !_.isUndefined(data.countryId);
 	const hasValidTypes = checkNumber(data.countryId);
 	const hasValidData = data.countryId > 0;
 
-	log(`hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateCountryDeleteData", LogSeverity.DEBUG);
-	if(!hasValidTypes || !hasValidData) {
-		log("Invalid DELETE data found.", "validateCountryDeleteData", LogSeverity.WARN);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateCountryDeleteData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateCountryDeleteData", LogSeverity.WARN);
 	}
 
-	return hasValidTypes && hasValidData;
+	return isDefined && hasValidTypes && hasValidData;
 }

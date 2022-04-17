@@ -98,13 +98,14 @@ export async function getAccessToken(deta: Deta, req: Request, res: Response, ne
 }
 
 function validateClientPostData(data: IClientPOSTData) {
+	const isDefined = !_.isUndefined(data.clientId) && !_.isUndefined(data.clientKey);
 	const hasValidTypes = _.isString(data.clientId) && _.isString(data.clientKey);
 	const hasValidData = !_.isEmpty(data.clientId) && (!_.isEmpty(data.clientKey) && data.clientKey.length === 64);
 
-	log(`hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateClientPostData", LogSeverity.DEBUG);
-	if(!hasValidTypes || !hasValidData) {
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateClientPostData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
 		log("Invalid POST data found.", "validateClientPostData", LogSeverity.WARN);
 	}
 
-	return hasValidTypes && hasValidData;
+	return isDefined && hasValidTypes && hasValidData;
 }
