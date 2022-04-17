@@ -47,6 +47,47 @@ export async function getUpdates(deta: Deta, sort: "id" | "date" = "date", desc 
 	}
 }
 
+export async function getUpdatesByStatus(deta: Deta, status: boolean, sort: "id" | "date" = "date", desc = false) {
+	const db = deta.Base(DB_NAME);
+
+	try {
+		const fetchResult = (await db.fetch({ online: status })).items as unknown as IUpdateDetailData[];
+
+		if(fetchResult.length <= 0) {
+			log(`${ DB_NAME }: No data returned from database.`, "getUpdatesByStatus", LogSeverity.WARN);
+		}
+
+		fetchResult.sort((a, b) => {
+			let compA = 0;
+			let compB = 0;
+
+			if(sort === "id") {
+				compA = _.parseInt(a.key);
+				compB = _.parseInt(b.key);
+			}
+			else {
+				compA = (typeof(a.dateAdded) === "string" ? new Date(a.dateAdded) : a.dateAdded).getTime();
+				compB = (typeof(b.dateAdded) === "string" ? new Date(b.dateAdded) : b.dateAdded).getTime();
+			}
+
+			return desc ? compB - compA : compA - compB;
+		});
+
+		log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getUpdatesByStatus", LogSeverity.LOG);
+		return fetchResult;
+	}
+	catch (e) {
+		if(_.isError(e)) {
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getUpdatesByStatus", LogSeverity.ERROR);
+		}
+		else {
+			log("Unknown error occurred while querying database.", "getUpdatesByStatus", LogSeverity.ERROR);
+		}
+
+		return [];
+	}
+}
+
 export async function getUpdateByKey(deta: Deta, key: number) {
 	const db = deta.Base(DB_NAME);
 

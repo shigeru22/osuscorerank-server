@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
 import { IResponseData, IResponseMessage } from "../types/express";
 import { IUpdateOnlinePOSTData, IUpdatePOSTData, IUpdateResponse, IUpdatesResponse } from "../types/update";
-import { getUpdateByKey, getUpdates, insertUpdate, updateOnlineStatus } from "../utils/deta/updates";
+import { getUpdateByKey, getUpdates, getUpdatesByStatus, insertUpdate, updateOnlineStatus } from "../utils/deta/updates";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
@@ -84,7 +84,27 @@ export async function getAllUpdates(req: Request, res: Response, next: NextFunct
 export async function getLatestUpdate(req: Request, res: Response, next: NextFunction) {
 	log("Function accessed.", "getLatestUpdate", LogSeverity.LOG);
 
-	const data = await getUpdates(res.locals.deta, "id", true);
+	let online = true;
+	{
+		if(!_.isUndefined(req.query.online)) {
+			if(!_.isString(req.query.online) || !(req.query.online === "true" || req.query.online === "false")) {
+				log("Invalid desc parameter. Sending error response.", "getAllUpdates", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid desc parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			if(req.query.online === "false") {
+				online = false;
+			}
+		}
+	}
+
+	const data = await getUpdatesByStatus(res.locals.deta, online, "id", true);
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
