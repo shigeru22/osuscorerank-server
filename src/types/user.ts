@@ -1,3 +1,5 @@
+import { ICountryItemData } from "./country";
+
 export interface IUserPOSTData {
   userName: string;
   osuId: number;
@@ -11,11 +13,7 @@ export interface IUserDELETEData {
 export interface IUserData {
 	userName: string;
 	osuId: number;
-	country: {
-		countryId: number;
-		countryName: string;
-		countryCode: string;
-	};
+	country: ICountryItemData;
 }
 
 export interface IUserItemData extends IUserData {

@@ -139,7 +139,7 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 		await db.put({
 			userName: data.userName,
 			osuId: data.osuId,
-			country: data.country,
+			country: JSON.parse(JSON.stringify(data.country)),
 			dateAdded: date.toISOString()
 		}, (currentLastId + 1).toString());
 

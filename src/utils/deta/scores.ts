@@ -184,7 +184,7 @@ export async function insertScore(deta: Deta, score: IScorePOSTData, silent = fa
 		const date = new Date();
 
 		await db.put({
-			user: data.user,
+			user: JSON.parse(JSON.stringify(data.user)),
 			score: data.score.toString(),
 			pp: data.pp,
 			dateAdded: date.toISOString()

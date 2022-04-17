@@ -1,3 +1,5 @@
+import { IUserItemData } from "./user";
+
 export interface IScorePOSTData {
 	userId: number;
 	score: number;
@@ -9,16 +11,7 @@ export interface IScoreDELETEData {
 }
 
 export interface IScoreData {
-	user: {
-		userId: number;
-		userName: string;
-		osuId: number;
-		country: {
-			countryId: number;
-			countryName: string;
-			countryCode: string;
-		};
-	};
+	user: IUserItemData;
 	score: bigint | number | string; // since bigint in stored form is usually string
 	pp: number;
 }

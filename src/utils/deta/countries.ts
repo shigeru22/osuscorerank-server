@@ -123,8 +123,6 @@ export async function insertCountry(deta: Deta, country: ICountryPOSTData, silen
 		await db.put({
 			countryName: country.countryName,
 			countryCode: country.countryCode,
-			recentlyInactive: 0,
-			highestId: 0,
 			dateAdded: date.toISOString()
 		}, (currentLastId + 1).toString());
 

@@ -10,8 +10,6 @@ export interface ICountryDELETEData {
 export interface ICountryData {
 	countryName: string;
 	countryCode: string;
-	recentlyInactive: number;
-	highestId: number;
 }
 
 export interface ICountryItemData extends ICountryData {
