@@ -7,19 +7,27 @@ import { log, LogSeverity } from "../log";
 
 const DB_NAME = "osu-countries";
 
-export async function getCountries(deta: Deta, sort: "id" | "date" = "date") {
+export async function getCountries(deta: Deta, sort: "id" | "date" = "id", desc = false) {
 	const db = deta.Base(DB_NAME);
 
 	try {
 		const fetchResult = (await db.fetch()).items as unknown as ICountryItemDetailData[];
-		if(sort === "date") {
-			fetchResult.sort((a, b) => {
-				const dateA: Date = typeof(a.dateAdded) === "string" ? new Date(a.dateAdded) : a.dateAdded;
-				const dateB: Date = typeof(b.dateAdded) === "string" ? new Date(b.dateAdded) : b.dateAdded;
 
-				return dateA.getTime() - dateB.getTime();
-			});
-		}
+		fetchResult.sort((a, b) => {
+			let compA = 0;
+			let compB = 0;
+
+			if(sort === "id") {
+				compA = _.parseInt(a.key);
+				compB = _.parseInt(b.key);
+			}
+			else {
+				compA = (typeof(a.dateAdded) === "string" ? new Date(a.dateAdded) : a.dateAdded).getTime();
+				compB = (typeof(b.dateAdded) === "string" ? new Date(b.dateAdded) : b.dateAdded).getTime();
+			}
+
+			return desc ? compB - compA : compA - compB;
+		});
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getCountries", LogSeverity.WARN);
