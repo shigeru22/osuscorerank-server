@@ -123,14 +123,16 @@ export async function deleteCountry(req: Request, res: Response, next: NextFunct
 		return;
 	}
 
-	const country = await getCountryByKey(res.locals.deta, data.countryId);
-	if(_.isNull(country)) {
-		const ret: IResponseMessage = {
-			message: "Country with specified ID can't be found."
-		};
+	{
+		const country = await getCountryByKey(res.locals.deta, data.countryId);
+		if(_.isNull(country)) {
+			const ret: IResponseMessage = {
+				message: "Country with specified ID can't be found."
+			};
 
-		res.status(HTTPStatus.NOT_FOUND).json(ret);
-		return;
+			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
+		}
 	}
 
 	/* TODO: remove scores and users by country id */
