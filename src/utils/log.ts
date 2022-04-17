@@ -1,5 +1,3 @@
-import _ from "lodash";
-
 export enum LogSeverity {
 	DEBUG = 0,
 	LOG,
@@ -9,12 +7,12 @@ export enum LogSeverity {
 
 const severityString = [ "DEBUG", "LOG", "WARN", "ERROR" ];
 
-export function log(message: string, source: string, severity?: LogSeverity) {
+export function log(message: string, source: string, severity: LogSeverity = LogSeverity.LOG) {
 	if(typeof(process.env.DEVELOPMENT) === "undefined" || process.env.DEVELOPMENT !== "1") {
 		if(severity === LogSeverity.DEBUG) {
 			return;
 		}
 	}
 
-	console.log(`[${ severityString[_.isUndefined(severity) ? 3 : severity] }] ${ source } :: ${ message }`);
+	console.log(`[${ severityString[severity] }] ${ source } :: ${ message }`);
 }
