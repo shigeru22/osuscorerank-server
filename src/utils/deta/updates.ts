@@ -91,13 +91,15 @@ export async function insertUpdate(deta: Deta, update: IUpdatePOSTData, silent =
 		const data: IUpdateData = {
 			date,
 			apiVersion: update.apiVersion,
-			webVersion: update.webVersion
+			webVersion: update.webVersion,
+			online: false
 		};
 
 		await db.put({
 			date: data.date.toISOString(),
 			apiVersion: data.apiVersion,
 			webVersion: data.webVersion,
+			online: data.online,
 			dateAdded: date.toISOString()
 		}, (currentLastId + 1).toString());
 
@@ -113,6 +115,30 @@ export async function insertUpdate(deta: Deta, update: IUpdatePOSTData, silent =
 		}
 		else {
 			log("Unknown error occurred while inserting data to database.", "insertUpdate", LogSeverity.ERROR);
+		}
+
+		return false;
+	}
+}
+
+export async function updateOnlineStatus(deta: Deta, key: number, value: boolean, silent = false) {
+	const db = deta.Base(DB_NAME);
+
+	try {
+		await db.update({ online: value }, key.toString());
+
+		if(!silent) {
+			log(`${ DB_NAME }: Updated 1 row.`, "updateOnlineStatus", LogSeverity.LOG);
+		}
+
+		return true;
+	}
+	catch (e) {
+		if(_.isError(e)) {
+			log(`An error occurred while inserting data to database.. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "updateOnlineStatus", LogSeverity.ERROR);
+		}
+		else {
+			log("Unknown error occurred while inserting data to database.", "updateOnlineStatus", LogSeverity.ERROR);
 		}
 
 		return false;

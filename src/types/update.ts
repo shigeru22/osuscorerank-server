@@ -7,6 +7,12 @@ export interface IUpdateData {
   date: Date;
   apiVersion: string;
   webVersion: string;
+  online: boolean;
+}
+
+export interface IUpdateOnlinePOSTData {
+  updateId: number;
+  online: boolean;
 }
 
 export interface IUpdateItemData extends IUpdateData {

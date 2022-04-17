@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
 import { IResponseData, IResponseMessage } from "../types/express";
-import { IUpdatePOSTData, IUpdateResponse, IUpdatesResponse } from "../types/update";
-import { getUpdateByKey, getUpdates, insertUpdate } from "../utils/deta/updates";
+import { IUpdateOnlinePOSTData, IUpdatePOSTData, IUpdateResponse, IUpdatesResponse } from "../types/update";
+import { getUpdateByKey, getUpdates, insertUpdate, updateOnlineStatus } from "../utils/deta/updates";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
@@ -70,7 +70,8 @@ export async function getAllUpdates(req: Request, res: Response, next: NextFunct
 			updatesData: data.map(item => ({
 				date: item.date,
 				apiVersion: item.apiVersion,
-				webVersion: item.webVersion
+				webVersion: item.webVersion,
+				online: item.online
 			})),
 			length: data.length
 		}
@@ -101,7 +102,8 @@ export async function getLatestUpdate(req: Request, res: Response, next: NextFun
 			updateData: {
 				date: data[0].date,
 				apiVersion: data[0].apiVersion,
-				webVersion: data[0].webVersion
+				webVersion: data[0].webVersion,
+				online: data[0].online
 			}
 		}
 	};
@@ -143,7 +145,8 @@ export async function getUpdate(req: Request, res: Response, next: NextFunction)
 			updateData: {
 				date: data.date,
 				apiVersion: data.apiVersion,
-				webVersion: data.webVersion
+				webVersion: data.webVersion,
+				online: data.online
 			}
 		}
 	};
@@ -189,6 +192,52 @@ export async function addUpdateData(req: Request, res: Response, next: NextFunct
 	res.status(HTTPStatus.OK).json(ret);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function updateDataOnlineStatus(req: Request, res: Response, next: NextFunction) {
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "updateDataOnlineStatus", LogSeverity.LOG);
+	const data: IUpdateOnlinePOSTData = req.body;
+
+	if(!validateUpdateOnlinePostData(data)) {
+		const ret: IResponseMessage = {
+			message: "Invalid POST data."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+
+	{
+		const update = await getUpdateByKey(res.locals.deta, data.updateId);
+		if(_.isNull(update)) {
+			const ret: IResponseMessage = {
+				message: "Update data with specified ID not found."
+			};
+
+			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
+		}
+	}
+
+	const result = await updateOnlineStatus(res.locals.deta, data.updateId, data.online);
+
+	if(!result) {
+		const ret: IResponseMessage = {
+			message: "Data update failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
+	log("Update data updated successfully. Sending data response.", "updateDataOnlineStatus", LogSeverity.LOG);
+
+	const ret: IResponseMessage = {
+		message: "Data updated successfully."
+	};
+
+	res.status(HTTPStatus.OK).json(ret);
+}
+
 function validateUpdatePostData(data: IUpdatePOSTData) {
 	const isDefined = !_.isUndefined(data.apiVersion) && !_.isUndefined(data.webVersion);
 	const hasValidTypes = _.isString(data.apiVersion) && _.isString(data.webVersion);
@@ -197,6 +246,19 @@ function validateUpdatePostData(data: IUpdatePOSTData) {
 	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateUpdatePostData", LogSeverity.DEBUG);
 	if(!isDefined || !hasValidTypes || !hasValidData) {
 		log("Invalid POST data found.", "validateUpdatePostData", LogSeverity.WARN);
+	}
+
+	return isDefined && hasValidTypes && hasValidData;
+}
+
+function validateUpdateOnlinePostData(data: IUpdateOnlinePOSTData) {
+	const isDefined = !_.isUndefined(data.updateId) && !_.isUndefined(data.online);
+	const hasValidTypes = _.isNumber(data.updateId) && _.isBoolean(data.online);
+	const hasValidData = isDefined && (checkNumber(data.updateId)); // boolean value has been checked at isDefined (true, false, undefined)
+
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateUpdateOnlinePostData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateUpdateOnlinePostData", LogSeverity.WARN);
 	}
 
 	return isDefined && hasValidTypes && hasValidData;
