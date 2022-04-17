@@ -7,6 +7,7 @@ import mainRoute from "./routes/main";
 import countryRoute from "./routes/countries";
 import userRoute from "./routes/users";
 import scoreRoute from "./routes/scores";
+import updateRoute from "./routes/updates";
 import authRoute from "./routes/auth";
 import { LogSeverity, log } from "./utils/log";
 
@@ -24,6 +25,7 @@ app.use("/api/", mainRoute);
 app.use("/api/countries", countryRoute);
 app.use("/api/users", userRoute);
 app.use("/api/scores", scoreRoute);
+app.use("/api/updates", updateRoute);
 app.use("/api/auth", authRoute);
 
 app.use("/api/*", getNotFoundMessage);
