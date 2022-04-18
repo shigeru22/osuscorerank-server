@@ -91,10 +91,14 @@ function checkEnv() {
 	return true;
 }
 
-if(!checkEnv()) {
-	process.exit();
+if(!_.isUndefined(process.env.DEVELOPMENT) && process.env.DEVELOPMENT === "1") {
+	if(!checkEnv()) {
+		process.exit();
+	}
+
+	app.listen(PORT, () => {
+		log(`Server is running at port ${ PORT }`, "checkEnv", LogSeverity.LOG);
+	});
 }
 
-app.listen(PORT, () => {
-	log(`Server is running at port ${ PORT }`, "checkEnv", LogSeverity.LOG);
-});
+export default app;
