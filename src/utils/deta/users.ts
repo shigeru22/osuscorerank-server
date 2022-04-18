@@ -1,7 +1,7 @@
 import _ from "lodash";
 import Deta from "deta/dist/types/deta";
 import { IUserCountryDetailData, IUserDetailData } from "../../types/deta/user";
-import { IUserCountryData, IUserPOSTData } from "../../types/user";
+import { IUserCountryData, IUserPOSTData, IUserPUTData } from "../../types/user";
 import { getCountryByKey } from "./countries";
 import { LogSeverity, log } from "../log";
 
@@ -216,11 +216,11 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 	}
 }
 
-export async function updateUser(deta: Deta, user: IUserPOSTData, silent = false) {
+export async function updateUser(deta: Deta, user: IUserPUTData, silent = false) {
 	const db = deta.Base(DB_NAME);
 
 	try {
-		const fetchedUser = await getUserByOsuId(deta, user.osuId);
+		const fetchedUser = await getUserByKey(deta, user.userId);
 		if(_.isNull(fetchedUser)) {
 			log("Null user returned. See above log (if any) for details.", "updateUser", LogSeverity.ERROR);
 			return false;

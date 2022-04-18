@@ -6,6 +6,12 @@ export interface IUserPOSTData {
   countryId: number;
 }
 
+export interface IUserPUTData {
+  userId: number;
+  userName: string;
+  countryId: number;
+}
+
 export interface IUserDELETEData {
   userId: number;
 }

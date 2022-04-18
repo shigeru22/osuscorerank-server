@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
 import { IResponseData, IResponseMessage } from "../types/express";
-import { ICountryUsersResponse, IUserDELETEData, IUserPOSTData, IUserResponse, IUsersResponse } from "../types/user";
+import { ICountryUsersResponse, IUserDELETEData, IUserPOSTData, IUserPUTData, IUserResponse, IUsersResponse } from "../types/user";
 import { getCountryByKey } from "../utils/deta/countries";
-import { getUserByKey, getUserByOsuId, getUsers, getUsersByCountryId, insertUser, removeUser } from "../utils/deta/users";
+import { getUserByKey, getUserByOsuId, getUsers, getUsersByCountryId, insertUser, removeUser, updateUser as updateUserData } from "../utils/deta/users";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
@@ -200,6 +200,64 @@ export async function addUser(req: Request, res: Response, next: NextFunction) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function updateUser(req: Request, res: Response, next: NextFunction) {
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "addUser", LogSeverity.LOG);
+	const data: IUserPUTData = req.body;
+
+	if(!validateUserPutData(data)) {
+		const ret: IResponseMessage = {
+			message: "Invalid PUT data."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+
+	{
+		const user = await getUserByKey(res.locals.deta, data.userId);
+		if(_.isNull(user)) {
+			const ret: IResponseMessage = {
+				message: "User with specified ID not found."
+			};
+
+			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
+		}
+	}
+
+	{
+		const country = await getCountryByKey(res.locals.deta, data.countryId);
+		if(_.isNull(country)) {
+			const ret: IResponseMessage = {
+				message: "Country with specified ID can't be found."
+			};
+
+			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
+		}
+	}
+
+	const result = await updateUserData(res.locals.deta, data);
+
+	if(!result) {
+		const ret: IResponseMessage = {
+			message: "Data update failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
+	log("User data updated successfully. Sending data response.", "addUser", LogSeverity.LOG);
+
+	const ret: IResponseMessage = {
+		message: "Data updated successfully."
+	};
+
+	res.status(HTTPStatus.OK).json(ret);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function deleteUser(req: Request, res: Response, next: NextFunction) {
 	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "deleteUser", LogSeverity.LOG);
 	const data: IUserDELETEData = req.body;
@@ -254,6 +312,19 @@ function validateUserPostData(data: IUserPOSTData) {
 	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateUserPostData", LogSeverity.DEBUG);
 	if(!isDefined || !hasValidTypes || !hasValidData) {
 		log("Invalid POST data found.", "validateUserPostData", LogSeverity.WARN);
+	}
+
+	return isDefined && hasValidTypes && hasValidData;
+}
+
+function validateUserPutData(data: IUserPUTData) {
+	const isDefined = !_.isUndefined(data.userId) && !_.isUndefined(data.userName) && !_.isUndefined(data.countryId);
+	const hasValidTypes = _.isNumber(data.userId) && _.isString(data.userName) && _.isNumber(data.countryId);
+	const hasValidData = isDefined && (checkNumber(data.userId) && !_.isEmpty(data.userName) && checkNumber(data.countryId));
+
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateUserPutData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateUserPutData", LogSeverity.WARN);
 	}
 
 	return isDefined && hasValidTypes && hasValidData;
