@@ -7,6 +7,8 @@ export enum LogSeverity {
 
 const severityString = [ "DEBUG", "LOG", "WARN", "ERROR" ];
 
+export const criticalLogs: string[] = [];
+
 export function log(message: string, source: string, severity: LogSeverity = LogSeverity.LOG) {
 	if(typeof(process.env.DEVELOPMENT) === "undefined" || process.env.DEVELOPMENT !== "1") {
 		if(severity === LogSeverity.DEBUG) {
@@ -14,5 +16,14 @@ export function log(message: string, source: string, severity: LogSeverity = Log
 		}
 	}
 
-	console.log(`[${ severityString[severity] }] ${ source } :: ${ message }`);
+	const logText = `[${ severityString[severity] }] ${ source } :: ${ message }`;
+
+	if(severity >= LogSeverity.WARN) {
+		if(criticalLogs.length === 10) {
+			criticalLogs.shift();
+		}
+		criticalLogs.push(logText);
+	}
+
+	console.log(logText);
 }

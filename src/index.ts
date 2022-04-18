@@ -9,6 +9,7 @@ import userRoute from "./routes/users";
 import scoreRoute from "./routes/scores";
 import updateRoute from "./routes/updates";
 import authRoute from "./routes/auth";
+import statusRoute from "./routes/status";
 import { LogSeverity, log } from "./utils/log";
 
 env.config();
@@ -27,6 +28,7 @@ app.use("/api/users", userRoute);
 app.use("/api/scores", scoreRoute);
 app.use("/api/updates", updateRoute);
 app.use("/api/auth", authRoute);
+app.use("/api/status", statusRoute);
 
 app.use("/api/*", getNotFoundMessage);
 
