@@ -7,7 +7,7 @@ import { LogSeverity, log } from "../log";
 
 const DB_NAME = "osu-users";
 
-export async function getUsers(deta: Deta, sort: "id" | "date" = "id") {
+export async function getUsers(deta: Deta, sort: "id" | "date" = "id", desc = false) {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -18,22 +18,21 @@ export async function getUsers(deta: Deta, sort: "id" | "date" = "id") {
 			return [];
 		}
 
-		if(sort === "date") {
-			fetchResult.sort((a, b) => {
-				const dateA: Date = typeof(a.dateAdded) === "string" ? new Date(a.dateAdded) : a.dateAdded;
-				const dateB: Date = typeof(b.dateAdded) === "string" ? new Date(b.dateAdded) : b.dateAdded;
+		fetchResult.sort((a, b) => {
+			let compA = 0;
+			let compB = 0;
 
-				return dateA.getTime() - dateB.getTime();
-			});
-		}
-		else {
-			fetchResult.sort((a, b) => {
-				const keyA = _.parseInt(a.key, 10);
-				const keyB = _.parseInt(b.key, 10);
+			if(sort === "id") {
+				compA = _.parseInt(a.key, 10);
+				compB = _.parseInt(b.key, 10);
+			}
+			else {
+				compA = (typeof(a.dateAdded) === "string" ? new Date(a.dateAdded) : a.dateAdded).getTime();
+				compB = (typeof(b.dateAdded) === "string" ? new Date(b.dateAdded) : b.dateAdded).getTime();
+			}
 
-				return keyA - keyB;
-			});
-		}
+			return desc ? compB - compA : compA - compB;
+		});
 
 		log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getUsers", LogSeverity.WARN);
 		return fetchResult;
