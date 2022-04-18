@@ -40,13 +40,15 @@ export async function getScoresByCountryId(deta: Deta, id: number, sort: "id" | 
 	const db = deta.Base(DB_NAME);
 
 	try {
-		const country = await getCountryByKey(deta, id);
-		if(_.isNull(country)) {
-			log("Null country returned. See above log (if any) for details.", "getScoresByCountryId", LogSeverity.WARN);
-			return [];
+		{
+			const country = await getCountryByKey(deta, id);
+			if(_.isNull(country)) {
+				log("Country not found. Cancelling score data retrieval.", "getScoresByCountryId", LogSeverity.WARN);
+				return [];
+			}
 		}
 
-		const fetchResult = (await db.fetch({ user: { country: { countryId: id } } })).items as unknown as IScoreDetailData[];
+		const fetchResult = (await db.fetch({ countryId: id })).items as unknown as IScoreDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScoresByCountryId", LogSeverity.WARN);
@@ -146,7 +148,15 @@ export async function getScoreByUserId(deta: Deta, id: number) {
 	const db = deta.Base(DB_NAME);
 
 	try {
-		const fetchResult = (await db.fetch({ user: { userId: id.toString() } })) as unknown as IScoreDetailData[];
+		{
+			const user = await getUserByKey(deta, id);
+			if(_.isNull(user)) {
+				log("Null user returned. See above log (if any) for details.", "getScoresByCountryId", LogSeverity.WARN);
+				return null;
+			}
+		}
+
+		const fetchResult = (await db.fetch({ userId: id })) as unknown as IScoreDetailData[];
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScoreByUserId", LogSeverity.WARN);
 			return null;
@@ -260,6 +270,8 @@ export async function insertScore(deta: Deta, score: IScorePOSTData, updateId?: 
 
 		await db.put({
 			user: JSON.parse(JSON.stringify(data.user)),
+			userId: data.user.userId,
+			countryId: data.user.country.countryId,
 			score: data.score.toString(),
 			pp: data.pp,
 			updateId: updateKey,

@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
 import { IResponseData, IResponseMessage } from "../types/express";
-import { IUserDELETEData, IUserPOSTData, IUserResponse, IUsersResponse } from "../types/user";
+import { ICountryUsersResponse, IUserDELETEData, IUserPOSTData, IUserResponse, IUsersResponse } from "../types/user";
 import { getCountryByKey } from "../utils/deta/countries";
-import { getUserByKey, getUserByOsuId, getUsers, insertUser, removeUser } from "../utils/deta/users";
+import { getUserByKey, getUserByOsuId, getUsers, getUsersByCountryId, insertUser, removeUser } from "../utils/deta/users";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
@@ -32,6 +32,64 @@ export async function getAllUsers(req: Request, res: Response, next: NextFunctio
 				userName: item.userName,
 				osuId: item.osuId,
 				country: item.country
+			})),
+			length: data.length
+		}
+	};
+
+	res.status(HTTPStatus.OK).json(ret);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getCountryUsers(req: Request, res: Response, next: NextFunction) {
+	log("Function accessed.", "getCountryUsers", LogSeverity.LOG);
+
+	const id = _.parseInt(req.params.countryId, 10);
+	if(!checkNumber(id) || id <= 0) {
+		log("Invalid ID parameter. Sending error response.", "getCountryUsers", LogSeverity.WARN);
+
+		const ret: IResponseMessage = {
+			message: "Invalid ID parameter."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+
+	const country = await getCountryByKey(res.locals.deta, id);
+	if(_.isNull(country)) {
+		const ret: IResponseMessage = {
+			message: "Country with specified ID not found."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
+	const data = await getUsersByCountryId(res.locals.deta, id);
+	if(data.length <= 0) {
+		const ret: IResponseMessage = {
+			message: "No data found."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
+	log("Users data retrieved successfully. Sending data response.", "getCountryUsers", LogSeverity.LOG);
+
+	const ret: IResponseData<ICountryUsersResponse> = {
+		message: "Data retrieved successfully.",
+		data: {
+			country: {
+				countryId: _.parseInt(country.key, 10),
+				countryName: country.countryName,
+				countryCode: country.countryCode
+			},
+			users: data.map(item => ({
+				userId: _.parseInt(item.key, 10),
+				userName: item.userName,
+				osuId: item.osuId
 			})),
 			length: data.length
 		}

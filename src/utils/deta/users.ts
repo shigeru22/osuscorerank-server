@@ -1,7 +1,7 @@
 import _ from "lodash";
 import Deta from "deta/dist/types/deta";
-import { IUserDetailData } from "../../types/deta/user";
-import { IUserData, IUserPOSTData } from "../../types/user";
+import { IUserCountryDetailData, IUserDetailData } from "../../types/deta/user";
+import { IUserCountryData, IUserPOSTData } from "../../types/user";
 import { getCountryByKey } from "./countries";
 import { LogSeverity, log } from "../log";
 
@@ -11,7 +11,7 @@ export async function getUsers(deta: Deta, sort: "id" | "date" = "id") {
 	const db = deta.Base(DB_NAME);
 
 	try {
-		const fetchResult = (await db.fetch()).items as unknown as IUserDetailData[];
+		const fetchResult = (await db.fetch()).items as unknown as IUserCountryDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getUsers", LogSeverity.WARN);
@@ -50,11 +50,64 @@ export async function getUsers(deta: Deta, sort: "id" | "date" = "id") {
 	}
 }
 
+export async function getUsersByCountryId(deta: Deta, id: number, sort: "id" | "date" = "id") {
+	const db = deta.Base(DB_NAME);
+
+	try {
+		{
+			{
+				const country = await getCountryByKey(deta, id);
+				if(_.isNull(country)) {
+					log("Country not found. Cancelling score data retrieval.", "getUsersByCountryId", LogSeverity.WARN);
+					return [];
+				}
+			}
+		}
+
+		const fetchResult = (await db.fetch({ countryId: id })).items as unknown as IUserDetailData[];
+
+		if(fetchResult.length <= 0) {
+			log(`${ DB_NAME }: No data returned from database.`, "getUsersByCountryId", LogSeverity.WARN);
+			return [];
+		}
+
+		if(sort === "date") {
+			fetchResult.sort((a, b) => {
+				const dateA: Date = typeof(a.dateAdded) === "string" ? new Date(a.dateAdded) : a.dateAdded;
+				const dateB: Date = typeof(b.dateAdded) === "string" ? new Date(b.dateAdded) : b.dateAdded;
+
+				return dateA.getTime() - dateB.getTime();
+			});
+		}
+		else {
+			fetchResult.sort((a, b) => {
+				const keyA = _.parseInt(a.key, 10);
+				const keyB = _.parseInt(b.key, 10);
+
+				return keyA - keyB;
+			});
+		}
+
+		log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getUsersByCountryId", LogSeverity.WARN);
+		return fetchResult;
+	}
+	catch (e) {
+		if(_.isError(e)) {
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getUsersByCountryId", LogSeverity.ERROR);
+		}
+		else {
+			log("Unknown error occurred while querying database.", "getUsersByCountryId", LogSeverity.ERROR);
+		}
+
+		return [];
+	}
+}
+
 export async function getUserByKey(deta: Deta, key: number) {
 	const db = deta.Base(DB_NAME);
 
 	try {
-		const fetchResult = (await db.get(key.toString())) as unknown as IUserDetailData;
+		const fetchResult = (await db.get(key.toString())) as unknown as IUserCountryDetailData;
 
 		if(_.isNull(fetchResult)) {
 			log(`${ DB_NAME }: No data returned from database.`, "getUserByKey", LogSeverity.WARN);
@@ -116,6 +169,8 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 			return false;
 		}
 
+		const countryKey = _.parseInt(country.key, 10);
+
 		let currentLastId = 0;
 		{
 			const rows = await getUsers(deta, "id");
@@ -124,11 +179,11 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 			}
 		}
 
-		const data: IUserData = {
+		const data: IUserCountryData = {
 			userName: user.userName,
 			osuId: user.osuId,
 			country: {
-				countryId: _.parseInt(country.key, 10),
+				countryId: countryKey,
 				countryName: country.countryName,
 				countryCode: country.countryCode
 			}
@@ -140,6 +195,7 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 			userName: data.userName,
 			osuId: data.osuId,
 			country: JSON.parse(JSON.stringify(data.country)),
+			countryId: countryKey,
 			dateAdded: date.toISOString()
 		}, (currentLastId + 1).toString());
 
@@ -177,13 +233,16 @@ export async function updateUser(deta: Deta, user: IUserPOSTData, silent = false
 			return false;
 		}
 
+		const countryKey = _.parseInt(fetchedCountry.key, 10);
+
 		await db.update({
 			userName: user.userName,
 			country: {
-				countryId: user.countryId.toString(),
+				countryId: countryKey,
 				countryName: fetchedCountry.countryName,
 				countryCode: fetchedCountry.countryCode
-			}
+			},
+			countryId: countryKey
 		}, fetchedUser.key);
 
 		if(!silent) {
