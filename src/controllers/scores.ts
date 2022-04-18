@@ -1,108 +1,168 @@
 import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
-import { JwtPayload } from "jsonwebtoken";
-import { IScorePOSTData, IScoreDELETEData, IGlobalScoreDeltaResponseData, IScoreDeltaResponseData, IGlobalRankingResponse, ICountryRankingResponse, IUserScoreResponse, IUserScoresResponse } from "../types/score";
-import { IScoreInsertData } from "../types/prisma/score";
-import { IResponseMessage, IResponseData } from "../types/express";
-import { getCountryById } from "../utils/prisma/countries";
-import { getScores, getScoresByCountryId, getScoreByUserId, insertScore, removeScore, removeAllScores, getScoresByUserIds } from "../utils/prisma/scores";
-import { getUserById } from "../utils/prisma/users";
-import { getRecentInactives } from "../utils/prisma/updates";
-import { checkNumber } from "../utils/common";
+import { IResponseData, IResponseMessage } from "../types/express";
+import { IScoreDELETEData, IScorePOSTData, IScoreResponse, IScoresResponse } from "../types/score";
+import { getCountryByKey } from "../utils/deta/countries";
+import { getUserByKey } from "../utils/deta/users";
+import { getScoreByKey, getScoreByUserId, getScores, getScoresByUpdateId, insertScore, removeScore } from "../utils/deta/scores";
 import { HTTPStatus } from "../utils/http";
-import { LogLevel, log } from "../utils/log";
+import { LogSeverity, log } from "../utils/log";
+import { checkNumber } from "../utils/common";
 
-export async function getAllScores(req: Request, res: Response) {
-	log("Accessed: getScoresByCountry", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getAllScores(req: Request, res: Response, next: NextFunction) {
+	log("Function accessed.", "getAllScores", LogSeverity.LOG);
 
-	const sortQuery = _.parseInt(req.query.sort as string, 10);
+	let sort: "id" | "score" | "pp" | "date" = "score";
+	{
+		if(!_.isUndefined(req.query.sort)) {
+			const id = _.parseInt(req.query.sort as string, 10);
+			if(_.isNaN(id) || (id < 1 || id > 4)) {
+				log("Invalid sort parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
 
-	if(!_.isUndefined(req.query.sort) && !validateSortQueryString(sortQuery)) {
-		const ret: IResponseMessage = {
-			message: "Invalid sort value."
-		};
+				const ret: IResponseMessage = {
+					message: "Invalid sort parameter."
+				};
 
-		res.status(HTTPStatus.BAD_REQUEST).json(ret);
-		return;
-	}
-
-	let sort = 1;
-	if(!_.isUndefined(req.query.sort)) {
-		switch(sortQuery) {
-			case 1: sort = 1; break;
-			case 2: sort = 2; break;
-			default: sort = 1;
-		}
-	}
-	else {
-		sort = 1;
-	}
-
-	const scores = await getScores(sort);
-
-	if(_.isEmpty(scores)) {
-		const ret: IResponseMessage = {
-			message: "Empty rankings returned."
-		};
-
-		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
-		return;
-	}
-
-	const inactives = await getRecentInactives();
-
-	if(_.isNull(inactives)) {
-		const ret: IResponseMessage = {
-			message: "Empty inactive record."
-		};
-
-		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
-		return;
-	}
-
-	const data: IGlobalScoreDeltaResponseData[] = scores.map((item, index) => ({
-		scoreId: item.scoreId,
-		user: {
-			userId: item.user.userId,
-			userName: item.user.userName,
-			osuId: item.user.osuId,
-			country: {
-				countryId: item.user.country.countryId,
-				countryName: item.user.country.countryName,
-				countryCode: item.user.country.countryCode
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
 			}
-		},
-		score: item.score,
-		pp: item.pp,
-		globalRank: item.globalRank,
-		delta: (
-			sort === 1 ? (!_.isNull(item.previousGlobalScoreRank) ? item.previousGlobalScoreRank - (index + 1) : 0) : (!_.isNull(item.previousGlobalPpRank) ? item.previousGlobalPpRank - (index + 1) : 0)
-		)
-	}));
 
-	const ret: IResponseData<IGlobalRankingResponse> = {
+			switch(id) {
+				case 1: sort = "id"; break;
+				case 3: sort = "pp"; break;
+				case 4: sort = "date"; break;
+			}
+		}
+	}
+
+	let desc = false;
+	{
+		if(!_.isUndefined(req.query.desc)) {
+			if(!_.isString(req.query.desc) || !(req.query.desc === "true" || req.query.desc === "false")) {
+				log("Invalid desc parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid desc parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			if(req.query.desc === "true") {
+				desc = true;
+			}
+		}
+	}
+
+	let update = 0;
+	{
+		if(!_.isUndefined(req.query.updateid)) {
+			const id = _.parseInt(req.query.updateid as string, 10);
+			if(_.isNaN(id) || (id <= 0)) {
+				log("Invalid update ID parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid updateid parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			update = id;
+		}
+	}
+
+	const data = await getScoresByUpdateId(res.locals.deta, update === 0 ? undefined : update, sort, desc);
+	if(!data) {
+		const ret: IResponseMessage = {
+			message: "Failed to retrieve score data."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
+	if(data.length <= 0) {
+		const ret: IResponseMessage = {
+			message: "No data found."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
+	log("Scores data retrieved successfully. Sending data response.", "getAllScores", LogSeverity.LOG);
+
+	const ret: IResponseData<IScoresResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
-			rankings: data,
-			inactives: {
-				recentlyInactive: inactives.recentlyInactive
-			},
-			total: data.length
+			scores: data.map(item => ({
+				scoreId: _.parseInt(item.key, 10),
+				user: item.user,
+				score: item.score,
+				pp: item.pp
+			})),
+			length: data.length
 		}
 	};
 
-	res.status(HTTPStatus.OK).send(JSON.stringify(
-		ret,
-		(key, value) => (typeof value === "bigint" ? value.toString() : value) // return bigint as string
-	));
+	res.status(HTTPStatus.OK).json(ret);
 }
 
-export async function getCountryScores(req: Request, res: Response) {
-	log("Accessed: getCountryScores", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getCountryScores(req: Request, res: Response, next: NextFunction) {
+	log("Function accessed.", "getCountryScores", LogSeverity.LOG);
 
-	const id = _.parseInt(req.params.countryId, 10); // database's country id
+	let sort: "id" | "score" | "pp" | "date" = "score";
+	{
+		if(!_.isUndefined(req.query.sort)) {
+			const id = _.parseInt(req.query.sort as string, 10);
+			if(_.isNaN(id) || (id < 1 || id > 4)) {
+				log("Invalid sort parameter. Sending error response.", "getCountryScores", LogSeverity.WARN);
 
-	if(!checkNumber(id)) {
+				const ret: IResponseMessage = {
+					message: "Invalid sort parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			switch(id) {
+				case 1: sort = "id"; break;
+				case 3: sort = "pp"; break;
+				case 4: sort = "date"; break;
+			}
+		}
+	}
+
+	let desc = false;
+	{
+		if(!_.isUndefined(req.query.desc)) {
+			if(!_.isString(req.query.desc) || !(req.query.desc === "true" || req.query.desc === "false")) {
+				log("Invalid desc parameter. Sending error response.", "getCountryScores", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid desc parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			if(req.query.desc === "true") {
+				desc = true;
+			}
+		}
+	}
+
+	const id = _.parseInt(req.params.countryId, 10);
+	if(!checkNumber(id) || id <= 0) {
+		log("Invalid ID parameter. Sending error response.", "getCountryScores", LogSeverity.WARN);
+
 		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
 		};
@@ -111,94 +171,54 @@ export async function getCountryScores(req: Request, res: Response) {
 		return;
 	}
 
-	const sortQuery = _.parseInt(req.query.sort as string, 10);
+	{
+		const country = await getCountryByKey(res.locals.deta, id);
+		if(_.isNull(country)) {
+			const ret: IResponseMessage = {
+				message: "Country with specified ID not found."
+			};
 
-	if(!_.isUndefined(req.query.sort) && !validateSortQueryString(sortQuery)) {
-		const ret: IResponseMessage = {
-			message: "Invalid sort value."
-		};
-
-		res.status(HTTPStatus.BAD_REQUEST).json(ret);
-		return;
-	}
-
-	let sort = 1;
-	if(!_.isUndefined(req.query.sort)) {
-		switch(sortQuery) {
-			case 1: sort = 1; break;
-			case 2: sort = 2; break;
-			default: sort = 1;
+			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
 		}
 	}
-	else {
-		sort = 1;
-	}
 
-	const country = await getCountryById(id);
-
-	if(_.isNull(country)) {
+	const data = (await getScores(res.locals.deta, sort, desc)).filter(item => item.user.country.countryId === id);
+	if(data.length <= 0) {
 		const ret: IResponseMessage = {
-			message: "Country with specified ID can't be found."
+			message: "No data found."
 		};
 
 		res.status(HTTPStatus.NOT_FOUND).json(ret);
 		return;
 	}
 
-	const scores = await getScoresByCountryId(id, sort);
+	log("Country scores data retrieved successfully. Sending data response.", "getMultipleUserScores", LogSeverity.LOG);
 
-	if(_.isEmpty(scores)) {
-		const ret: IResponseMessage = {
-			message: "Empty rankings returned."
-		};
-
-		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
-		return;
-	}
-
-	const data: IScoreDeltaResponseData[] = scores.map((item, index) => ({
-		scoreId: item.scoreId,
-		user: {
-			userId: item.user.userId,
-			userName: item.user.userName,
-			osuId: item.user.osuId
-		},
-		score: item.score,
-		pp: item.pp,
-		globalRank: item.globalRank,
-		delta: (
-			sort === 1 ? (!_.isNull(item.previousScoreRank) ? item.previousScoreRank - (index + 1) : 0) : (!_.isNull(item.previousPpRank) ? item.previousPpRank - (index + 1) : 0)
-		)
-	}));
-
-	const ret: IResponseData<ICountryRankingResponse> = {
+	const ret: IResponseData<IScoresResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
-			country: {
-				countryId: id,
-				countryName: country.countryName,
-				countryCode: country.countryCode
-			},
-			rankings: data,
-			inactives: {
-				recentlyInactive: country.recentlyInactive
-			},
-			total: data.length
+			scores: data.map(item => ({
+				scoreId: _.parseInt(item.key, 10),
+				user: item.user,
+				score: item.score,
+				pp: item.pp
+			})),
+			length: data.length
 		}
 	};
 
-	res.status(HTTPStatus.OK).send(JSON.stringify(
-		ret,
-		(key, value) => (typeof value === "bigint" ? value.toString() : value) // return bigint as string
-	));
+	res.status(HTTPStatus.OK).json(ret);
 }
 
-export async function getUserScore(req: Request, res: Response) {
-	log("Accessed: getUserScore", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getScore(req: Request, res: Response, next: NextFunction) {
+	log("Function accessed.", "getScore", LogSeverity.LOG);
 
-	const id = _.parseInt(req.params.userId, 10); // database's user id
+	const id = _.parseInt(req.params.scoreId, 10);
+	if(!checkNumber(id) || id <= 0) {
+		log("Invalid ID parameter. Sending error message.", "getScore", LogSeverity.WARN);
 
-	if(!checkNumber(id)) {
 		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
 		};
@@ -207,47 +227,84 @@ export async function getUserScore(req: Request, res: Response) {
 		return;
 	}
 
-	const user = await getUserById(id);
-
-	if(_.isNull(user)) {
+	const data = await getScoreByKey(res.locals.deta, id);
+	if(_.isNull(data)) {
 		const ret: IResponseMessage = {
-			message: "User with specified ID can't be found."
+			message: "Score with specified ID not found."
 		};
 
 		res.status(HTTPStatus.NOT_FOUND).json(ret);
 		return;
 	}
 
-	const score = await getScoreByUserId(id);
+	log("Score data retrieved successfully. Sending data response.", "getMultipleUserScores", LogSeverity.LOG);
 
-	if(_.isNull(score)) {
-		const ret: IResponseMessage = {
-			message: "Null data returned."
-		};
-
-		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
-		return;
-	}
-
-	const ret: IResponseData<IUserScoreResponse> = {
+	const ret: IResponseData<IScoreResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
-			score: score
+			score: {
+				scoreId: _.parseInt(data.key, 10),
+				user: data.user,
+				score: data.score,
+				pp: data.pp
+			}
 		}
 	};
 
-	res.status(HTTPStatus.OK).send(JSON.stringify(
-		ret,
-		(key, value) => (typeof value === "bigint" ? value.toString() : value) // return bigint as string
-	));
+	res.status(HTTPStatus.OK).json(ret);
 }
 
-export async function getMultipleUserScores(req: Request, res: Response) {
-	log("Accessed: getMultipleUserScores", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getUserScore(req: Request, res: Response, next: NextFunction) {
+	log("Function accessed.", "getUserScore", LogSeverity.LOG);
+
+	const id = _.parseInt(req.params.userId, 10);
+	if(!checkNumber(id) || id <= 0) {
+		log("Invalid ID parameter. Sending error response.", "getUserScore", LogSeverity.WARN);
+
+		const ret: IResponseMessage = {
+			message: "Invalid ID parameter."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+
+	const data = await getScoreByUserId(res.locals.deta, id);
+	if(_.isNull(data)) {
+		const ret: IResponseMessage = {
+			message: "Score with specified ID not found."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
+	log("Score data retrieved successfully. Sending data response.", "getMultipleUserScores", LogSeverity.LOG);
+
+	const ret: IResponseData<IScoreResponse> = {
+		message: "Data retrieved successfully.",
+		data: {
+			score: {
+				scoreId: _.parseInt(data.key, 10),
+				user: data.user,
+				score: data.score,
+				pp: data.pp
+			}
+		}
+	};
+
+	res.status(HTTPStatus.OK).json(ret);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getMultipleUserScores(req: Request, res: Response, next: NextFunction) {
+	log("Function accessed.", "getMultipleUserScores", LogSeverity.LOG);
 
 	const sortQuery = _.parseInt(req.query.sort as string, 10);
-
 	if(!_.isArray(req.query.users)) {
+		log("Invalid users parameter. Sending error response.", "getMultipleUserScores", LogSeverity.WARN);
+
 		const ret: IResponseMessage = {
 			message: "Invalid users parameter."
 		};
@@ -257,6 +314,8 @@ export async function getMultipleUserScores(req: Request, res: Response) {
 	}
 
 	if(req.query.users.length <= 0) {
+		log("Invalid array length. Sending error response.", "getMultipleUserScores", LogSeverity.WARN);
+
 		const ret: IResponseMessage = {
 			message: "Invalid array length."
 		};
@@ -265,12 +324,43 @@ export async function getMultipleUserScores(req: Request, res: Response) {
 		return;
 	}
 
-	let sort = 1;
+	let sort: "id" | "score" | "pp" | "date" = "id";
 	if(!_.isUndefined(req.query.sort)) {
+		if(sortQuery < 1 || sortQuery > 4) {
+			log("Invalid sort parameter. Sending error response.", "getMultipleUserScores", LogSeverity.WARN);
+
+			const ret: IResponseMessage = {
+				message: "Invalid sort parameter."
+			};
+
+			res.status(HTTPStatus.BAD_REQUEST).json(ret);
+			return;
+		}
+
 		switch(sortQuery) {
-			case 1: sort = 1; break;
-			case 2: sort = 2; break;
-			default: sort = 1;
+			case 2: sort = "score"; break;
+			case 3: sort = "pp"; break;
+			case 4: sort = "date"; break;
+		}
+	}
+
+	let desc = false;
+	{
+		if(!_.isUndefined(req.query.desc)) {
+			if(!_.isString(req.query.desc) || !(req.query.desc === "true" || req.query.desc === "false")) {
+				log("Invalid desc parameter. Sending error response.", "getMultipleUserScores", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid desc parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			if(req.query.desc === "true") {
+				desc = true;
+			}
 		}
 	}
 
@@ -281,34 +371,29 @@ export async function getMultipleUserScores(req: Request, res: Response) {
 		return 0;
 	});
 
-	const scores = await getScoresByUserIds(ids, sort);
+	const data = (await getScores(res.locals.deta, sort, desc)).filter(row => _.includes(ids, _.parseInt(row.key, 10)));
 
-	if(scores.length <= 0) {
-		const ret: IResponseMessage = {
-			message: "No users found."
-		};
+	log("Score data retrieved successfully. Sending data response.", "getMultipleUserScores", LogSeverity.LOG);
 
-		res.status(HTTPStatus.NOT_FOUND).json(ret);
-		return;
-	}
-
-	const ret: IResponseData<IUserScoresResponse> = {
+	const ret: IResponseData<IScoresResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
-			scores: scores
+			scores: data.map(item => ({
+				scoreId: _.parseInt(item.key, 10),
+				user: item.user,
+				score: item.score,
+				pp: item.pp
+			})),
+			length: data.length
 		}
 	};
 
-	res.status(HTTPStatus.OK).send(JSON.stringify(
-		ret,
-		(key, value) => (typeof value === "bigint" ? value.toString() : value) // return bigint as string
-	));
+	res.status(HTTPStatus.OK).json(ret);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function addUserScore(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
-	log(`Accessed: addUserScore, Auth: ${ decode.clientId }`, LogLevel.LOG);
-
+export async function addScore(req: Request, res: Response, next: NextFunction) {
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "addScore", LogSeverity.LOG);
 	const data: IScorePOSTData = req.body;
 
 	if(!validateScorePostData(data)) {
@@ -320,56 +405,21 @@ export async function addUserScore(decode: JwtPayload, req: Request, res: Respon
 		return;
 	}
 
-	const score: IScoreInsertData = {
-		userId: data.userId,
-		score: data.score,
-		pp: data.pp,
-		globalRank: data.globalRank,
-		previousPpRank: null,
-		previousScoreRank: null,
-		previousGlobalPpRank: null,
-		previousGlobalScoreRank: null
-	};
-
-	const userScore = await getScoreByUserId(data.userId);
-
-	if(!_.isNull(userScore)) {
-		const user = await getUserById(data.userId);
-
+	{
+		const user = await getUserByKey(res.locals.deta, data.userId);
 		if(_.isNull(user)) {
 			const ret: IResponseMessage = {
-				message: "User with specified ID can't be found."
+				message: "User with specified ID not found."
 			};
 
 			res.status(HTTPStatus.NOT_FOUND).json(ret);
 			return;
 		}
-
-		const globalScoreRank = await getScores(1);
-		const globalPpRank = await getScores(2);
-		const countryScoreRank = await getScoresByCountryId(user.country.countryId, 1);
-		const countryPpRank = await getScoresByCountryId(user.country.countryId, 2);
-
-		score.previousScoreRank = countryScoreRank.findIndex(item => item.user.userId === user.userId);
-		score.previousGlobalScoreRank = globalScoreRank.findIndex(item => item.user.userId === user.userId);
-		score.previousPpRank = countryPpRank.findIndex(item => item.user.userId === user.userId);
-		score.previousGlobalPpRank = globalPpRank.findIndex(item => item.user.userId === user.userId);
-
-		const resDelete = await removeScore(userScore.scoreId);
-
-		if(resDelete < 0) {
-			const ret: IResponseMessage = {
-				message: "Invalid record deletion."
-			};
-
-			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
-			return;
-		}
 	}
 
-	const result = await insertScore([ score ]);
+	const result = await insertScore(res.locals.deta, data);
 
-	if(result <= 0) {
+	if(!result) {
 		const ret: IResponseMessage = {
 			message: "Data insertion failed."
 		};
@@ -378,17 +428,18 @@ export async function addUserScore(decode: JwtPayload, req: Request, res: Respon
 		return;
 	}
 
+	log("Score data inserted successfully. Sending success response.", "addScore", LogSeverity.LOG);
+
 	const ret: IResponseMessage = {
-		message: "Data added successfully."
+		message: "Data inserted successfully."
 	};
 
 	res.status(HTTPStatus.OK).json(ret);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function deleteUserScore(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
-	log(`Accessed: deleteUserScore, Auth: ${ decode.clientId }`, LogLevel.LOG);
-
+export async function deleteScore(req: Request, res: Response, next: NextFunction) {
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "deleteScore", LogSeverity.LOG);
 	const data: IScoreDELETEData = req.body;
 
 	if(!validateScoreDeleteData(data)) {
@@ -400,9 +451,20 @@ export async function deleteUserScore(decode: JwtPayload, req: Request, res: Res
 		return;
 	}
 
-	const result = await removeScore(data.scoreId);
+	{
+		const score = await getScoreByKey(res.locals.deta, data.scoreId);
+		if(_.isNull(score)) {
+			const ret: IResponseMessage = {
+				message: "Score with specified ID not found."
+			};
 
-	if(result !== 1) {
+			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
+		}
+	}
+
+	const result = await removeScore(res.locals.deta, data.scoreId);
+	if(!result) {
 		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
@@ -411,27 +473,7 @@ export async function deleteUserScore(decode: JwtPayload, req: Request, res: Res
 		return;
 	}
 
-	const ret: IResponseMessage = {
-		message: "Data deleted successfully."
-	};
-
-	res.status(HTTPStatus.OK).json(ret);
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function resetScores(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
-	log("Accessed: resetScores", LogLevel.LOG);
-
-	const result = await removeAllScores();
-
-	if(result <= 0) {
-		const ret: IResponseMessage = {
-			message: "Data deletion failed."
-		};
-
-		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
-		return;
-	}
+	log("Score data deleted successfully. Sending success response.", "removeScore", LogSeverity.LOG);
 
 	const ret: IResponseMessage = {
 		message: "Data deleted successfully."
@@ -441,28 +483,27 @@ export async function resetScores(decode: JwtPayload, req: Request, res: Respons
 }
 
 function validateScorePostData(data: IScorePOSTData) {
-	const hasValidTypes = checkNumber(data.userId) && checkNumber(data.pp) && checkNumber(data.score) && checkNumber(data.globalRank);
-	const hasValidData = data.userId > 0 && data.pp >= 0 && data.score >= 0 && data.globalRank > 0;
+	const isDefined = !_.isUndefined(data.userId) && !_.isUndefined(data.score) && !_.isUndefined(data.pp);
+	const hasValidTypes = _.isNumber(data.userId) && _.isNumber(data.score) && _.isNumber(data.pp);
+	const hasValidData = isDefined && (checkNumber(data.userId) && checkNumber(data.score) && checkNumber(data.pp));
 
-	log(`validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateScorePostData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateScorePostData", LogSeverity.WARN);
+	}
 
-	return hasValidTypes && hasValidData;
+	return isDefined && hasValidTypes && hasValidData;
 }
 
 function validateScoreDeleteData(data: IScoreDELETEData) {
-	const hasValidTypes = checkNumber(data.scoreId);
-	const hasValidData = data.scoreId > 0;
+	const isDefined = !_.isUndefined(data.scoreId);
+	const hasValidTypes = _.isNumber(data.scoreId);
+	const hasValidData = isDefined && (checkNumber(data.scoreId));
 
-	log(`validateScoreDeleteData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateScoreDeleteData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateScoreDeleteData", LogSeverity.WARN);
+	}
 
-	return hasValidTypes && hasValidData;
-}
-
-function validateSortQueryString(sort: unknown) {
-	const hasValidTypes = checkNumber(sort);
-	const hasValidData = _.isNumber(sort) && (sort >= 1 && sort <= 2);
-
-	log(`validateScoreDeleteData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
-
-	return hasValidTypes && hasValidData;
+	return isDefined && hasValidTypes && hasValidData;
 }

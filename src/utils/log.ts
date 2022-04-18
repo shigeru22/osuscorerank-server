@@ -1,19 +1,29 @@
-import _ from "lodash";
-
-export enum LogLevel {
+export enum LogSeverity {
 	DEBUG = 0,
-	INFO,
 	LOG,
 	WARN,
 	ERROR
 }
 
-const LogLevelMessage = [ "DEBUG", "INFO", "LOG", "WARN", "ERROR" ];
+const severityString = [ "DEBUG", "LOG", "WARN", "ERROR" ];
 
-export function log(message: string, level?: LogLevel) {
-	if(!_.isUndefined(process.env.DEVELOPMENT) &&	_.parseInt(process.env.DEVELOPMENT, 10) === 0 &&	level === LogLevel.DEBUG) {
-		return;
+export const criticalLogs: string[] = [];
+
+export function log(message: string, source: string, severity: LogSeverity = LogSeverity.LOG) {
+	if(typeof(process.env.DEVELOPMENT) === "undefined" || process.env.DEVELOPMENT !== "1") {
+		if(severity === LogSeverity.DEBUG) {
+			return;
+		}
 	}
 
-	console.log(`[${ _.isUndefined(level) ? LogLevelMessage[LogLevel.INFO] : LogLevelMessage[level] }] ${ message }`);
+	const logText = `[${ severityString[severity] }] ${ source } :: ${ message }`;
+
+	if(severity >= LogSeverity.WARN) {
+		if(criticalLogs.length === 10) {
+			criticalLogs.shift();
+		}
+		criticalLogs.push(logText);
+	}
+
+	console.log(logText);
 }

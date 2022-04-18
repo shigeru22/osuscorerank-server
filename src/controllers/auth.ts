@@ -1,16 +1,19 @@
-import { Request, Response } from "express";
+import { createHmac, timingSafeEqual } from "crypto";
+import { NextFunction, Request, Response } from "express";
 import _ from "lodash";
-import { timingSafeEqual } from "crypto";
 import jwt from "jsonwebtoken";
-import { IClientPOSTData, IAuthenticationResponse } from "../types/auth";
 import { IResponseMessage, IResponseData } from "../types/express";
+import { IClientPOSTData, IAuthenticationResponse } from "../types/auth";
+import { getClientById } from "../utils/deta/auth";
 import { HTTPStatus } from "../utils/http";
-import { LogLevel, log } from "../utils/log";
-import { getClientById } from "../utils/prisma/auth";
+import { LogSeverity, log } from "../utils/log";
 
-export async function getAccessToken(req: Request, res: Response) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getAccessToken(req: Request, res: Response, next: NextFunction) {
 	try {
 		if(_.isUndefined(process.env.TOKEN_SECRET)) {
+			log("TOKEN_SECRET is not yet defined. See .env-template for details.", "addDummyData", LogSeverity.ERROR);
+
 			const ret: IResponseMessage = {
 				message: "Secret is not defined. Please contact system administrator."
 			};
@@ -20,7 +23,6 @@ export async function getAccessToken(req: Request, res: Response) {
 		}
 
 		const data: IClientPOSTData = req.body;
-
 		if(!validateClientPostData(data)) {
 			const ret: IResponseMessage = {
 				message: "Invalid POST data."
@@ -30,44 +32,47 @@ export async function getAccessToken(req: Request, res: Response) {
 			return;
 		}
 
-		const client = await getClientById(data.clientId);
+		const client = await getClientById(res.locals.deta, data.clientId);
 
 		if(_.isNull(client)) {
 			const ret: IResponseMessage = {
-				message: "Invalid client ID or key."
+				message: "Invalid client credentials."
 			};
 
 			res.status(HTTPStatus.UNAUTHORIZED).json(ret);
 			return;
 		}
 
-		const keyBuffer = Buffer.from(data.clientKey, "utf8");
-		const dbKeyBuffer = Buffer.from(client.clientKey, "utf8");
+		{
+			const hashedRequestKey = createHmac("sha256", process.env.TOKEN_SECRET).update(data.clientKey, "utf8").digest("hex");
+			const hashedClientKey = createHmac("sha256", process.env.TOKEN_SECRET).update(client.clientKey, "utf8").digest("hex");
 
-		const equal = timingSafeEqual(keyBuffer, dbKeyBuffer);
+			const equal = timingSafeEqual(Buffer.from(hashedRequestKey, "utf8"), Buffer.from(hashedClientKey, "utf8"));
+			if(!equal) {
+				log("Invalid secret given. Sending error response.", "addDummyData", LogSeverity.WARN);
 
-		if(!equal) {
-			const ret: IResponseMessage = {
-				message: "Invalid client ID or key."
-			};
+				const ret: IResponseMessage = {
+					message: "Invalid client credentials."
+				};
 
-			res.status(HTTPStatus.UNAUTHORIZED).json(ret);
-			return;
+				res.status(HTTPStatus.UNAUTHORIZED).json(ret);
+				return;
+			}
 		}
 
-		const token = jwt.sign({ clientId: client.clientId }, process.env.TOKEN_SECRET, { expiresIn: "1d" });
+		const token = jwt.sign({ clientId: client.key }, process.env.TOKEN_SECRET, { expiresIn: "1d" });
+
+		log(`Access token generated for client id: ${ client.clientId }. Sending token response.`, "getAccessToken", LogSeverity.LOG);
 
 		const ret: IResponseData<IAuthenticationResponse> = {
-			message: "Authenticated successfully.",
+			message: "Authentication success.",
 			data: {
 				accessToken: token,
 				expiresIn: "1d"
 			}
 		};
 
-		log(`getAccessToken(): Access token generated for ${ client.clientName }.`, LogLevel.LOG);
 		res.status(HTTPStatus.OK).json(ret);
-		return;
 	}
 	catch (e) {
 		if(_.isError(e)) {
@@ -75,7 +80,9 @@ export async function getAccessToken(req: Request, res: Response) {
 				message: "An error occurred."
 			};
 
-			log(`getAccessToken() :: ${ e.name }: ${ e.message }`, LogLevel.ERROR);
+			/* TODO: add expired token error handling */
+
+			log(`${ e.name }: ${ e.message }\n${ e.stack }`, "getAccessToken", LogSeverity.ERROR);
 
 			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
 			return;
@@ -90,10 +97,14 @@ export async function getAccessToken(req: Request, res: Response) {
 }
 
 function validateClientPostData(data: IClientPOSTData) {
+	const isDefined = !_.isUndefined(data.clientId) && !_.isUndefined(data.clientKey);
 	const hasValidTypes = _.isString(data.clientId) && _.isString(data.clientKey);
 	const hasValidData = !_.isEmpty(data.clientId) && (!_.isEmpty(data.clientKey) && data.clientKey.length === 64);
 
-	log(`validateClientPostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateClientPostData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateClientPostData", LogSeverity.WARN);
+	}
 
-	return hasValidTypes && hasValidData;
+	return isDefined && hasValidTypes && hasValidData;
 }

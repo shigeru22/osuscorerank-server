@@ -1,17 +1,17 @@
 import { Router } from "express";
-import * as scores from "../controllers/scores";
+import { getAllScores, getCountryScores, getUserScore, getMultipleUserScores, addScore, deleteScore } from "../controllers/scores";
+import { verifyProjectKey } from "../middleware/deta";
 import { verifyToken } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", scores.getAllScores);
-router.get("/country/:countryId", scores.getCountryScores);
-router.get("/user/:userId", scores.getUserScore);
-router.get("/users", scores.getMultipleUserScores);
+router.get("/", verifyProjectKey, getAllScores);
+router.get("/country/:countryId", verifyProjectKey, getCountryScores);
+router.get("/user/:userId", verifyProjectKey, getUserScore);
+router.get("/users", verifyProjectKey, getMultipleUserScores);
 
-router.post("/add", verifyToken, scores.addUserScore);
+router.post("/add", [ verifyToken, verifyProjectKey ], addScore);
 
-router.delete("/delete", verifyToken, scores.deleteUserScore);
-router.delete("/deleteall", verifyToken, scores.resetScores);
+router.delete("/delete", [ verifyToken, verifyProjectKey ], deleteScore);
 
 export default router;

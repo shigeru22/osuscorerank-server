@@ -1,37 +1,43 @@
 import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
-import { JwtPayload } from "jsonwebtoken";
-import { ICountryDELETEData, ICountryPOSTData, ICountriesResponse, ICountryResponse } from "../types/country";
-import { IResponseMessage, IResponseData } from "../types/express";
-import { removeAllScores, removeScoresByCountryId } from "../utils/prisma/scores";
-import { removeAllUsers, removeUserByCountryId } from "../utils/prisma/users";
-import { getCountries, getCountryById, insertCountry, removeAllCountries, removeCountry } from "../utils/prisma/countries";
-import { checkNumber } from "../utils/common";
+import { IResponseData, IResponseMessage } from "../types/express";
+import { ICountriesResponse, ICountryDELETEData, ICountryPOSTData, ICountryResponse } from "../types/country";
+import { getCountries, getCountryByKey, insertCountry, removeCountry } from "../utils/deta/countries";
 import { HTTPStatus } from "../utils/http";
-import { LogLevel, log } from "../utils/log";
+import { LogSeverity, log } from "../utils/log";
+import { checkNumber } from "../utils/common";
 
-export async function getAllCountries(req: Request, res: Response) {
-	log("Accessed: getAllCountries", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getAllCountries(req: Request, res: Response, next: NextFunction) {
+	log("Function accessed.", "getAllCountries", LogSeverity.LOG);
 
-	const data = await getCountries();
+	const data = await getCountries(res.locals.deta);
+
+	log("Countries data retrieved successfully. Sending data response.", "getAllCountries", LogSeverity.LOG);
 
 	const ret: IResponseData<ICountriesResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
-			countries: data,
-			total: data.length
+			countries: data.map(item => ({
+				countryId: _.parseInt(item.key, 10),
+				countryName: item.countryName,
+				countryCode: item.countryCode
+			})),
+			length: data.length
 		}
 	};
 
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export async function getCountry(req: Request, res: Response) {
-	log("Accessed: getCountry", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getCountry(req: Request, res: Response, next: NextFunction) {
+	log("Function accessed.", "getCountry", LogSeverity.LOG);
 
 	const id = _.parseInt(req.params.countryId, 10); // database's country id
+	if(!checkNumber(id) || id <= 0) {
+		log("Invalid ID parameter. Sending error response.", "getCountry", LogSeverity.WARN);
 
-	if(!checkNumber(id)) {
 		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
 		};
@@ -40,21 +46,26 @@ export async function getCountry(req: Request, res: Response) {
 		return;
 	}
 
-	const data = await getCountryById(id);
-
+	const data = await getCountryByKey(res.locals.deta, id);
 	if(_.isNull(data)) {
 		const ret: IResponseMessage = {
-			message: "Country with specified ID can't be found."
+			message: "Country with specified ID not found."
 		};
 
 		res.status(HTTPStatus.NOT_FOUND).json(ret);
 		return;
 	}
 
+	log("Country data retrieved successfully. Sending data response.", "getCountry", LogSeverity.LOG);
+
 	const ret: IResponseData<ICountryResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
-			country: data
+			country: {
+				countryId: _.parseInt(data.key, 10),
+				countryCode: data.countryCode,
+				countryName: data.countryName
+			}
 		}
 	};
 
@@ -62,9 +73,8 @@ export async function getCountry(req: Request, res: Response) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function addCountry(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
-	log(`Accessed: addCountry, Auth: ${ decode.clientId }`, LogLevel.LOG);
-
+export async function addCountry(req: Request, res: Response, next: NextFunction) {
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "addCountry", LogSeverity.LOG);
 	const data: ICountryPOSTData = req.body;
 
 	if(!validateCountryPostData(data)) {
@@ -76,9 +86,8 @@ export async function addCountry(decode: JwtPayload, req: Request, res: Response
 		return;
 	}
 
-	const result = await insertCountry([ data ]);
-
-	if(result <= 0) {
+	const result = await insertCountry(res.locals.deta, data);
+	if(!result) {
 		const ret: IResponseMessage = {
 			message: "Data insertion failed."
 		};
@@ -86,6 +95,8 @@ export async function addCountry(decode: JwtPayload, req: Request, res: Response
 		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
 		return;
 	}
+
+	log("Country data inserted successfully. Sending success response.", "addCountry", LogSeverity.LOG);
 
 	const ret: IResponseMessage = {
 		message: "Data inserted successfully."
@@ -95,9 +106,8 @@ export async function addCountry(decode: JwtPayload, req: Request, res: Response
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function deleteCountry(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
-	log(`Accessed: deleteCountry, Auth: ${ decode.clientId }`, LogLevel.LOG);
-
+export async function deleteCountry(req: Request, res: Response, next: NextFunction) {
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "deleteCountry", LogSeverity.LOG);
 	const data: ICountryDELETEData = req.body;
 
 	if(!validateCountryDeleteData(data)) {
@@ -109,31 +119,22 @@ export async function deleteCountry(decode: JwtPayload, req: Request, res: Respo
 		return;
 	}
 
-	const country = await getCountryById(data.countryId);
+	{
+		const country = await getCountryByKey(res.locals.deta, data.countryId);
+		if(_.isNull(country)) {
+			const ret: IResponseMessage = {
+				message: "Country with specified ID not found."
+			};
 
-	if(_.isNull(country)) {
-		const ret: IResponseMessage = {
-			message: "Country with specified ID can't be found."
-		};
-
-		res.status(HTTPStatus.NOT_FOUND).json(ret);
-		return;
+			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
+		}
 	}
 
-	const resScores = await removeScoresByCountryId(data.countryId);
+	/* TODO: remove scores and users by country id */
 
-	if(resScores < 0) {
-		const ret: IResponseMessage = {
-			message: "Data deletion failed."
-		};
-
-		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
-		return;
-	}
-
-	const resUsers = await removeUserByCountryId(data.countryId);
-
-	if(resUsers < 0) {
+	const result = await removeCountry(res.locals.deta, data.countryId);
+	if(!result) {
 		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
@@ -142,73 +143,7 @@ export async function deleteCountry(decode: JwtPayload, req: Request, res: Respo
 		return;
 	}
 
-	const result = await removeCountry(data.countryId);
-
-	if(result !== 1) {
-		const ret: IResponseMessage = {
-			message: "Data deletion failed."
-		};
-
-		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
-		return;
-	}
-
-	const ret: IResponseMessage = {
-		message: "Data deleted successfully."
-	};
-
-	res.status(HTTPStatus.OK).json(ret);
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function resetCountries(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
-	/* this essentially resets everything */
-
-	log(`Accessed: resetCountries, Auth: ${ decode.clientId }`, LogLevel.LOG);
-
-	const countries = await getCountries();
-
-	if(countries.length <= 0) {
-		const ret: IResponseMessage = {
-			message: "No countries to delete."
-		};
-
-		res.status(HTTPStatus.NOT_FOUND).json(ret);
-		return;
-	}
-
-	const resScores = await removeAllScores();
-
-	if(resScores < 0) {
-		const ret: IResponseMessage = {
-			message: "Data deletion failed."
-		};
-
-		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
-		return;
-	}
-
-	const resUsers = await removeAllUsers();
-
-	if(resUsers < 0) {
-		const ret: IResponseMessage = {
-			message: "Data deletion failed."
-		};
-
-		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
-		return;
-	}
-
-	const resCountries = await removeAllCountries();
-
-	if(resCountries < 0) {
-		const ret: IResponseMessage = {
-			message: "Data deletion failed."
-		};
-
-		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
-		return;
-	}
+	log("Country data deleted successfully. Sending success response.", "deleteCountry", LogSeverity.LOG);
 
 	const ret: IResponseMessage = {
 		message: "Data deleted successfully."
@@ -218,22 +153,27 @@ export async function resetCountries(decode: JwtPayload, req: Request, res: Resp
 }
 
 function validateCountryPostData(data: ICountryPOSTData) {
-	/* TODO: implement isDefined to all validations */
-
 	const isDefined = !_.isUndefined(data.countryName) && !_.isUndefined(data.countryCode);
 	const hasValidTypes = _.isString(data.countryName) && _.isString(data.countryCode);
 	const hasValidData = isDefined && (!_.isEmpty(data.countryName) && data.countryCode.length === 2);
 
-	log(`validateScorePostData :: isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateCountryPostData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateCountryPostData", LogSeverity.WARN);
+	}
 
 	return isDefined && hasValidTypes && hasValidData;
 }
 
 function validateCountryDeleteData(data: ICountryDELETEData) {
+	const isDefined = !_.isUndefined(data.countryId);
 	const hasValidTypes = checkNumber(data.countryId);
 	const hasValidData = data.countryId > 0;
 
-	log(`validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateCountryDeleteData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateCountryDeleteData", LogSeverity.WARN);
+	}
 
-	return hasValidTypes && hasValidData;
+	return isDefined && hasValidTypes && hasValidData;
 }

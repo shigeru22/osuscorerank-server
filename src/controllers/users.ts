@@ -1,23 +1,38 @@
 import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
-import { JwtPayload } from "jsonwebtoken";
-import { IUserPOSTData, IUserDELETEData, IUsersResponse, IUserResponse } from "../types/user";
-import { IResponseMessage, IResponseData } from "../types/express";
-import { getUsers, getUserById, insertUser, removeUser, getUserByOsuId } from "../utils/prisma/users";
-import { removeScore } from "../utils/prisma/scores";
-import { checkNumber } from "../utils/common";
+import { IResponseData, IResponseMessage } from "../types/express";
+import { ICountryUsersResponse, IUserDELETEData, IUserPOSTData, IUserPUTData, IUserResponse, IUsersResponse } from "../types/user";
+import { getCountryByKey } from "../utils/deta/countries";
+import { getUserByKey, getUserByOsuId, getUsers, getUsersByCountryId, insertUser, removeUser, updateUser as updateUserData } from "../utils/deta/users";
 import { HTTPStatus } from "../utils/http";
-import { LogLevel, log } from "../utils/log";
+import { LogSeverity, log } from "../utils/log";
+import { checkNumber } from "../utils/common";
 
-export async function getAllUsers(req: Request, res: Response) {
-	log("Accessed: getAllUsers", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getAllUsers(req: Request, res: Response, next: NextFunction) {
+	log("Function accessed.", "getAllUsers", LogSeverity.LOG);
 
-	const data = await getUsers();
+	const data = await getUsers(res.locals.deta);
+	if(data.length <= 0) {
+		const ret: IResponseMessage = {
+			message: "No data found."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
+	log("Users data retrieved successfully. Sending data response.", "getAllUsers", LogSeverity.LOG);
 
 	const ret: IResponseData<IUsersResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
-			users: data,
+			users: data.map(item => ({
+				userId: _.parseInt(item.key, 10),
+				userName: item.userName,
+				osuId: item.osuId,
+				country: item.country
+			})),
 			length: data.length
 		}
 	};
@@ -25,12 +40,14 @@ export async function getAllUsers(req: Request, res: Response) {
 	res.status(HTTPStatus.OK).json(ret);
 }
 
-export async function getUser(req: Request, res: Response) {
-	log("Accessed: getUser", LogLevel.LOG);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getCountryUsers(req: Request, res: Response, next: NextFunction) {
+	log("Function accessed.", "getCountryUsers", LogSeverity.LOG);
 
-	const id = _.parseInt(req.params.userId, 10); // database's user id
+	const id = _.parseInt(req.params.countryId, 10);
+	if(!checkNumber(id) || id <= 0) {
+		log("Invalid ID parameter. Sending error response.", "getCountryUsers", LogSeverity.WARN);
 
-	if(!checkNumber) {
 		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
 		};
@@ -39,21 +56,42 @@ export async function getUser(req: Request, res: Response) {
 		return;
 	}
 
-	const data = await getUserById(id);
-
-	if(_.isNull(data)) {
+	const country = await getCountryByKey(res.locals.deta, id);
+	if(_.isNull(country)) {
 		const ret: IResponseMessage = {
-			message: "User with specified ID can't be found."
+			message: "Country with specified ID not found."
 		};
 
 		res.status(HTTPStatus.NOT_FOUND).json(ret);
 		return;
 	}
 
-	const ret: IResponseData<IUserResponse> = {
+	const data = await getUsersByCountryId(res.locals.deta, id);
+	if(data.length <= 0) {
+		const ret: IResponseMessage = {
+			message: "No data found."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
+	log("Users data retrieved successfully. Sending data response.", "getCountryUsers", LogSeverity.LOG);
+
+	const ret: IResponseData<ICountryUsersResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
-			user: data
+			country: {
+				countryId: _.parseInt(country.key, 10),
+				countryName: country.countryName,
+				countryCode: country.countryCode
+			},
+			users: data.map(item => ({
+				userId: _.parseInt(item.key, 10),
+				userName: item.userName,
+				osuId: item.osuId
+			})),
+			length: data.length
 		}
 	};
 
@@ -61,9 +99,51 @@ export async function getUser(req: Request, res: Response) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function addUser(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
-	log(`Accessed: addCountry, Auth: ${ decode.clientId }`, LogLevel.LOG);
+export async function getUser(req: Request, res: Response, next: NextFunction) {
+	log("Function accessed.", "getUser", LogSeverity.LOG);
 
+	const id = _.parseInt(req.params.userId, 10); // database's user id
+	if(!checkNumber(id) || id <= 0) {
+		log("Invalid ID parameter. Sending error response.", "getAllUsers", LogSeverity.WARN);
+
+		const ret: IResponseMessage = {
+			message: "Invalid ID parameter."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+
+	const data = await getUserByKey(res.locals.deta, id);
+	if(_.isNull(data)) {
+		const ret: IResponseMessage = {
+			message: "User with specified ID not found."
+		};
+
+		res.status(HTTPStatus.NOT_FOUND).json(ret);
+		return;
+	}
+
+	log("User data retrieved successfully. Sending data response.", "getUser", LogSeverity.LOG);
+
+	const ret: IResponseData<IUserResponse> = {
+		message: "Data retrieved successfully.",
+		data: {
+			user: {
+				userId: _.parseInt(data.key, 10),
+				userName: data.userName,
+				osuId: data.osuId,
+				country: data.country
+			}
+		}
+	};
+
+	res.status(HTTPStatus.OK).json(ret);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function addUser(req: Request, res: Response, next: NextFunction) {
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "addUser", LogSeverity.LOG);
 	const data: IUserPOSTData = req.body;
 
 	if(!validateUserPostData(data)) {
@@ -75,20 +155,33 @@ export async function addUser(decode: JwtPayload, req: Request, res: Response, n
 		return;
 	}
 
-	const user = await getUserByOsuId(data.osuId);
+	{
+		const user = await getUserByOsuId(res.locals.deta, data.osuId);
+		if(!_.isNull(user)) {
+			const ret: IResponseMessage = {
+				message: "The specified osu! ID has been exist by another user."
+			};
 
-	if(!_.isNull(user)) {
-		const ret: IResponseMessage = {
-			message: "User with the specified osu! ID already exists."
-		};
-
-		res.status(HTTPStatus.CONFLICT).json(ret);
-		return;
+			res.status(HTTPStatus.CONFLICT).json(ret);
+			return;
+		}
 	}
 
-	const result = await insertUser([ data ]);
+	{
+		const country = await getCountryByKey(res.locals.deta, data.countryId);
+		if(_.isNull(country)) {
+			const ret: IResponseMessage = {
+				message: "Country with specified ID not found."
+			};
 
-	if(result <= 0) {
+			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
+		}
+	}
+
+	const result = await insertUser(res.locals.deta, data);
+
+	if(!result) {
 		const ret: IResponseMessage = {
 			message: "Data insertion failed."
 		};
@@ -96,6 +189,8 @@ export async function addUser(decode: JwtPayload, req: Request, res: Response, n
 		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
 		return;
 	}
+
+	log("User data inserted successfully. Sending data response.", "addUser", LogSeverity.LOG);
 
 	const ret: IResponseMessage = {
 		message: "Data inserted successfully."
@@ -105,9 +200,66 @@ export async function addUser(decode: JwtPayload, req: Request, res: Response, n
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function deleteUser(decode: JwtPayload, req: Request, res: Response, next: NextFunction) {
-	log(`Accessed: deleteUser, Auth: ${ decode.clientId }`, LogLevel.LOG);
+export async function updateUser(req: Request, res: Response, next: NextFunction) {
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "addUser", LogSeverity.LOG);
+	const data: IUserPUTData = req.body;
 
+	if(!validateUserPutData(data)) {
+		const ret: IResponseMessage = {
+			message: "Invalid PUT data."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+
+	{
+		const user = await getUserByKey(res.locals.deta, data.userId);
+		if(_.isNull(user)) {
+			const ret: IResponseMessage = {
+				message: "User with specified ID not found."
+			};
+
+			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
+		}
+	}
+
+	{
+		const country = await getCountryByKey(res.locals.deta, data.countryId);
+		if(_.isNull(country)) {
+			const ret: IResponseMessage = {
+				message: "Country with specified ID not found."
+			};
+
+			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
+		}
+	}
+
+	const result = await updateUserData(res.locals.deta, data);
+
+	if(!result) {
+		const ret: IResponseMessage = {
+			message: "Data update failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
+	log("User data updated successfully. Sending data response.", "addUser", LogSeverity.LOG);
+
+	const ret: IResponseMessage = {
+		message: "Data updated successfully."
+	};
+
+	res.status(HTTPStatus.OK).json(ret);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function deleteUser(req: Request, res: Response, next: NextFunction) {
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "deleteUser", LogSeverity.LOG);
 	const data: IUserDELETEData = req.body;
 
 	if(!validateUserDeleteData(data)) {
@@ -119,31 +271,22 @@ export async function deleteUser(decode: JwtPayload, req: Request, res: Response
 		return;
 	}
 
-	const user = await getUserById(data.userId);
+	{
+		const user = await getUserByKey(res.locals.deta, data.userId);
+		if(_.isNull(user)) {
+			const ret: IResponseMessage = {
+				message: "User with specified ID not found."
+			};
 
-	if(_.isNull(user)) {
-		const ret: IResponseMessage = {
-			message: "User with specified ID can't be found."
-		};
-
-		res.status(HTTPStatus.NOT_FOUND).json(ret);
-		return;
+			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
+		}
 	}
 
-	const resScore = await removeScore(data.userId);
+	/* TODO: remove scores by user id */
 
-	if(resScore === -1) {
-		const ret: IResponseMessage = {
-			message: "Data deletion failed."
-		};
-
-		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
-		return;
-	}
-
-	const result = await removeUser(data.userId);
-
-	if(result !== 1) {
+	const result = await removeUser(res.locals.deta, data.userId);
+	if(!result) {
 		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
@@ -151,6 +294,8 @@ export async function deleteUser(decode: JwtPayload, req: Request, res: Response
 		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
 		return;
 	}
+
+	log("User data deleted successfully. Sending data response.", "deleteUser", LogSeverity.LOG);
 
 	const ret: IResponseMessage = {
 		message: "Data deleted successfully."
@@ -160,19 +305,40 @@ export async function deleteUser(decode: JwtPayload, req: Request, res: Response
 }
 
 function validateUserPostData(data: IUserPOSTData) {
-	const hasValidTypes = _.isString(data.userName) && checkNumber(data.osuId) && checkNumber(data.countryId);
-	const hasValidData = !_.isEmpty(data.userName) && data.osuId > 0 && data.countryId > 0;
+	const isDefined = !_.isUndefined(data.userName) && !_.isUndefined(data.osuId) && !_.isUndefined(data.countryId);
+	const hasValidTypes = _.isString(data.userName) && _.isNumber(data.osuId) && _.isNumber(data.countryId);
+	const hasValidData = isDefined && (!_.isEmpty(data.userName) && checkNumber(data.osuId) && checkNumber(data.countryId));
 
-	log(`validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateUserPostData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateUserPostData", LogSeverity.WARN);
+	}
 
-	return hasValidTypes && hasValidData;
+	return isDefined && hasValidTypes && hasValidData;
+}
+
+function validateUserPutData(data: IUserPUTData) {
+	const isDefined = !_.isUndefined(data.userId) && !_.isUndefined(data.userName) && !_.isUndefined(data.countryId);
+	const hasValidTypes = _.isNumber(data.userId) && _.isString(data.userName) && _.isNumber(data.countryId);
+	const hasValidData = isDefined && (checkNumber(data.userId) && !_.isEmpty(data.userName) && checkNumber(data.countryId));
+
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateUserPutData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateUserPutData", LogSeverity.WARN);
+	}
+
+	return isDefined && hasValidTypes && hasValidData;
 }
 
 function validateUserDeleteData(data: IUserDELETEData) {
-	const hasValidTypes = checkNumber(data.userId);
-	const hasValidData = data.userId > 0;
+	const isDefined = !_.isUndefined(data.userId);
+	const hasValidTypes = _.isNumber(data.userId);
+	const hasValidData = isDefined && (checkNumber(data.userId));
 
-	log(`validateScorePostData :: hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, LogLevel.DEBUG);
+	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateUserDeleteData", LogSeverity.DEBUG);
+	if(!isDefined || !hasValidTypes || !hasValidData) {
+		log("Invalid POST data found.", "validateUserDeleteData", LogSeverity.WARN);
+	}
 
-	return hasValidTypes && hasValidData;
+	return isDefined && hasValidTypes && hasValidData;
 }

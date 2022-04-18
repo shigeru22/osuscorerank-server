@@ -1,10 +1,9 @@
 import { Router } from "express";
-import * as auth from "../controllers/auth";
-import { verifyToken } from "../middleware/auth";
+import { getAccessToken } from "../controllers/auth";
+import { verifyProjectKey } from "../middleware/deta";
 
 const router = Router();
 
-router.post("/", auth.getAccessToken);
-router.post("/test", verifyToken);
+router.post("/", verifyProjectKey, getAccessToken);
 
 export default router;
