@@ -75,7 +75,16 @@ export async function getAllScores(req: Request, res: Response, next: NextFuncti
 		}
 	}
 
-	const data = update === 0 ? (await getScores(res.locals.deta, sort, desc)) : (await getScoresByUpdateId(res.locals.deta, update, sort, desc));
+	const data = await getScoresByUpdateId(res.locals.deta, update === 0 ? undefined : update, sort, desc);
+	if(!data) {
+		const ret: IResponseMessage = {
+			message: "Failed to retrieve score data."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."

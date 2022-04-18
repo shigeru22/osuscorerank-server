@@ -68,11 +68,32 @@ export async function getScoresByCountryId(deta: Deta, id: number, sort: "id" | 
 	}
 }
 
-export async function getScoresByUpdateId(deta: Deta, id: number, sort: "id" | "score" | "pp" | "date" = "score", desc = false) {
+export async function getScoresByUpdateId(deta: Deta, id?: number, sort: "id" | "score" | "pp" | "date" = "score", desc = false) {
 	const db = deta.Base(DB_NAME);
 
 	try {
-		const fetchResult = (await db.fetch({ updateId: id })).items as unknown as IScoreDetailData[];
+		let updateKey = 0;
+		{
+			if(_.isUndefined(id)) { // if id is undefined, return key of the latest online update
+				const updateResult = await getUpdatesByStatus(deta, true, "id", desc);
+				if(updateResult.length <= 0) {
+					log("No update data in finalized status. Cancelling score data retrieval.", "getScoresByUpdateId", LogSeverity.ERROR);
+					return false;
+				}
+
+				updateKey = _.parseInt(updateResult[0].key, 10);
+			}
+			else {
+				if(id <= 0) {
+					log("Invalid update ID parameter. Cancelling score data retrieval.", "getScoresByUpdateId", LogSeverity.ERROR);
+					return false;
+				}
+
+				updateKey = id;
+			}
+		}
+
+		const fetchResult = (await db.fetch({ updateId: updateKey })).items as unknown as IScoreDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScoresByUpdateId", LogSeverity.WARN);
