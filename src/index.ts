@@ -1,3 +1,4 @@
+import path from "path";
 import express from "express";
 import env from "dotenv";
 import cors from "cors";
@@ -20,6 +21,9 @@ const PORT = process.env.API_PORT || 5000;
 /* middlewares */
 app.use(express.json());
 app.use(cors());
+
+/* static files */
+app.use(express.static(path.resolve(__dirname, "./client")));
 
 /* routes */
 app.use("/api/", mainRoute);
