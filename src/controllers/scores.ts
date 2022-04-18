@@ -230,7 +230,7 @@ export async function getScore(req: Request, res: Response, next: NextFunction) 
 	const data = await getScoreByKey(res.locals.deta, id);
 	if(_.isNull(data)) {
 		const ret: IResponseMessage = {
-			message: "Score with specified ID can't be found."
+			message: "Score with specified ID not found."
 		};
 
 		res.status(HTTPStatus.NOT_FOUND).json(ret);
@@ -273,7 +273,7 @@ export async function getUserScore(req: Request, res: Response, next: NextFuncti
 	const data = await getScoreByUserId(res.locals.deta, id);
 	if(_.isNull(data)) {
 		const ret: IResponseMessage = {
-			message: "Score with specified ID can't be found."
+			message: "Score with specified ID not found."
 		};
 
 		res.status(HTTPStatus.NOT_FOUND).json(ret);
@@ -409,7 +409,7 @@ export async function addScore(req: Request, res: Response, next: NextFunction) 
 		const user = await getUserByKey(res.locals.deta, data.userId);
 		if(_.isNull(user)) {
 			const ret: IResponseMessage = {
-				message: "User with specified ID can't be found."
+				message: "User with specified ID not found."
 			};
 
 			res.status(HTTPStatus.NOT_FOUND).json(ret);
@@ -455,7 +455,7 @@ export async function deleteScore(req: Request, res: Response, next: NextFunctio
 		const score = await getScoreByKey(res.locals.deta, data.scoreId);
 		if(_.isNull(score)) {
 			const ret: IResponseMessage = {
-				message: "Score with specified ID can't be found."
+				message: "Score with specified ID not found."
 			};
 
 			res.status(HTTPStatus.NOT_FOUND).json(ret);

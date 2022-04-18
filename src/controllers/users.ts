@@ -117,7 +117,7 @@ export async function getUser(req: Request, res: Response, next: NextFunction) {
 	const data = await getUserByKey(res.locals.deta, id);
 	if(_.isNull(data)) {
 		const ret: IResponseMessage = {
-			message: "User with specified ID can't be found."
+			message: "User with specified ID not found."
 		};
 
 		res.status(HTTPStatus.NOT_FOUND).json(ret);
@@ -171,7 +171,7 @@ export async function addUser(req: Request, res: Response, next: NextFunction) {
 		const country = await getCountryByKey(res.locals.deta, data.countryId);
 		if(_.isNull(country)) {
 			const ret: IResponseMessage = {
-				message: "Country with specified ID can't be found."
+				message: "Country with specified ID not found."
 			};
 
 			res.status(HTTPStatus.NOT_FOUND).json(ret);
@@ -229,7 +229,7 @@ export async function updateUser(req: Request, res: Response, next: NextFunction
 		const country = await getCountryByKey(res.locals.deta, data.countryId);
 		if(_.isNull(country)) {
 			const ret: IResponseMessage = {
-				message: "Country with specified ID can't be found."
+				message: "Country with specified ID not found."
 			};
 
 			res.status(HTTPStatus.NOT_FOUND).json(ret);
@@ -275,7 +275,7 @@ export async function deleteUser(req: Request, res: Response, next: NextFunction
 		const user = await getUserByKey(res.locals.deta, data.userId);
 		if(_.isNull(user)) {
 			const ret: IResponseMessage = {
-				message: "User with specified ID can't be found."
+				message: "User with specified ID not found."
 			};
 
 			res.status(HTTPStatus.NOT_FOUND).json(ret);

@@ -19,7 +19,7 @@ export async function getScores(deta: Deta, sort: "id" | "score" | "pp" | "date"
 			log(`${ DB_NAME }: No data returned from database.`, "getScores", LogSeverity.WARN);
 		}
 		else {
-			log(`${ DB_NAME }: returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getScores", LogSeverity.LOG);
+			log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getScores", LogSeverity.LOG);
 		}
 
 		return sortScores(fetchResult, sort, desc);
@@ -55,7 +55,7 @@ export async function getScoresByCountryId(deta: Deta, id: number, sort: "id" | 
 			return [];
 		}
 
-		log(`${ DB_NAME }: returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getScoresByCountryId", LogSeverity.LOG);
+		log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getScoresByCountryId", LogSeverity.LOG);
 		return sortScores(fetchResult, sort, desc);
 	}
 	catch (e) {
@@ -102,7 +102,7 @@ export async function getScoresByUpdateId(deta: Deta, id?: number, sort: "id" | 
 			return [];
 		}
 
-		log(`${ DB_NAME }: returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getScoresByUpdateId", LogSeverity.LOG);
+		log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getScoresByUpdateId", LogSeverity.LOG);
 		return sortScores(fetchResult, sort, desc);
 	}
 	catch (e) {
@@ -247,7 +247,7 @@ export async function insertScore(deta: Deta, score: IScorePOSTData, updateId?: 
 			else {
 				const updateResult = await getUpdatesByStatus(deta, false, "id", true);
 				if(updateResult.length <= 0) {
-					log("No update data in non-finalized status. Canceling score data insertion.", "insertScore", LogSeverity.ERROR);
+					log("No update data in non-finalized status. Cancelling score data insertion.", "insertScore", LogSeverity.ERROR);
 					return false;
 				}
 

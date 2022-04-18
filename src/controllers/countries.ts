@@ -49,7 +49,7 @@ export async function getCountry(req: Request, res: Response, next: NextFunction
 	const data = await getCountryByKey(res.locals.deta, id);
 	if(_.isNull(data)) {
 		const ret: IResponseMessage = {
-			message: "Country with specified ID can't be found."
+			message: "Country with specified ID not found."
 		};
 
 		res.status(HTTPStatus.NOT_FOUND).json(ret);
@@ -123,7 +123,7 @@ export async function deleteCountry(req: Request, res: Response, next: NextFunct
 		const country = await getCountryByKey(res.locals.deta, data.countryId);
 		if(_.isNull(country)) {
 			const ret: IResponseMessage = {
-				message: "Country with specified ID can't be found."
+				message: "Country with specified ID not found."
 			};
 
 			res.status(HTTPStatus.NOT_FOUND).json(ret);
