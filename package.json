@@ -2,12 +2,12 @@
 	"name": "osuinactive-api",
 	"version": "0.1.0",
 	"description": "API for osu! Inactive User Score Rankings",
-	"main": "index.ts",
+	"main": "index.js",
 	"scripts": {
 		"dev": "nodemon --exec npx ts-node src/index.ts",
 		"fetch": "ts-node ./src/data-fetch.ts",
 		"build": "tsc && cd client && npm install && npm run build",
-		"start": "node ./dist/index.js"
+		"start": "node ."
 	},
 	"author": "shigeru22",
 	"license": "MIT",
