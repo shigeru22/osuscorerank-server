@@ -1,6 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { NextFunction, Request, Response } from "express";
-import Deta from "deta/dist/types/deta";
 import _ from "lodash";
 import jwt from "jsonwebtoken";
 import { IResponseMessage, IResponseData } from "../types/express";
@@ -10,7 +9,7 @@ import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function getAccessToken(deta: Deta, req: Request, res: Response, next: NextFunction) {
+export async function getAccessToken(req: Request, res: Response, next: NextFunction) {
 	try {
 		if(_.isUndefined(process.env.TOKEN_SECRET)) {
 			log("TOKEN_SECRET is not yet defined. See .env-template for details.", "addDummyData", LogSeverity.ERROR);
@@ -33,7 +32,7 @@ export async function getAccessToken(deta: Deta, req: Request, res: Response, ne
 			return;
 		}
 
-		const client = await getClientById(deta, data.clientId);
+		const client = await getClientById(res.locals.deta, data.clientId);
 
 		if(_.isNull(client)) {
 			const ret: IResponseMessage = {
