@@ -13,6 +13,10 @@ export async function getCountries(deta: Deta, sort: "id" | "date" = "id", desc 
 	try {
 		const fetchResult = (await db.fetch()).items as unknown as ICountryItemDetailData[];
 
+		if(fetchResult.length <= 0) {
+			log(`${ DB_NAME }: No data returned from database.`, "getCountries", LogSeverity.WARN);
+		}
+
 		fetchResult.sort((a, b) => {
 			let compA = 0;
 			let compB = 0;
@@ -29,12 +33,7 @@ export async function getCountries(deta: Deta, sort: "id" | "date" = "id", desc 
 			return desc ? compB - compA : compA - compB;
 		});
 
-		if(fetchResult.length <= 0) {
-			log(`${ DB_NAME }: No data returned from database.`, "getCountries", LogSeverity.WARN);
-		}
-		else {
-			log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getCountries", LogSeverity.LOG);
-		}
+		log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getCountries", LogSeverity.LOG);
 
 		return fetchResult;
 	}
