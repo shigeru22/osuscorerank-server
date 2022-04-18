@@ -17,6 +17,7 @@ env.config();
 
 const app = express();
 const PORT = process.env.API_PORT || 5000;
+const clientPath = path.join(__dirname + "/client/index.html");
 
 /* middlewares */
 app.use(express.json());
@@ -36,8 +37,13 @@ app.use("/api/status", statusRoute);
 
 app.use("/api/*", getNotFoundMessage);
 
-app.use("*", (req, res) => {
-	res.send("React endpoint goes here");
+app.get("*", (req, res) => {
+	if(!_.isUndefined(process.env.DEVELOPMENT) && process.env.DEVELOPMENT === "1") {
+		res.send("If you're seeing this message, the server is running in development mode. Client endpoints are only available in production mode.");
+		return;
+	}
+
+	res.sendFile(clientPath);
 });
 
 /* environment check */
