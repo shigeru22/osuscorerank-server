@@ -4,7 +4,7 @@ import { IResponseData, IResponseMessage } from "../types/express";
 import { IScoreDELETEData, IScorePOSTData, IScoreResponse, IScoresResponse } from "../types/score";
 import { getCountryByKey } from "../utils/deta/countries";
 import { getUserByKey } from "../utils/deta/users";
-import { getScoreByKey, getScoreByUserId, getScores, insertScore, removeScore } from "../utils/deta/scores";
+import { getScoreByKey, getScoreByUserId, getScores, getScoresByUpdateId, insertScore, removeScore } from "../utils/deta/scores";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
@@ -56,7 +56,26 @@ export async function getAllScores(req: Request, res: Response, next: NextFuncti
 		}
 	}
 
-	const data = await getScores(res.locals.deta, sort, desc);
+	let update = 0;
+	{
+		if(!_.isUndefined(req.query.updateid)) {
+			const id = _.parseInt(req.query.updateid as string, 10);
+			if(_.isNaN(id) || (id <= 0)) {
+				log("Invalid update ID parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid updateid parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			update = id;
+		}
+	}
+
+	const data = update === 0 ? (await getScores(res.locals.deta, sort, desc)) : (await getScoresByUpdateId(res.locals.deta, update, sort, desc));
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."

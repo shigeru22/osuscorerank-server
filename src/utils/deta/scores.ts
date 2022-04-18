@@ -5,6 +5,7 @@ import { IScoreData, IScorePOSTData } from "../../types/score";
 import { getCountryByKey } from "./countries";
 import { getUserByKey } from "./users";
 import { LogSeverity, log } from "../log";
+import { getUpdateByKey, getUpdatesByStatus } from "./updates";
 
 const DB_NAME = "osu-scores";
 
@@ -61,6 +62,38 @@ export async function getScoresByCountryId(deta: Deta, id: number, sort: "id" | 
 		}
 		else {
 			log("Unknown error occurred while querying database.", "getScoresByCountryId", LogSeverity.ERROR);
+		}
+
+		return [];
+	}
+}
+
+export async function getScoresByUpdateId(deta: Deta, id: number, sort: "id" | "score" | "pp" | "date" = "score", desc = false) {
+	const db = deta.Base(DB_NAME);
+
+	try {
+		const country = await getCountryByKey(deta, id);
+		if(_.isNull(country)) {
+			log("Null country returned. See above log (if any) for details.", "getScoresByUpdateId", LogSeverity.WARN);
+			return [];
+		}
+
+		const fetchResult = (await db.fetch({ updateId: id })).items as unknown as IScoreDetailData[];
+
+		if(fetchResult.length <= 0) {
+			log(`${ DB_NAME }: No data returned from database.`, "getScoresByUpdateId", LogSeverity.WARN);
+			return [];
+		}
+
+		log(`${ DB_NAME }: returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getScoresByUpdateId", LogSeverity.LOG);
+		return sortScores(fetchResult, sort, desc);
+	}
+	catch (e) {
+		if(_.isError(e)) {
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getScoresByCountryId", LogSeverity.ERROR);
+		}
+		else {
+			log("Unknown error occurred while querying database.", "getScoresByUpdateId", LogSeverity.ERROR);
 		}
 
 		return [];
@@ -152,13 +185,13 @@ export async function getScoreByOsuId(deta: Deta, id: number) {
 	}
 }
 
-export async function insertScore(deta: Deta, score: IScorePOSTData, silent = false) {
+export async function insertScore(deta: Deta, score: IScorePOSTData, updateId?: number, silent = false) {
 	const db = deta.Base(DB_NAME);
 
 	try {
 		const user = await getUserByKey(deta, score.userId);
 		if(_.isNull(user)) {
-			log("Null user returned. See above log (if any) for details.", "insertScore", LogSeverity.WARN);
+			log("Null user returned. See above log (if any) for details.", "insertScore", LogSeverity.ERROR);
 			return false;
 		}
 
@@ -167,6 +200,33 @@ export async function insertScore(deta: Deta, score: IScorePOSTData, silent = fa
 			const rows = await getScores(deta, "id");
 			if(rows.length > 0) {
 				currentLastId = _.parseInt(rows[rows.length - 1].key, 10);
+			}
+		}
+
+		let updateKey = 0;
+		{
+			if(!_.isUndefined(updateId)) {
+				const updateResult = await getUpdateByKey(deta, updateId);
+				if(_.isNull(updateResult)) {
+					log("Null update data returned. See above log (if any) for details.", "insertScore", LogSeverity.ERROR);
+					return false;
+				}
+
+				if(updateResult.online) {
+					log("Update data already finalized. Cancelling score data insertion.", "insertScore", LogSeverity.ERROR);
+					return false;
+				}
+
+				updateKey = updateId;
+			}
+			else {
+				const updateResult = await getUpdatesByStatus(deta, false, "id", true);
+				if(updateResult.length <= 0) {
+					log("No update data in non-finalized status. Canceling score data insertion.", "insertScore", LogSeverity.ERROR);
+					return false;
+				}
+
+				updateKey = _.parseInt(updateResult[0].key, 10);
 			}
 		}
 
@@ -187,6 +247,7 @@ export async function insertScore(deta: Deta, score: IScorePOSTData, silent = fa
 			user: JSON.parse(JSON.stringify(data.user)),
 			score: data.score.toString(),
 			pp: data.pp,
+			updateId: updateKey,
 			dateAdded: date.toISOString()
 		}, (currentLastId + 1).toString());
 
