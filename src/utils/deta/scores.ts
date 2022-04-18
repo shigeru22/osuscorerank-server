@@ -72,12 +72,6 @@ export async function getScoresByUpdateId(deta: Deta, id: number, sort: "id" | "
 	const db = deta.Base(DB_NAME);
 
 	try {
-		const country = await getCountryByKey(deta, id);
-		if(_.isNull(country)) {
-			log("Null country returned. See above log (if any) for details.", "getScoresByUpdateId", LogSeverity.WARN);
-			return [];
-		}
-
 		const fetchResult = (await db.fetch({ updateId: id })).items as unknown as IScoreDetailData[];
 
 		if(fetchResult.length <= 0) {
