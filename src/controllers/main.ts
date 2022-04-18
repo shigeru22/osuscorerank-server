@@ -1,10 +1,10 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { NextFunction, Request, Response } from "express";
-import Deta from "deta/dist/types/deta";
 import _ from "lodash";
 import { IResponseMessage } from "../types/express";
 import { IDummyPOSTData } from "../types/main";
 import { insertClient } from "../utils/deta/auth";
+import { insertUpdate } from "../utils/deta/updates";
 import { insertCountry } from "../utils/deta/countries";
 import { insertUser } from "../utils/deta/users";
 import { insertScore } from "../utils/deta/scores";
@@ -32,7 +32,7 @@ export function getNotFoundMessage(req: Request, res: Response) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function addDummyData(deta: Deta, req: Request, res: Response, next: NextFunction) {
+export async function addDummyData(req: Request, res: Response, next: NextFunction) {
 	log("Function accessed.", "addDummyData", LogSeverity.LOG);
 
 	if(_.isUndefined(process.env.TOKEN_SECRET)) {
@@ -73,7 +73,7 @@ export async function addDummyData(deta: Deta, req: Request, res: Response, next
 		}
 	}
 
-	let result = await insertClient(deta, "C0001", "Webmaster's client");
+	let result = await insertClient(res.locals.deta, "C0001", "Webmaster's client");
 	if(!result) {
 		const ret: IResponseMessage = {
 			message: "An error occurred while inserting client data."
@@ -83,7 +83,21 @@ export async function addDummyData(deta: Deta, req: Request, res: Response, next
 		return;
 	}
 
-	result = await insertCountry(deta, {
+	result = await insertUpdate(res.locals.deta, {
+		apiVersion: "1.0.0",
+		webVersion: "1.0.0"
+	});
+
+	if(!result) {
+		const ret: IResponseMessage = {
+			message: "An error occurred while inserting update data."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
+	result = await insertCountry(res.locals.deta, {
 		countryName: "Indonesia",
 		countryCode: "ID"
 	});
@@ -97,7 +111,7 @@ export async function addDummyData(deta: Deta, req: Request, res: Response, next
 		return;
 	}
 
-	result = await insertUser(deta, {
+	result = await insertUser(res.locals.deta, {
 		userName: "Shigeru22",
 		osuId: 2581664,
 		countryId: 1
@@ -112,7 +126,7 @@ export async function addDummyData(deta: Deta, req: Request, res: Response, next
 		return;
 	}
 
-	result = await insertScore(deta, {
+	result = await insertScore(res.locals.deta, {
 		userId: 1,
 		score: 48662338537,
 		pp: 8645
