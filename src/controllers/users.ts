@@ -12,7 +12,28 @@ import { checkNumber } from "../utils/common";
 export async function getAllUsers(req: Request, res: Response, next: NextFunction) {
 	log("Function accessed.", "getAllUsers", LogSeverity.LOG);
 
-	const data = await getUsers(res.locals.deta);
+	let isActive: boolean | null = null;
+	{
+		if(!_.isUndefined(req.query.active)) {
+			if(!_.isString(req.query.active) || !(req.query.active === "true" || req.query.active === "false" || req.query.active === "all")) {
+				log("Invalid active parameter. Sending error response.", "getAllUsers", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid active parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			switch(req.query.active) {
+				case "true": isActive = true; break;
+				case "false": isActive = false; break;
+			}
+		}
+	}
+
+	const data = await getUsers(res.locals.deta, isActive);
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
@@ -31,6 +52,7 @@ export async function getAllUsers(req: Request, res: Response, next: NextFunctio
 				userId: _.parseInt(item.key, 10),
 				userName: item.userName,
 				osuId: item.osuId,
+				isActive: item.isActive,
 				country: item.country
 			})),
 			length: data.length
@@ -56,6 +78,27 @@ export async function getCountryUsers(req: Request, res: Response, next: NextFun
 		return;
 	}
 
+	let isActive: boolean | null = null;
+	{
+		if(!_.isUndefined(req.query.active)) {
+			if(!_.isString(req.query.active) || !(req.query.active === "true" || req.query.active === "false" || req.query.active === "all")) {
+				log("Invalid active parameter. Sending error response.", "getAllUsers", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid active parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			switch(req.query.active) {
+				case "true": isActive = true; break;
+				case "false": isActive = false; break;
+			}
+		}
+	}
+
 	const country = await getCountryByKey(res.locals.deta, id);
 	if(_.isNull(country)) {
 		const ret: IResponseMessage = {
@@ -66,7 +109,7 @@ export async function getCountryUsers(req: Request, res: Response, next: NextFun
 		return;
 	}
 
-	const data = await getUsersByCountryId(res.locals.deta, id);
+	const data = await getUsersByCountryId(res.locals.deta, isActive, id);
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
@@ -89,7 +132,8 @@ export async function getCountryUsers(req: Request, res: Response, next: NextFun
 			users: data.map(item => ({
 				userId: _.parseInt(item.key, 10),
 				userName: item.userName,
-				osuId: item.osuId
+				osuId: item.osuId,
+				isActive: item.isActive
 			})),
 			length: data.length
 		}
@@ -133,6 +177,7 @@ export async function getUser(req: Request, res: Response, next: NextFunction) {
 				userId: _.parseInt(data.key, 10),
 				userName: data.userName,
 				osuId: data.osuId,
+				isActive: data.isActive,
 				country: data.country
 			}
 		}
@@ -305,9 +350,9 @@ export async function deleteUser(req: Request, res: Response, next: NextFunction
 }
 
 function validateUserPostData(data: IUserPOSTData) {
-	const isDefined = !_.isUndefined(data.userName) && !_.isUndefined(data.osuId) && !_.isUndefined(data.countryId);
-	const hasValidTypes = _.isString(data.userName) && _.isNumber(data.osuId) && _.isNumber(data.countryId);
-	const hasValidData = isDefined && (!_.isEmpty(data.userName) && checkNumber(data.osuId) && checkNumber(data.countryId));
+	const isDefined = !_.isUndefined(data.userName) && !_.isUndefined(data.osuId) && !_.isUndefined(data.countryId) && !_.isUndefined(data.isActive);
+	const hasValidTypes = _.isString(data.userName) && _.isNumber(data.osuId) && _.isNumber(data.countryId) && _.isBoolean(data.isActive);
+	const hasValidData = isDefined && (!_.isEmpty(data.userName) && checkNumber(data.osuId) && checkNumber(data.countryId)); // boolean values are checked at isDefined
 
 	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateUserPostData", LogSeverity.DEBUG);
 	if(!isDefined || !hasValidTypes || !hasValidData) {
@@ -318,9 +363,9 @@ function validateUserPostData(data: IUserPOSTData) {
 }
 
 function validateUserPutData(data: IUserPUTData) {
-	const isDefined = !_.isUndefined(data.userId) && !_.isUndefined(data.userName) && !_.isUndefined(data.countryId);
-	const hasValidTypes = _.isNumber(data.userId) && _.isString(data.userName) && _.isNumber(data.countryId);
-	const hasValidData = isDefined && (checkNumber(data.userId) && !_.isEmpty(data.userName) && checkNumber(data.countryId));
+	const isDefined = !_.isUndefined(data.userId) && !_.isUndefined(data.userName) && !_.isUndefined(data.countryId) && !_.isUndefined(data.isActive);
+	const hasValidTypes = _.isNumber(data.userId) && _.isString(data.userName) && _.isNumber(data.countryId) && _.isBoolean(data.isActive);
+	const hasValidData = isDefined && (checkNumber(data.userId) && !_.isEmpty(data.userName) && checkNumber(data.countryId)); // boolean values are checked at isDefined
 
 	log(`isDefined: ${ isDefined }, hasValidTypes: ${ hasValidTypes }, hasValidData: ${ hasValidData }`, "validateUserPutData", LogSeverity.DEBUG);
 	if(!isDefined || !hasValidTypes || !hasValidData) {

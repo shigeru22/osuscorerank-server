@@ -4,12 +4,14 @@ export interface IUserPOSTData {
   userName: string;
   osuId: number;
   countryId: number;
+  isActive: boolean;
 }
 
 export interface IUserPUTData {
   userId: number;
   userName: string;
   countryId: number;
+  isActive: boolean;
 }
 
 export interface IUserDELETEData {
@@ -19,6 +21,7 @@ export interface IUserDELETEData {
 export interface IUserData {
 	userName: string;
 	osuId: number;
+  isActive: boolean;
 }
 
 export interface IUserCountryData extends IUserData {

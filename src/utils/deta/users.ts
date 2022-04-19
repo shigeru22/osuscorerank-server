@@ -7,11 +7,12 @@ import { LogSeverity, log } from "../log";
 
 const DB_NAME = "osu-users";
 
-export async function getUsers(deta: Deta, sort: "id" | "date" = "id", desc = false) {
+export async function getUsers(deta: Deta, active: boolean | null = null, sort: "id" | "date" = "id", desc = false) {
 	const db = deta.Base(DB_NAME);
 
 	try {
-		const fetchResult = (await db.fetch()).items as unknown as IUserCountryDetailData[];
+		/* TODO: use Object.assign() for multiple fetch query assignments */
+		const fetchResult = (_.isNull(active) ? (await db.fetch()) : (await db.fetch({ isActive: active }))).items as unknown as IUserCountryDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getUsers", LogSeverity.WARN);
@@ -49,7 +50,7 @@ export async function getUsers(deta: Deta, sort: "id" | "date" = "id", desc = fa
 	}
 }
 
-export async function getUsersByCountryId(deta: Deta, id: number, sort: "id" | "date" = "id") {
+export async function getUsersByCountryId(deta: Deta, active: boolean | null = null, id: number, sort: "id" | "date" = "id") {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -63,7 +64,8 @@ export async function getUsersByCountryId(deta: Deta, id: number, sort: "id" | "
 			}
 		}
 
-		const fetchResult = (await db.fetch({ countryId: id })).items as unknown as IUserDetailData[];
+		const fetchResult = (
+			_.isNull(active) ? (await db.fetch({ countryId: id })) : (await db.fetch({ countryId: id, isActive: active }))).items as unknown as IUserDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getUsersByCountryId", LogSeverity.WARN);
@@ -172,7 +174,7 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 
 		let currentLastId = 0;
 		{
-			const rows = await getUsers(deta, "id");
+			const rows = await getUsers(deta, null, "id");
 			if(rows.length > 0) {
 				currentLastId = _.parseInt(rows[rows.length - 1].key, 10);
 			}
@@ -181,6 +183,7 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 		const data: IUserCountryData = {
 			userName: user.userName,
 			osuId: user.osuId,
+			isActive: user.isActive,
 			country: {
 				countryId: countryKey,
 				countryName: country.countryName,
@@ -193,6 +196,7 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 		await db.put({
 			userName: data.userName,
 			osuId: data.osuId,
+			isActive: data.isActive,
 			country: JSON.parse(JSON.stringify(data.country)),
 			countryId: countryKey,
 			dateAdded: date.toISOString()
@@ -236,6 +240,7 @@ export async function updateUser(deta: Deta, user: IUserPUTData, silent = false)
 
 		await db.update({
 			userName: user.userName,
+			isActive: user.isActive,
 			country: {
 				countryId: countryKey,
 				countryName: fetchedCountry.countryName,

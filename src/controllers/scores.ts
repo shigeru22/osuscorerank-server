@@ -13,6 +13,27 @@ import { checkNumber } from "../utils/common";
 export async function getAllScores(req: Request, res: Response, next: NextFunction) {
 	log("Function accessed.", "getAllScores", LogSeverity.LOG);
 
+	let isActive: boolean | null = null;
+	{
+		if(!_.isUndefined(req.query.active)) {
+			if(!_.isString(req.query.active) || !(req.query.active === "true" || req.query.active === "false" || req.query.active === "all")) {
+				log("Invalid active parameter. Sending error response.", "getAllUsers", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid active parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			switch(req.query.active) {
+				case "true": isActive = true; break;
+				case "false": isActive = false; break;
+			}
+		}
+	}
+
 	let sort: "id" | "score" | "pp" | "date" = "score";
 	{
 		if(!_.isUndefined(req.query.sort)) {
@@ -75,7 +96,7 @@ export async function getAllScores(req: Request, res: Response, next: NextFuncti
 		}
 	}
 
-	const data = await getScoresByUpdateId(res.locals.deta, update === 0 ? undefined : update, sort, desc);
+	const data = await getScoresByUpdateId(res.locals.deta, isActive, update === 0 ? undefined : update, sort, desc);
 	if(!data) {
 		const ret: IResponseMessage = {
 			message: "Failed to retrieve score data."
@@ -115,6 +136,27 @@ export async function getAllScores(req: Request, res: Response, next: NextFuncti
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getCountryScores(req: Request, res: Response, next: NextFunction) {
 	log("Function accessed.", "getCountryScores", LogSeverity.LOG);
+
+	let isActive: boolean | null = null;
+	{
+		if(!_.isUndefined(req.query.active)) {
+			if(!_.isString(req.query.active) || !(req.query.active === "true" || req.query.active === "false" || req.query.active === "all")) {
+				log("Invalid active parameter. Sending error response.", "getAllUsers", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid active parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			switch(req.query.active) {
+				case "true": isActive = true; break;
+				case "false": isActive = false; break;
+			}
+		}
+	}
 
 	let sort: "id" | "score" | "pp" | "date" = "score";
 	{
@@ -183,7 +225,7 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 		}
 	}
 
-	const data = (await getScores(res.locals.deta, sort, desc)).filter(item => item.user.country.countryId === id);
+	const data = (await getScores(res.locals.deta, isActive, sort, desc)).filter(item => item.user.country.countryId === id);
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
@@ -371,7 +413,7 @@ export async function getMultipleUserScores(req: Request, res: Response, next: N
 		return 0;
 	});
 
-	const data = (await getScores(res.locals.deta, sort, desc)).filter(row => _.includes(ids, _.parseInt(row.key, 10)));
+	const data = (await getScores(res.locals.deta, null, sort, desc)).filter(row => _.includes(ids, _.parseInt(row.key, 10)));
 
 	log("Score data retrieved successfully. Sending data response.", "getMultipleUserScores", LogSeverity.LOG);
 

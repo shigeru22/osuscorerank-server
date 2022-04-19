@@ -5,5 +5,6 @@ export interface IScoreDetailData extends IScoreData {
 	countryId: number;
 	userId: number;
 	updateId: number;
+	isActive: boolean;
 	dateAdded: Date | string;
 }

@@ -200,7 +200,7 @@ module.exports = {
 		"object-curly-newline": [ "warn", {
 			"ObjectExpression": {
 				"multiline": true,
-				"minProperties": 2,
+				"minProperties": 4,
 				"consistent": true
 			},
 			"ObjectPattern": { "multiline": false },

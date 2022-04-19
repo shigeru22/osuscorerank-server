@@ -114,7 +114,8 @@ export async function addDummyData(req: Request, res: Response, next: NextFuncti
 	result = await insertUser(res.locals.deta, {
 		userName: "Shigeru22",
 		osuId: 2581664,
-		countryId: 1
+		countryId: 1,
+		isActive: true
 	});
 
 	if(!result) {

@@ -9,11 +9,11 @@ import { getUpdateByKey, getUpdatesByStatus } from "./updates";
 
 const DB_NAME = "osu-scores";
 
-export async function getScores(deta: Deta, sort: "id" | "score" | "pp" | "date" = "score", desc = false) {
+export async function getScores(deta: Deta, active: boolean | null = null, sort: "id" | "score" | "pp" | "date" = "score", desc = false) {
 	const db = deta.Base(DB_NAME);
 
 	try {
-		const fetchResult = (await db.fetch()).items as unknown as IScoreDetailData[];
+		const fetchResult = (_.isNull(active) ? (await db.fetch()) : await db.fetch({ isActive: active })).items as unknown as IScoreDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScores", LogSeverity.WARN);
@@ -36,7 +36,7 @@ export async function getScores(deta: Deta, sort: "id" | "score" | "pp" | "date"
 	}
 }
 
-export async function getScoresByCountryId(deta: Deta, id: number, sort: "id" | "score" | "pp" | "date" = "score", desc = false) {
+export async function getScoresByCountryId(deta: Deta, active: boolean | null = null, id: number, sort: "id" | "score" | "pp" | "date" = "score", desc = false) {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -48,7 +48,7 @@ export async function getScoresByCountryId(deta: Deta, id: number, sort: "id" | 
 			}
 		}
 
-		const fetchResult = (await db.fetch({ countryId: id })).items as unknown as IScoreDetailData[];
+		const fetchResult = (_.isNull(active) ? (await db.fetch({ countryId: id })) : await db.fetch({ countryId: id, isActive: active })).items as unknown as IScoreDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScoresByCountryId", LogSeverity.WARN);
@@ -70,7 +70,7 @@ export async function getScoresByCountryId(deta: Deta, id: number, sort: "id" | 
 	}
 }
 
-export async function getScoresByUpdateId(deta: Deta, id?: number, sort: "id" | "score" | "pp" | "date" = "score", desc = false) {
+export async function getScoresByUpdateId(deta: Deta, active: boolean | null = null, id?: number, sort: "id" | "score" | "pp" | "date" = "score", desc = false) {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -95,7 +95,7 @@ export async function getScoresByUpdateId(deta: Deta, id?: number, sort: "id" | 
 			}
 		}
 
-		const fetchResult = (await db.fetch({ updateId: updateKey })).items as unknown as IScoreDetailData[];
+		const fetchResult = (_.isNull(active) ? (await db.fetch({ updateId: updateKey })) : await db.fetch({ updateId: updateKey, isActive: active })).items as unknown as IScoreDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScoresByUpdateId", LogSeverity.WARN);
@@ -222,7 +222,7 @@ export async function insertScore(deta: Deta, score: IScorePOSTData, updateId?: 
 
 		let currentLastId = 0;
 		{
-			const rows = await getScores(deta, "id");
+			const rows = await getScores(deta, null, "id");
 			if(rows.length > 0) {
 				currentLastId = _.parseInt(rows[rows.length - 1].key, 10);
 			}
@@ -260,6 +260,7 @@ export async function insertScore(deta: Deta, score: IScorePOSTData, updateId?: 
 				userId: _.parseInt(user.key, 10),
 				userName: user.userName,
 				osuId: user.osuId,
+				isActive: user.isActive,
 				country: user.country
 			},
 			score: score.score,
@@ -272,6 +273,7 @@ export async function insertScore(deta: Deta, score: IScorePOSTData, updateId?: 
 			user: JSON.parse(JSON.stringify(data.user)),
 			userId: data.user.userId,
 			countryId: data.user.country.countryId,
+			isActive: data.user.isActive,
 			score: data.score.toString(),
 			pp: data.pp,
 			updateId: updateKey,
@@ -329,6 +331,7 @@ export async function updateScore(deta: Deta, score: IScorePOSTData, silent = fa
 					countryCode: fetchedCountry.countryCode
 				}
 			},
+			isActive: fetchedUser.isActive,
 			score: score.score,
 			pp: score.pp
 		}, fetchedScore.key);
