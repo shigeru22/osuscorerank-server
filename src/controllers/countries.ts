@@ -63,8 +63,8 @@ export async function getCountry(req: Request, res: Response, next: NextFunction
 		data: {
 			country: {
 				countryId: _.parseInt(data.key, 10),
-				countryCode: data.countryCode,
-				countryName: data.countryName
+				countryName: data.countryName,
+				countryCode: data.countryCode
 			}
 		}
 	};
