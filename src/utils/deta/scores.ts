@@ -36,19 +36,40 @@ export async function getScores(deta: Deta, active: boolean | null = null, sort:
 	}
 }
 
-export async function getScoresByCountryId(deta: Deta, active: boolean | null = null, id: number, sort: "id" | "score" | "pp" | "date" = "score", desc = false) {
+export async function getScoresByCountryId(deta: Deta, active: boolean | null = null, countryId: number, updateId?: number, sort: "id" | "score" | "pp" | "date" = "score", desc = false) {
 	const db = deta.Base(DB_NAME);
 
 	try {
+		let updateKey = 0;
 		{
-			const country = await getCountryByKey(deta, id);
+			if(_.isUndefined(updateId)) { // if id is undefined, return key of the latest online update
+				const updateResult = await getUpdatesByStatus(deta, true, "id", desc);
+				if(updateResult.length <= 0) {
+					log("No update data in finalized status. Cancelling score data retrieval.", "getScoresByUpdateId", LogSeverity.ERROR);
+					return [];
+				}
+
+				updateKey = _.parseInt(updateResult[0].key, 10);
+			}
+			else {
+				if(updateId <= 0) {
+					log("Invalid update ID parameter. Cancelling score data retrieval.", "getScoresByUpdateId", LogSeverity.ERROR);
+					return [];
+				}
+
+				updateKey = updateId;
+			}
+		}
+
+		{
+			const country = await getCountryByKey(deta, countryId);
 			if(_.isNull(country)) {
 				log("Country not found. Cancelling score data retrieval.", "getScoresByCountryId", LogSeverity.WARN);
 				return [];
 			}
 		}
 
-		const fetchResult = (_.isNull(active) ? (await db.fetch({ countryId: id })) : await db.fetch({ countryId: id, isActive: active })).items as unknown as IScoreDetailData[];
+		const fetchResult = (_.isNull(active) ? (await db.fetch({ countryId: countryId, updateId: updateKey })) : await db.fetch({ countryId: countryId, updateId: updateKey, isActive: active })).items as unknown as IScoreDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScoresByCountryId", LogSeverity.WARN);
@@ -77,7 +98,7 @@ export async function getScoresByUpdateId(deta: Deta, active: boolean | null = n
 		let updateKey = 0;
 		{
 			if(_.isUndefined(id)) { // if id is undefined, return key of the latest online update
-				const updateResult = await getUpdatesByStatus(deta, true, "id", desc);
+				const updateResult = await getUpdatesByStatus(deta, true, "id", true);
 				if(updateResult.length <= 0) {
 					log("No update data in finalized status. Cancelling score data retrieval.", "getScoresByUpdateId", LogSeverity.ERROR);
 					return false;
@@ -144,10 +165,31 @@ export async function getScoreByKey(deta: Deta, key: number) {
 	}
 }
 
-export async function getScoreByUserId(deta: Deta, id: number) {
+export async function getScoreByUserId(deta: Deta, id: number, updateId?: number) {
 	const db = deta.Base(DB_NAME);
 
 	try {
+		let updateKey: number | null = null;
+		{
+			if(_.isUndefined(updateId)) { // if id is undefined, return key of the latest online update
+				const updateResult = await getUpdatesByStatus(deta, true, "id", true);
+				if(updateResult.length <= 0) {
+					log("No update data in finalized status. Cancelling score data retrieval.", "getScoreByUserId", LogSeverity.ERROR);
+					return null;
+				}
+
+				updateKey = _.parseInt(updateResult[0].key, 10);
+			}
+			else {
+				if(updateId <= 0) {
+					log("Invalid update ID parameter. Cancelling score data retrieval.", "getScoreByUserId", LogSeverity.ERROR);
+					return null;
+				}
+
+				updateKey = updateId;
+			}
+		}
+
 		{
 			const user = await getUserByKey(deta, id);
 			if(_.isNull(user)) {
@@ -156,7 +198,7 @@ export async function getScoreByUserId(deta: Deta, id: number) {
 			}
 		}
 
-		const fetchResult = (await db.fetch({ userId: id })) as unknown as IScoreDetailData[];
+		const fetchResult = (await db.fetch({ userId: id, updateId: updateKey })).items as unknown as IScoreDetailData[];
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScoreByUserId", LogSeverity.WARN);
 			return null;
@@ -406,6 +448,8 @@ function sortScores(data: IScoreDetailData[], sort: "id" | "score" | "pp" | "dat
 
 		return desc ? compB - compA : compA - compB;
 	});
+
+	console.log(`sort: ${ sort }, desc: ${ desc }`);
 
 	return [ ...temp ];
 }

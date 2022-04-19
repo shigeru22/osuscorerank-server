@@ -201,6 +201,25 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 		}
 	}
 
+	let update: number | undefined = undefined;
+	{
+		if(!_.isUndefined(req.query.updateid)) {
+			const id = _.parseInt(req.query.updateid as string, 10);
+			if(_.isNaN(id) || (id <= 0)) {
+				log("Invalid update ID parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid updateid parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			update = id;
+		}
+	}
+
 	const id = _.parseInt(req.params.countryId, 10);
 	if(!checkNumber(id) || id <= 0) {
 		log("Invalid ID parameter. Sending error response.", "getCountryScores", LogSeverity.WARN);
@@ -225,7 +244,7 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 		}
 	}
 
-	const data = await getScoresByCountryId(res.locals.deta, isActive, id, sort, desc);
+	const data = await getScoresByCountryId(res.locals.deta, isActive, id, update, sort, desc);
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
@@ -312,7 +331,26 @@ export async function getUserScore(req: Request, res: Response, next: NextFuncti
 		return;
 	}
 
-	const data = await getScoreByUserId(res.locals.deta, id);
+	let update: number | undefined = undefined;
+	{
+		if(!_.isUndefined(req.query.updateid)) {
+			const id = _.parseInt(req.query.updateid as string, 10);
+			if(_.isNaN(id) || (id <= 0)) {
+				log("Invalid update ID parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid updateid parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			update = id;
+		}
+	}
+
+	const data = await getScoreByUserId(res.locals.deta, id, update);
 	if(_.isNull(data)) {
 		const ret: IResponseMessage = {
 			message: "Score with specified ID not found."
@@ -337,6 +375,7 @@ export async function getUserScore(req: Request, res: Response, next: NextFuncti
 	};
 
 	res.status(HTTPStatus.OK).json(ret);
+	return;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -406,6 +445,25 @@ export async function getMultipleUserScores(req: Request, res: Response, next: N
 		}
 	}
 
+	let update = 0;
+	{
+		if(!_.isUndefined(req.query.updateid)) {
+			const id = _.parseInt(req.query.updateid as string, 10);
+			if(_.isNaN(id) || (id <= 0)) {
+				log("Invalid update ID parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid updateid parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			update = id;
+		}
+	}
+
 	const ids = req.query.users.map(item => {
 		if(_.isString(item)) {
 			return _.parseInt(item, 10);
@@ -413,7 +471,17 @@ export async function getMultipleUserScores(req: Request, res: Response, next: N
 		return 0;
 	});
 
-	const data = (await getScores(res.locals.deta, null, sort, desc)).filter(row => _.includes(ids, _.parseInt(row.key, 10)));
+	const queryResult = (update === 0 ? (await getScores(res.locals.deta, null, sort, desc)) : (await getScoresByUpdateId(res.locals.deta, null, update, sort, desc)));
+	if(!queryResult) {
+		const ret: IResponseMessage = {
+			message: "Failed to retrieve score data."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
+	const data = queryResult.filter(row => _.includes(ids, _.parseInt(row.key, 10)));
 
 	log("Score data retrieved successfully. Sending data response.", "getMultipleUserScores", LogSeverity.LOG);
 
