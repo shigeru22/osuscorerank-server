@@ -12,6 +12,26 @@ import { checkNumber } from "../utils/common";
 export async function getAllUsers(req: Request, res: Response, next: NextFunction) {
 	log("Function accessed.", "getAllUsers", LogSeverity.LOG);
 
+	let desc = false;
+	{
+		if(!_.isUndefined(req.query.desc)) {
+			if(!_.isString(req.query.desc) || !(req.query.desc === "true" || req.query.desc === "false")) {
+				log("Invalid desc parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid desc parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			if(req.query.desc === "true") {
+				desc = true;
+			}
+		}
+	}
+
 	let isActive: boolean | null = null;
 	{
 		if(!_.isUndefined(req.query.active)) {
@@ -33,7 +53,7 @@ export async function getAllUsers(req: Request, res: Response, next: NextFunctio
 		}
 	}
 
-	const data = await getUsers(res.locals.deta, isActive);
+	const data = await getUsers(res.locals.deta, isActive, "id", desc);
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
@@ -99,6 +119,26 @@ export async function getCountryUsers(req: Request, res: Response, next: NextFun
 		}
 	}
 
+	let desc = false;
+	{
+		if(!_.isUndefined(req.query.desc)) {
+			if(!_.isString(req.query.desc) || !(req.query.desc === "true" || req.query.desc === "false")) {
+				log("Invalid desc parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+
+				const ret: IResponseMessage = {
+					message: "Invalid desc parameter."
+				};
+
+				res.status(HTTPStatus.BAD_REQUEST).json(ret);
+				return;
+			}
+
+			if(req.query.desc === "true") {
+				desc = true;
+			}
+		}
+	}
+
 	const country = await getCountryByKey(res.locals.deta, id);
 	if(_.isNull(country)) {
 		const ret: IResponseMessage = {
@@ -109,7 +149,7 @@ export async function getCountryUsers(req: Request, res: Response, next: NextFun
 		return;
 	}
 
-	const data = await getUsersByCountryId(res.locals.deta, isActive, id);
+	const data = await getUsersByCountryId(res.locals.deta, isActive, id, "id", desc);
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
