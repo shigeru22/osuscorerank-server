@@ -102,7 +102,7 @@ export async function getCountryUsers(req: Request, res: Response, next: NextFun
 	{
 		if(!_.isUndefined(req.query.active)) {
 			if(!_.isString(req.query.active) || !(req.query.active === "true" || req.query.active === "false" || req.query.active === "all")) {
-				log("Invalid active parameter. Sending error response.", "getAllUsers", LogSeverity.WARN);
+				log("Invalid active parameter. Sending error response.", "getCountryUsers", LogSeverity.WARN);
 
 				const ret: IResponseMessage = {
 					message: "Invalid active parameter."
@@ -123,7 +123,7 @@ export async function getCountryUsers(req: Request, res: Response, next: NextFun
 	{
 		if(!_.isUndefined(req.query.desc)) {
 			if(!_.isString(req.query.desc) || !(req.query.desc === "true" || req.query.desc === "false")) {
-				log("Invalid desc parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+				log("Invalid desc parameter. Sending error response.", "getCountryUsers", LogSeverity.WARN);
 
 				const ret: IResponseMessage = {
 					message: "Invalid desc parameter."
@@ -188,7 +188,7 @@ export async function getUser(req: Request, res: Response, next: NextFunction) {
 
 	const id = _.parseInt(req.params.userId, 10); // database's user id
 	if(!checkNumber(id) || id <= 0) {
-		log("Invalid ID parameter. Sending error response.", "getAllUsers", LogSeverity.WARN);
+		log("Invalid ID parameter. Sending error response.", "getUser", LogSeverity.WARN);
 
 		const ret: IResponseMessage = {
 			message: "Invalid ID parameter."
@@ -286,7 +286,7 @@ export async function addUser(req: Request, res: Response, next: NextFunction) {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function updateUser(req: Request, res: Response, next: NextFunction) {
-	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "addUser", LogSeverity.LOG);
+	log(`Function accessed, by clientId: ${ res.locals.decode.clientId }`, "updateUser", LogSeverity.LOG);
 	const data: IUserPUTData = req.body;
 
 	if(!validateUserPutData(data)) {
@@ -333,7 +333,7 @@ export async function updateUser(req: Request, res: Response, next: NextFunction
 		return;
 	}
 
-	log("User data updated successfully. Sending data response.", "addUser", LogSeverity.LOG);
+	log("User data updated successfully. Sending data response.", "updateUser", LogSeverity.LOG);
 
 	const ret: IResponseMessage = {
 		message: "Data updated successfully."

@@ -17,7 +17,7 @@ export async function getAllScores(req: Request, res: Response, next: NextFuncti
 	{
 		if(!_.isUndefined(req.query.active)) {
 			if(!_.isString(req.query.active) || !(req.query.active === "true" || req.query.active === "false" || req.query.active === "all")) {
-				log("Invalid active parameter. Sending error response.", "getAllUsers", LogSeverity.WARN);
+				log("Invalid active parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
 
 				const ret: IResponseMessage = {
 					message: "Invalid active parameter."
@@ -141,7 +141,7 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 	{
 		if(!_.isUndefined(req.query.active)) {
 			if(!_.isString(req.query.active) || !(req.query.active === "true" || req.query.active === "false" || req.query.active === "all")) {
-				log("Invalid active parameter. Sending error response.", "getAllUsers", LogSeverity.WARN);
+				log("Invalid active parameter. Sending error response.", "getCountryScores", LogSeverity.WARN);
 
 				const ret: IResponseMessage = {
 					message: "Invalid active parameter."
@@ -206,7 +206,7 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 		if(!_.isUndefined(req.query.updateid)) {
 			const id = _.parseInt(req.query.updateid as string, 10);
 			if(_.isNaN(id) || (id <= 0)) {
-				log("Invalid update ID parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+				log("Invalid update ID parameter. Sending error response.", "getCountryScores", LogSeverity.WARN);
 
 				const ret: IResponseMessage = {
 					message: "Invalid updateid parameter."
@@ -254,7 +254,7 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 		return;
 	}
 
-	log("Country scores data retrieved successfully. Sending data response.", "getMultipleUserScores", LogSeverity.LOG);
+	log("Country scores data retrieved successfully. Sending data response.", "getCountryScores", LogSeverity.LOG);
 
 	const ret: IResponseData<IScoresResponse> = {
 		message: "Data retrieved successfully.",
@@ -298,7 +298,7 @@ export async function getScore(req: Request, res: Response, next: NextFunction) 
 		return;
 	}
 
-	log("Score data retrieved successfully. Sending data response.", "getMultipleUserScores", LogSeverity.LOG);
+	log("Score data retrieved successfully. Sending data response.", "getScore", LogSeverity.LOG);
 
 	const ret: IResponseData<IScoreResponse> = {
 		message: "Data retrieved successfully.",
@@ -336,7 +336,7 @@ export async function getUserScore(req: Request, res: Response, next: NextFuncti
 		if(!_.isUndefined(req.query.updateid)) {
 			const id = _.parseInt(req.query.updateid as string, 10);
 			if(_.isNaN(id) || (id <= 0)) {
-				log("Invalid update ID parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+				log("Invalid update ID parameter. Sending error response.", "getUserScore", LogSeverity.WARN);
 
 				const ret: IResponseMessage = {
 					message: "Invalid updateid parameter."
@@ -360,7 +360,7 @@ export async function getUserScore(req: Request, res: Response, next: NextFuncti
 		return;
 	}
 
-	log("Score data retrieved successfully. Sending data response.", "getMultipleUserScores", LogSeverity.LOG);
+	log("Score data retrieved successfully. Sending data response.", "getUserScore", LogSeverity.LOG);
 
 	const ret: IResponseData<IScoreResponse> = {
 		message: "Data retrieved successfully.",
@@ -450,7 +450,7 @@ export async function getMultipleUserScores(req: Request, res: Response, next: N
 		if(!_.isUndefined(req.query.updateid)) {
 			const id = _.parseInt(req.query.updateid as string, 10);
 			if(_.isNaN(id) || (id <= 0)) {
-				log("Invalid update ID parameter. Sending error response.", "getAllScores", LogSeverity.WARN);
+				log("Invalid update ID parameter. Sending error response.", "getMultipleUserScores", LogSeverity.WARN);
 
 				const ret: IResponseMessage = {
 					message: "Invalid updateid parameter."
@@ -583,7 +583,7 @@ export async function deleteScore(req: Request, res: Response, next: NextFunctio
 		return;
 	}
 
-	log("Score data deleted successfully. Sending success response.", "removeScore", LogSeverity.LOG);
+	log("Score data deleted successfully. Sending success response.", "deleteScore", LogSeverity.LOG);
 
 	const ret: IResponseMessage = {
 		message: "Data deleted successfully."

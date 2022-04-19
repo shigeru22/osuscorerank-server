@@ -128,7 +128,7 @@ export async function getScoresByUpdateId(deta: Deta, active: boolean | null = n
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getScoresByCountryId", LogSeverity.ERROR);
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "getScoresByUpdateId", LogSeverity.ERROR);
 		}
 		else {
 			log("Unknown error occurred while querying database.", "getScoresByUpdateId", LogSeverity.ERROR);
@@ -193,7 +193,7 @@ export async function getScoreByUserId(deta: Deta, id: number, updateId?: number
 		{
 			const user = await getUserByKey(deta, id);
 			if(_.isNull(user)) {
-				log("Null user returned. See above log (if any) for details.", "getScoresByCountryId", LogSeverity.WARN);
+				log("Null user returned. See above log (if any) for details.", "getScoreByUserId", LogSeverity.WARN);
 				return null;
 			}
 		}
@@ -448,8 +448,6 @@ function sortScores(data: IScoreDetailData[], sort: "id" | "score" | "pp" | "dat
 
 		return desc ? compB - compA : compA - compB;
 	});
-
-	console.log(`sort: ${ sort }, desc: ${ desc }`);
 
 	return [ ...temp ];
 }

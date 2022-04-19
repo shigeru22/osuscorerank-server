@@ -112,7 +112,7 @@ export async function getUserByKey(deta: Deta, key: number) {
 			log(`${ DB_NAME }: No data returned from database.`, "getUserByKey", LogSeverity.WARN);
 		}
 		else {
-			log(`${ DB_NAME }: Returned 1 row.`, "getCountries", LogSeverity.LOG);
+			log(`${ DB_NAME }: Returned 1 row.`, "getUserByKey", LogSeverity.LOG);
 		}
 
 		return fetchResult;
