@@ -64,8 +64,7 @@ export async function getUsersByCountryId(deta: Deta, active: boolean | null = n
 			}
 		}
 
-		const fetchResult = (
-			_.isNull(active) ? (await db.fetch({ countryId: id })) : (await db.fetch({ countryId: id, isActive: active }))).items as unknown as IUserDetailData[];
+		const fetchResult = (_.isNull(active) ? (await db.fetch({ countryId: id })) : (await db.fetch({ countryId: id, isActive: active }))).items as unknown as IUserDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getUsersByCountryId", LogSeverity.WARN);
