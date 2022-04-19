@@ -4,7 +4,7 @@ import { IResponseData, IResponseMessage } from "../types/express";
 import { IScoreDELETEData, IScorePOSTData, IScoreResponse, IScoresResponse } from "../types/score";
 import { getCountryByKey } from "../utils/deta/countries";
 import { getUserByKey } from "../utils/deta/users";
-import { getScoreByKey, getScoreByUserId, getScores, getScoresByUpdateId, insertScore, removeScore } from "../utils/deta/scores";
+import { getScoreByKey, getScoreByUserId, getScores, getScoresByCountryId, getScoresByUpdateId, insertScore, removeScore } from "../utils/deta/scores";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
@@ -225,7 +225,7 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 		}
 	}
 
-	const data = (await getScores(res.locals.deta, isActive, sort, desc)).filter(item => item.user.country.countryId === id);
+	const data = await getScoresByCountryId(res.locals.deta, isActive, id, sort, desc);
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
