@@ -1,7 +1,7 @@
 import _ from "lodash";
 import Deta from "deta/dist/types/deta";
 import { IScoreDetailData } from "../../types/deta/score";
-import { IScoreData, IScorePOSTData } from "../../types/score";
+import { IScoreCountryData, IScorePOSTData } from "../../types/score";
 import { getCountryByKey } from "./countries";
 import { getUserByKey } from "./users";
 import { LogSeverity, log } from "../log";
@@ -297,7 +297,7 @@ export async function insertScore(deta: Deta, score: IScorePOSTData, updateId?: 
 			}
 		}
 
-		const data: IScoreData = {
+		const data: IScoreCountryData = {
 			user: {
 				userId: _.parseInt(user.key, 10),
 				userName: user.userName,

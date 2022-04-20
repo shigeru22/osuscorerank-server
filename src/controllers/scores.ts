@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import _ from "lodash";
 import { IResponseData, IResponseMessage } from "../types/express";
-import { IScoreDELETEData, IScorePOSTData, IScoreResponse, IScoresResponse } from "../types/score";
+import { ICountryScoresResponse, IScoreDELETEData, IScorePOSTData, IScoreResponse, IScoresResponse } from "../types/score";
 import { getCountryByKey } from "../utils/deta/countries";
 import { getUserByKey } from "../utils/deta/users";
 import { getScoreByKey, getScoreByUserId, getScores, getScoresByCountryId, getScoresByUpdateId, insertScore, removeScore } from "../utils/deta/scores";
@@ -122,7 +122,17 @@ export async function getAllScores(req: Request, res: Response, next: NextFuncti
 		data: {
 			scores: data.map(item => ({
 				scoreId: _.parseInt(item.key, 10),
-				user: item.user,
+				user: {
+					userId: item.user.userId,
+					userName: item.user.userName,
+					osuId: item.user.osuId,
+					isActive: item.user.isActive,
+					country: {
+						countryId: item.user.country.countryId,
+						countryName: item.user.country.countryName,
+						countryCode: item.user.country.countryCode
+					}
+				},
 				score: item.score,
 				pp: item.pp
 			})),
@@ -232,8 +242,8 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 		return;
 	}
 
+	const country = await getCountryByKey(res.locals.deta, id);
 	{
-		const country = await getCountryByKey(res.locals.deta, id);
 		if(_.isNull(country)) {
 			const ret: IResponseMessage = {
 				message: "Country with specified ID not found."
@@ -256,12 +266,22 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 
 	log("Country scores data retrieved successfully. Sending data response.", "getCountryScores", LogSeverity.LOG);
 
-	const ret: IResponseData<IScoresResponse> = {
+	const ret: IResponseData<ICountryScoresResponse> = {
 		message: "Data retrieved successfully.",
 		data: {
+			country: {
+				countryId: _.parseInt(country.key, 10),
+				countryName: country.countryName,
+				countryCode: country.countryCode
+			},
 			scores: data.map(item => ({
 				scoreId: _.parseInt(item.key, 10),
-				user: item.user,
+				user: {
+					userId: item.user.userId,
+					userName: item.user.userName,
+					osuId: item.user.osuId,
+					isActive: item.user.isActive
+				},
 				score: item.score,
 				pp: item.pp
 			})),
@@ -367,7 +387,17 @@ export async function getUserScore(req: Request, res: Response, next: NextFuncti
 		data: {
 			score: {
 				scoreId: _.parseInt(data.key, 10),
-				user: data.user,
+				user: {
+					userId: data.user.userId,
+					userName: data.user.userName,
+					osuId: data.user.osuId,
+					isActive: data.user.isActive,
+					country: {
+						countryId: data.user.country.countryId,
+						countryName: data.user.country.countryName,
+						countryCode: data.user.country.countryCode
+					}
+				},
 				score: data.score,
 				pp: data.pp
 			}
@@ -490,7 +520,17 @@ export async function getMultipleUserScores(req: Request, res: Response, next: N
 		data: {
 			scores: data.map(item => ({
 				scoreId: _.parseInt(item.key, 10),
-				user: item.user,
+				user: {
+					userId: item.user.userId,
+					userName: item.user.userName,
+					osuId: item.user.osuId,
+					isActive: item.user.isActive,
+					country: {
+						countryId: item.user.country.countryId,
+						countryName: item.user.country.countryName,
+						countryCode: item.user.country.countryCode
+					}
+				},
 				score: item.score,
 				pp: item.pp
 			})),

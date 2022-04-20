@@ -73,7 +73,11 @@ export async function getAllUsers(req: Request, res: Response, next: NextFunctio
 				userName: item.userName,
 				osuId: item.osuId,
 				isActive: item.isActive,
-				country: item.country
+				country: {
+					countryId: item.country.countryId,
+					countryName: item.country.countryName,
+					countryCode: item.country.countryCode
+				}
 			})),
 			length: data.length
 		}
@@ -218,7 +222,11 @@ export async function getUser(req: Request, res: Response, next: NextFunction) {
 				userName: data.userName,
 				osuId: data.osuId,
 				isActive: data.isActive,
-				country: data.country
+				country: {
+					countryId: data.country.countryId,
+					countryName: data.country.countryName,
+					countryCode: data.country.countryCode
+				}
 			}
 		}
 	};

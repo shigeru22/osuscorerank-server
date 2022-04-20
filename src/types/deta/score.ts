@@ -1,6 +1,6 @@
-import { IScoreData } from "../score";
+import { IScoreCountryItemData } from "../score";
 
-export interface IScoreDetailData extends IScoreData {
+export interface IScoreDetailData extends IScoreCountryItemData {
 	key: string;
 	countryId: number;
 	userId: number;
