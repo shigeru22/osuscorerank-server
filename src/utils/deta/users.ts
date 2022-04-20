@@ -11,8 +11,12 @@ export async function getUsers(deta: Deta, active: boolean | null = null, sort: 
 	const db = deta.Base(DB_NAME);
 
 	try {
-		/* TODO: use Object.assign() for multiple fetch query assignments */
-		const fetchResult = (_.isNull(active) ? (await db.fetch()) : (await db.fetch({ isActive: active }))).items as unknown as IUserCountryDetailData[];
+		let query = {};
+		if(!_.isNull(active)) {
+			query = Object.assign(query, { isActive: active });
+		}
+
+		const fetchResult = (await db.fetch(query)).items as unknown as IUserCountryDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getUsers", LogSeverity.WARN);
@@ -35,7 +39,7 @@ export async function getUsers(deta: Deta, active: boolean | null = null, sort: 
 			return desc ? compB - compA : compA - compB;
 		});
 
-		log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getUsers", LogSeverity.WARN);
+		log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getUsers", LogSeverity.LOG);
 		return fetchResult;
 	}
 	catch (e) {
@@ -64,7 +68,12 @@ export async function getUsersByCountryId(deta: Deta, active: boolean | null = n
 			}
 		}
 
-		const fetchResult = (_.isNull(active) ? (await db.fetch({ countryId: id })) : (await db.fetch({ countryId: id, isActive: active }))).items as unknown as IUserDetailData[];
+		let query = { countryId: id };
+		if(!_.isNull(active)) {
+			query = Object.assign(query, { isActive: active });
+		}
+
+		const fetchResult = (await db.fetch(query)).items as unknown as IUserDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getUsersByCountryId", LogSeverity.WARN);

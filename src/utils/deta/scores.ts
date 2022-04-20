@@ -13,7 +13,12 @@ export async function getScores(deta: Deta, active: boolean | null = null, sort:
 	const db = deta.Base(DB_NAME);
 
 	try {
-		const fetchResult = (_.isNull(active) ? (await db.fetch()) : await db.fetch({ isActive: active })).items as unknown as IScoreDetailData[];
+		let query = {};
+		if(!_.isNull(active)) {
+			query = Object.assign(query, { isActive: active });
+		}
+
+		const fetchResult = (await db.fetch(query)).items as unknown as IScoreDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScores", LogSeverity.WARN);
@@ -69,7 +74,12 @@ export async function getScoresByCountryId(deta: Deta, active: boolean | null = 
 			}
 		}
 
-		const fetchResult = (_.isNull(active) ? (await db.fetch({ countryId: countryId, updateId: updateKey })) : await db.fetch({ countryId: countryId, updateId: updateKey, isActive: active })).items as unknown as IScoreDetailData[];
+		let query = { countryId: countryId, updateId: updateKey };
+		if(!_.isNull(active)) {
+			query = Object.assign(query, { isActive: active });
+		}
+
+		const fetchResult = (await db.fetch(query)).items as unknown as IScoreDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScoresByCountryId", LogSeverity.WARN);
@@ -116,7 +126,12 @@ export async function getScoresByUpdateId(deta: Deta, active: boolean | null = n
 			}
 		}
 
-		const fetchResult = (_.isNull(active) ? (await db.fetch({ updateId: updateKey })) : await db.fetch({ updateId: updateKey, isActive: active })).items as unknown as IScoreDetailData[];
+		let query = { updateId: updateKey };
+		if(!_.isNull(active)) {
+			query = Object.assign(query, { isActive: active });
+		}
+
+		const fetchResult = (await db.fetch(query)).items as unknown as IScoreDetailData[];
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScoresByUpdateId", LogSeverity.WARN);
