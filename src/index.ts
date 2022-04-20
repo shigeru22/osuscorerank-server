@@ -16,7 +16,7 @@ import { LogSeverity, log } from "./utils/log";
 env.config();
 
 const app = express();
-const PORT = process.env.API_PORT || 5000;
+const PORT = process.env.API_PORT || 3000;
 const clientPath = path.join(__dirname + "/client/index.html");
 
 /* middlewares */
