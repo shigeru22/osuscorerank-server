@@ -91,7 +91,7 @@ function checkEnv() {
 	return true;
 }
 
-if(!_.isUndefined(process.env.DEVELOPMENT) && process.env.DEVELOPMENT === "1") {
+if(!_.isUndefined(process.env.STANDALONE) && process.env.STANDALONE === "1") {
 	if(!checkEnv()) {
 		process.exit();
 	}
