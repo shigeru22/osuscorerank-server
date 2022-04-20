@@ -1,10 +1,10 @@
-import { createHmac, timingSafeEqual } from "crypto";
 import { NextFunction, Request, Response } from "express";
 import _ from "lodash";
 import jwt from "jsonwebtoken";
 import { IResponseMessage, IResponseData } from "../types/express";
 import { IClientPOSTData, IAuthenticationResponse } from "../types/auth";
 import { getClientById } from "../utils/deta/auth";
+import { secureTimingSafeEqual } from "../utils/crypto";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 
@@ -44,10 +44,7 @@ export async function getAccessToken(req: Request, res: Response, next: NextFunc
 		}
 
 		{
-			const hashedRequestKey = createHmac("sha256", process.env.TOKEN_SECRET).update(data.clientKey, "utf8").digest("hex");
-			const hashedClientKey = createHmac("sha256", process.env.TOKEN_SECRET).update(client.clientKey, "utf8").digest("hex");
-
-			const equal = timingSafeEqual(Buffer.from(hashedRequestKey, "utf8"), Buffer.from(hashedClientKey, "utf8"));
+			const equal = secureTimingSafeEqual(data.clientKey, client.clientKey);
 			if(!equal) {
 				log("Invalid secret given. Sending error response.", "addDummyData", LogSeverity.WARN);
 

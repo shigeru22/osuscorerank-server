@@ -1,4 +1,3 @@
-import { createHmac, timingSafeEqual } from "crypto";
 import { NextFunction, Request, Response } from "express";
 import _ from "lodash";
 import { IResponseMessage } from "../types/express";
@@ -8,6 +7,7 @@ import { getUpdates, insertUpdate } from "../utils/deta/updates";
 import { insertCountry } from "../utils/deta/countries";
 import { insertUser } from "../utils/deta/users";
 import { insertScore } from "../utils/deta/scores";
+import { secureTimingSafeEqual } from "../utils/crypto";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 
@@ -69,10 +69,7 @@ export async function addDummyData(req: Request, res: Response, next: NextFuncti
 	}
 
 	{
-		const hashedRequestSecret = createHmac("sha256", process.env.TOKEN_SECRET).update(data.secret, "utf8").digest("hex");
-		const hashedClientSecret = createHmac("sha256", process.env.TOKEN_SECRET).update(process.env.TOKEN_SECRET, "utf8").digest("hex");
-
-		const equal = timingSafeEqual(Buffer.from(hashedRequestSecret, "utf8"), Buffer.from(hashedClientSecret, "utf8"));
+		const equal = secureTimingSafeEqual(process.env.TOKEN_SECRET, data.secret);
 		if(!equal) {
 			log("Invalid secret given. Sending error response.", "addDummyData", LogSeverity.WARN);
 
