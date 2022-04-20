@@ -166,7 +166,7 @@ export async function updateOnlineStatus(deta: Deta, key: number, value: boolean
 	const db = deta.Base(DB_NAME);
 
 	try {
-		await db.update({ online: value }, key.toString());
+		await db.update({ date: (new Date()).toISOString(), online: value }, key.toString());
 
 		if(!silent) {
 			log(`${ DB_NAME }: Updated 1 row.`, "updateOnlineStatus", LogSeverity.LOG);
