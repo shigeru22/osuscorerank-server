@@ -14,6 +14,7 @@ export async function getUpdates(deta: Deta, sort: "id" | "date" = "date", desc 
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScores", LogSeverity.WARN);
+			return [];
 		}
 
 		fetchResult.sort((a, b) => {
@@ -55,6 +56,7 @@ export async function getUpdatesByStatus(deta: Deta, status: boolean, sort: "id"
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getUpdatesByStatus", LogSeverity.WARN);
+			return [];
 		}
 
 		fetchResult.sort((a, b) => {

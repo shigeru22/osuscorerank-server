@@ -3,7 +3,7 @@ import Deta from "deta/dist/types/deta";
 import { IScoreDetailData } from "../../types/deta/score";
 import { IScoreCountryData, IScorePOSTData } from "../../types/score";
 import { getCountryByKey } from "./countries";
-import { getUserByKey } from "./users";
+import { getUserByKey, getUserByOsuId } from "./users";
 import { LogSeverity, log } from "../log";
 import { getUpdateByKey, getUpdatesByStatus } from "./updates";
 
@@ -22,6 +22,7 @@ export async function getScores(deta: Deta, active: boolean | null = null, sort:
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScores", LogSeverity.WARN);
+			return [];
 		}
 		else {
 			log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getScores", LogSeverity.LOG);
@@ -242,7 +243,15 @@ export async function getScoreByOsuId(deta: Deta, id: number) {
 	const db = deta.Base(DB_NAME);
 
 	try {
-		const fetchResult = (await db.fetch({ osuId: id.toString() })) as unknown as IScoreDetailData[];
+		const user = await getUserByOsuId(deta, id);
+		{
+			if(_.isNull(user)) {
+				log(`${ DB_NAME }: No user found. Canceling score data retrieval.`, "getScoreByOsuId", LogSeverity.WARN);
+				return null;
+			}
+		}
+
+		const fetchResult = (await db.fetch({ userId: _.parseInt(user.key, 10) })) as unknown as IScoreDetailData[];
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScoreByOsuId", LogSeverity.WARN);
 			return null;
