@@ -80,8 +80,6 @@ export async function getAccessToken(req: Request, res: Response, next: NextFunc
 				message: "An error occurred."
 			};
 
-			/* TODO: add expired token error handling */
-
 			log(`${ e.name }: ${ e.message }\n${ e.stack }`, "getAccessToken", LogSeverity.ERROR);
 
 			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
