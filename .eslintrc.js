@@ -7,6 +7,7 @@ module.exports = {
 		"eslint:recommended",
 		"plugin:@typescript-eslint/recommended"
 	],
+	"ignorePatterns": [ "dist/**/*.js" ],
 	"parser": "@typescript-eslint/parser",
 	"parserOptions": {
 		"ecmaFeatures": {
