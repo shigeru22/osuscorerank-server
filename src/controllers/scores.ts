@@ -5,6 +5,7 @@ import { ICountryScoresResponse, IScoreDELETEData, IScorePOSTData, IScoreRespons
 import { getCountryByKey } from "../utils/deta/countries";
 import { getUserByKey } from "../utils/deta/users";
 import { getScoreByKey, getScoreByUserId, getScores, getScoresByCountryId, getScoresByUpdateId, insertScore, removeScore } from "../utils/deta/scores";
+import { getUpdateByKey } from "../utils/deta/updates";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
@@ -601,14 +602,37 @@ export async function deleteScore(req: Request, res: Response, next: NextFunctio
 		return;
 	}
 
+	const score = await getScoreByKey(res.locals.deta, data.scoreId);
 	{
-		const score = await getScoreByKey(res.locals.deta, data.scoreId);
 		if(_.isNull(score)) {
 			const ret: IResponseMessage = {
 				message: "Score with specified ID not found."
 			};
 
 			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
+		}
+	}
+
+	{
+		const update = await getUpdateByKey(res.locals.deta, score.updateId);
+		if(_.isNull(update)) {
+			const ret: IResponseMessage = {
+				message: "Score data contains invalid update ID."
+			};
+
+			log(`Score with key ${ data.scoreId } contains invalid update ID. Fix this and try again.`, "deleteScore", LogSeverity.ERROR);
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+
+		if(update.online) {
+			const ret: IResponseMessage = {
+				message: "Update data status for requested score is online."
+			};
+
+			log(`Score with key ${ data.scoreId } can't be deleted: Update ID ${ update.key } is online.`, "deleteScore", LogSeverity.ERROR);
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
 			return;
 		}
 	}
