@@ -4,7 +4,7 @@ import _ from "lodash";
 import { IResponseMessage } from "../types/express";
 import { IDummyPOSTData } from "../types/main";
 import { insertClient } from "../utils/deta/auth";
-import { insertUpdate } from "../utils/deta/updates";
+import { getUpdates, insertUpdate } from "../utils/deta/updates";
 import { insertCountry } from "../utils/deta/countries";
 import { insertUser } from "../utils/deta/users";
 import { insertScore } from "../utils/deta/scores";
@@ -44,6 +44,18 @@ export async function addDummyData(req: Request, res: Response, next: NextFuncti
 
 		res.status(HTTPStatus.BAD_REQUEST).json(ret);
 		return;
+	}
+
+	{
+		const clients = await getUpdates(res.locals.deta);
+		if(clients.length > 0) {
+			const ret: IResponseMessage = {
+				message: "Data already exist."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
 	}
 
 	const data: IDummyPOSTData = req.body;
