@@ -17,10 +17,9 @@ Retrieves all countries in the database.
     "countries": {
       "countryId": number,
       "countryName": string,
-      "countryCode": string,
-      "recentlyInactive": number
+      "countryCode": string
     }[],
-    "total": number
+    "length": number
   }
 }
 ```
@@ -35,29 +34,25 @@ Retrieves all countries in the database.
       {
         "countryId": 1,
         "countryName": "Indonesia",
-        "countryCode": "ID",
-        "recentlyInactive": 3
+        "countryCode": "ID"
       },
       {
         "countryId": 2,
         "countryName": "Singapore",
-        "countryCode": "SG",
-        "recentlyInactive": 1
+        "countryCode": "SG"
       },
       {
         "countryId": 3,
         "countryName": "Japan",
-        "countryCode": "JP",
-        "recentlyInactive": 1
+        "countryCode": "JP"
       },
       {
         "countryId": 4,
         "countryName": "United States",
-        "countryCode": "US",
-        "recentlyInactive": 1
+        "countryCode": "US"
       }
     ],
-    "total": 4
+    "length": 4
   }
 }
 ```
@@ -83,8 +78,7 @@ Country ID in the database.
     "country": {
       "countryId": number,
       "countryName": string,
-      "countryCode": string,
-      "recentlyInactive": number
+      "countryCode": string
     }
   }
 }
@@ -101,30 +95,9 @@ Country ID in the database.
     "country": {
       "countryId": 1,
       "countryName": "Indonesia",
-      "countryCode": "ID",
-      "recentlyInactive": 3
+      "countryCode": "ID"
     }
   }
-}
-```
-
-##### Example response (400):
-
-`/countries/a`
-
-```json
-{
-  "message": "Invalid ID parameter."
-}
-```
-
-##### Example response (404):
-
-`/countries/100` (ID not in database)
-
-```json
-{
-  "message": "Country with specified ID can't be found."
 }
 ```
 
@@ -153,7 +126,7 @@ Country Code. Must be 2-letter code in ISO 3166-1 Alpha-2 format for integrity. 
 
 ##### Example response (200):
 
-**POST** `/countries/add`
+**POST** `/countries/add` <ins>Auth</ins>
 
 Body:
 
@@ -169,22 +142,6 @@ Response:
 ```json
 {
   "message": "Data inserted successfully."
-}
-```
-
-##### Example response (400):
-
-```json
-{
-  "message": "Invalid POST data."
-}
-```
-
-##### Example response (500):
-
-```json
-{
-  "message": "Data insertion failed."
 }
 ```
 
@@ -214,7 +171,7 @@ Body:
 
 ```json
 {
-  "countryId": 4
+  "countryId": 5
 }
 ```
 
@@ -223,61 +180,5 @@ Response:
 ```json
 {
   "message": "Data deleted successfully."
-}
-```
-
-##### Example response (400):
-
-```json
-{
-  "message": "Invalid DELETE data."
-}
-```
-
-##### Example response (404):
-
-```json
-{
-  "message": "Country with specified ID can't be found."
-}
-```
-
-##### Example response (500):
-
-```json
-{
-  "message": "Data deletion failed."
-}
-```
-
-## Reset countries
-
-Removes all countries. **This essentially deletes everything!**
-
-#### DELETE `/countries/deleteall` <ins>Auth</ins>
-
-##### Example response (200):
-
-Response:
-
-```json
-{
-  "message": "Data deleted successfully."
-}
-```
-
-##### Example response (404):
-
-```json
-{
-  "message": "No countries to delete."
-}
-```
-
-##### Example response (500):
-
-```json
-{
-  "message": "Data deletion failed."
 }
 ```

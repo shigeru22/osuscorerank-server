@@ -12,14 +12,34 @@ Since this is a global ranking list, also returns number of inactive users. Delt
 
 ##### Query Parameters
 
-`sort` **string** *(optional, defaults to score)*
+`active` **string** *(optional, defaults to `all`)*
+
+Query only users active, inactive, or both. Available options are:
+
+```
+true = (query only active users)
+false = (query only inactive users)
+all = (query everything)
+```
+
+`sort` **number** *(optional, defaults to score)*
 
 Sorting criteria. The available options are:
 
 ```
-1 = score
-2 = pp
+1 = id
+2 = score
+3 = pp
+4 = date
 ```
+
+`desc` **boolean** *(optional, defaults to `false`)*
+
+Sort descendingly by specified sorting criteria.
+
+`updateid` **number** *(optional, defaults to any latest online update)*
+
+Update ID to query data on. Details about update ID and how data is stored can be found in [Updates](7-updates.md) section.
 
 ##### Response format (JSON):
 
@@ -27,12 +47,13 @@ Sorting criteria. The available options are:
 {
   "message": string,
   "data": {
-    "rankings": {
+    "scores": {
       "scoreId": number,
       "user": {
         "userId": number,
         "userName": string,
         "osuId": number,
+        "isActive": boolean,
         "country": {
           "countryId": number,
           "countryName": string,
@@ -40,14 +61,9 @@ Sorting criteria. The available options are:
         }
       },
       "score": string, // bigint, returned as string
-      "pp": number,
-      "globalRank": number,
-      "delta": number
+      "pp": number
     }[],
-    "inactives": {
-      "recentlyInactive": number
-    },
-    "total": number
+    "length": number
   }
 }
 ```
@@ -65,6 +81,7 @@ Sorting criteria. The available options are:
           "userId": 4,
           "userName": "EEEEEEEEEEEEEEE",
           "osuId": 2927048,
+          "isActive": true,
           "country": {
             "countryId": 4,
             "countryName": "United States",
@@ -72,9 +89,7 @@ Sorting criteria. The available options are:
           }
         },
         "score": "970375021269",
-        "pp": 9486,
-        "globalRank": 2264,
-        "delta": 0
+        "pp": 9486
       },
       {
         "scoreId": 6,
@@ -82,6 +97,7 @@ Sorting criteria. The available options are:
           "userId": 6,
           "userName": "Venta",
           "osuId": 11320627,
+          "isActive": true,
           "country": {
             "countryId": 1,
             "countryName": "Indonesia",
@@ -99,6 +115,7 @@ Sorting criteria. The available options are:
           "userId": 2,
           "userName": "Patience",
           "osuId": 13509913,
+          "isActive": true,
           "country": {
             "countryId": 2,
             "countryName": "Singapore",
@@ -106,25 +123,18 @@ Sorting criteria. The available options are:
           }
         },
         "score": "233011877962",
-        "pp": 5074,
-        "globalRank": 45789,
-        "delta": -1
+        "pp": 5074
       },
       // ...
     ],
-    "inactives": {
-      "recentlyInactive": 6
-    },
     "total": 6
   }
 }
 ```
 
-## Get score ranking (country)
+## Get country scores
 
-Retrieves all score in the database by country specified in route parameter. The queried results are either sorted by score or by Performance Points (pp), creating a ranking list.
-
-Also returns number of inactive users. Delta calculation is also provided from previously refreshed ranking state.
+Retrieves all score in the database by country specified in route parameter.
 
 #### GET `/scores/country/{id}`
 
@@ -136,14 +146,34 @@ Country ID in the database.
 
 ##### Query Parameters
 
-`sort` **string** *(optional, defaults to score)*
+`active` **string** *(optional, defaults to `all`)*
+
+Query only users active, inactive, or both. Available options are:
+
+```
+true = (query only active users)
+false = (query only inactive users)
+all = (query everything)
+```
+
+`sort` **number** *(optional, defaults to score)*
 
 Sorting criteria. The available options are:
 
 ```
-1 = score
-2 = pp
+1 = id
+2 = score
+3 = pp
+4 = date
 ```
+
+`desc` **boolean** *(optional, defaults to `false`)*
+
+Sort descendingly by specified sorting criteria.
+
+`updateid` **number** *(optional, defaults to any latest online update)*
+
+Update ID to query data on. Details about update ID and how data is stored can be found in [Updates](7-updates.md) section.
 
 ##### Response format:
 
@@ -155,23 +185,20 @@ Sorting criteria. The available options are:
       "countryName": string,
       "countryCode": string
     },
-    "rankings": {
+    "scores": {
       "scoreId": number,
       "user": {
         "userId": number,
         "userName": string,
-        "osuId": number
+        "osuId": number,
+        "isActive": boolean
       },
       "score": string, // bigint, returned as string
-      "pp": number,
-      "globalRank": number,
-      "delta": number
+      "pp": number
     },
-    "inactives": {
-      "recentlyInactive": number
-    },
-    "total": number
+    "length": number
   }
+}
 ```
 
 ##### Example response (200):
@@ -193,63 +220,37 @@ Sorting criteria. The available options are:
         "user": {
           "userId": 6,
           "userName": "Venta",
-          "osuId": 11320627
+          "osuId": 11320627,
+          "isActive": true
         },
-        "score": "350279198497",
-        "pp": 10161,
-        "globalRank": 1452,
-        "delta": 0
+        "score": "116841606315",
+        "pp": 10189
       },
       {
         "scoreId": 1,
         "user": {
           "userId": 1,
           "userName": "Shigeru22",
-          "osuId": 2581664
+          "osuId": 2581664,
+          "isActive": true
         },
-        "score": "206202433453",
-        "pp": 8641,
-        "globalRank": 3884,
-        "delta": -1
+        "score": "48738707596",
+        "pp": 8645
       },
       {
         "scoreId": 5,
         "user": {
           "userId": 5,
           "userName": "Itsakaseru",
-          "osuId": 6932675
+          "osuId": 6932675,
+          "isActive": true
         },
-        "score": "89616403675",
-        "pp": 9207,
-        "globalRank": 2726,
-        "delta": 0
+        "score": "18100972154",
+        "pp": 9207
       }
     ],
-    "inactives": {
-      "recentlyInactive": 3
-    },
-    "total": 3
+    "length": 3
   }
-}
-```
-
-##### Example response (400):
-
-`/scores/country/a`
-
-```json
-{
-  "message": "Invalid ID parameter."
-}
-```
-
-##### Example response (404):
-
-`/scores/country/100` (ID not in database)
-
-```json
-{
-  "message": "User with specified ID can't be found."
 }
 ```
 
@@ -265,6 +266,38 @@ Retrieves user score by ID specified in route parameter.
 
 User ID in the database.
 
+##### Query Parameters
+
+`updateid` **number** *(optional, defaults to any latest online update)*
+
+Update ID to query data on. Details about update ID and how data is stored can be found in [Updates](7-updates.md) section.
+
+##### Response format:
+
+```
+"message": string,
+  "data": {
+    "country": {
+      "countryId": number,
+      "countryName": string,
+      "countryCode": string
+    },
+    "scores": {
+      "scoreId": number,
+      "user": {
+        "userId": number,
+        "userName": string,
+        "osuId": number,
+        "isActive": boolean
+      },
+      "score": string, // bigint, returned as string
+      "pp": number
+    },
+    "length": number
+  }
+}
+```
+
 ##### Response format:
 
 ```
@@ -277,6 +310,7 @@ User ID in the database.
         "userId": number,
         "userName": string,
         "osuId": number,
+        "isActive": boolean,
         "country": {
           "countryId": number,
           "countryName": string,
@@ -284,8 +318,7 @@ User ID in the database.
         }
       },
       "score": string, // bigint, returned as string
-      "pp": number,
-      "globalRank": number
+      "pp": number
     }
   }
 }
@@ -305,6 +338,7 @@ User ID in the database.
         "userId": 1,
         "userName": "Shigeru22",
         "osuId": 2581664,
+        "isActive": true,
         "country": {
           "countryId": 1,
           "countryName": "Indonesia",
@@ -312,30 +346,9 @@ User ID in the database.
         }
       },
       "score": "206202433453",
-      "pp": 8641,
-      "globalRank": 3884
+      "pp": 8641
     }
   }
-}
-```
-
-##### Example response (400):
-
-`/scores/user/a`
-
-```json
-{
-  "message": "Invalid ID parameter."
-}
-```
-
-##### Example response (404):
-
-`/scores/user/100` (ID not in database)
-
-```json
-{
-  "message": "User with specified ID can't be found."
 }
 ```
 
@@ -343,28 +356,39 @@ User ID in the database.
 
 Retrieves multiple user scores by ID specified in query parameter. Also sorts them into a ranking list.
 
-**Note:** If any user is not found in the database, it's considered as back active and wouldn't be returned in scores array.
+**Note:** Any users not found will not be returned in `score` array.
 
 #### GET `/scores/users`
 
 ##### Query Parameters
 
-`users` **string**
+`users` **string[]**
 
 User ID in the database, in form of arrays.
+
 Example:
 `[1, 2, 3]` as
 `/scores/users?users=1&users=2&users=3` (must be multiple values) or
 `/scores/users?users[]=1&users[]=2&users[]=3`
 
-`sort` **string** *(optional, defaults to score)*
+`sort` **number** *(optional, defaults to score)*
 
 Sorting criteria. The available options are:
 
 ```
-1 = score
-2 = pp
+1 = id
+2 = score
+3 = pp
+4 = date
 ```
+
+`desc` **boolean** *(optional, defaults to `false`)*
+
+Sort descendingly by specified sorting criteria.
+
+`updateid` **number** *(optional, defaults to any latest online update)*
+
+Update ID to query data on. Details about update ID and how data is stored can be found in [Updates](7-updates.md) section.
 
 ##### Response format:
 
@@ -378,6 +402,7 @@ Sorting criteria. The available options are:
         "userId": number,
         "userName": string,
         "osuId": number,
+        "isActive": boolean,
         "country": {
           "countryId": number,
           "countryName": string,
@@ -385,9 +410,8 @@ Sorting criteria. The available options are:
         }
       },
       "score": string, // bigint, returned as string
-      "pp": number,
-      "globalRank": number
-    },
+      "pp": number
+    }[],
     "length": number
   }
 }
@@ -395,7 +419,7 @@ Sorting criteria. The available options are:
 
 ##### Example response (200):
 
-**GET** `/scores/users?users=1&users=2&users=3`
+**GET** `/scores/users?users=1&users=6`
 
 Body:
 
@@ -405,20 +429,20 @@ Body:
   "data": {
     "scores": [
       {
-        "scoreId": 2,
+        "scoreId": 6,
         "user": {
-          "userId": 2,
-          "userName": "Patience",
-          "osuId": 13509913,
+          "userId": 6,
+          "userName": "Venta",
+          "osuId": 11320627,
+          "isActive": true,
           "country": {
-            "countryId": 2,
-            "countryName": "Singapore",
-            "countryCode": "SG"
+            "countryId": 1,
+            "countryName": "Indonesia",
+            "countryCode": "ID"
           }
         },
-        "score": "233011877962",
-        "pp": 5074,
-        "globalRank": 45789
+        "score": "116841606315",
+        "pp": 10189
       },
       {
         "scoreId": 1,
@@ -426,64 +450,27 @@ Body:
           "userId": 1,
           "userName": "Shigeru22",
           "osuId": 2581664,
+          "isActive": true,
           "country": {
             "countryId": 1,
             "countryName": "Indonesia",
             "countryCode": "ID"
           }
         },
-        "score": "206202433453",
-        "pp": 8641,
-        "globalRank": 3884
-      },
-      {
-        "scoreId": 3,
-        "user": {
-          "userId": 3,
-          "userName": "StylishRENREN",
-          "osuId": 17159233,
-          "country": {
-            "countryId": 3,
-            "countryName": "Japan",
-            "countryCode": "JP"
-          }
-        },
-        "score": "155418273729",
-        "pp": 7988,
-        "globalRank": 6110
+        "score": "48738707596",
+        "pp": 8645
       }
-    ]
+    ],
+    "length": 2
   }
-}
-```
-
-##### Example response (400):
-
-**GET** `/scores/users?users[]=test` (Must be number)
-
-Body:
-
-```json
-{
-  "message": "Invalid users parameter."
-}
-```
-
-##### Example response (404):
-
-**GET** `/scores/users?users=10&users=11` (ID not in database)
-
-Body:
-
-```json
-{
-  "message": "No users found."
 }
 ```
 
 ## Add user score
 
 Inserts a new score in the database.
+
+**Note:** Latest update ID with non-finalized data must be exist. Details about update ID and how data is stored can be found in [Updates](7-updates.md) section.
 
 #### POST `/scores/add` **<ins>Auth</ins>**
 
@@ -493,8 +480,7 @@ Inserts a new score in the database.
 {
   "userId": number,
   "score": bigint | number,
-  "pp": number,
-  "globalRank": number
+  "pp": number
 }
 ```
 
@@ -510,10 +496,6 @@ Score to be inserted.
 
 Current Performance Points (pp).
 
-`globalRank` **number**
-
-Current global rank.
-
 ##### Example response (200):
 
 **POST** `/scores/add`
@@ -522,10 +504,9 @@ Body:
 
 ```json
 {
-  "userId": 8,
-  "score": 260879391059,
-  "pp": 6683,
-  "globalRank": 15527
+  "userId": 2,
+  "score": 21637451299,
+  "pp": 6287
 }
 ```
 
@@ -537,33 +518,11 @@ Response:
 }
 ```
 
-##### Example response (400):
-
-```json
-{
-  "message": "Invalid POST data."
-}
-``` 
-
-##### Example response (409):
-
-```json
-{
-  "message": "Score with the specified osu! ID already exists."
-}
-```
-
-##### Example response (500):
-
-```json
-{
-  "message": "Data insertion failed."
-}
-```
-
 ## Delete user score
 
-Removes a score from the database. **This will remove score's previous rank data!**
+Removes a score from the database.
+
+**Note:** Latest update ID with non-finalized data must be exist. Details about update ID and how data is stored can be found in [Updates](7-updates.md) section.
 
 #### DELETE `/scores/delete` **<ins>Auth</ins>**
 
@@ -612,27 +571,5 @@ Response:
 ```json
 {
   "message": "Data insertion failed."
-}
-```
-
-## Delete all scores
-
-Removes all scores in the database. **This will reset all scores, including previous rank data!**
-
-#### DELETE `/scores/deleteall` **<ins>Auth</ins>**
-
-##### Example response (200):
-
-```json
-{
-  "message": "Data deleted successfully."
-}
-```
-
-##### Example response (500):
-
-```json
-{
-  "message": "Data deletion failed."
 }
 ```

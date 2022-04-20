@@ -13,7 +13,7 @@ Secret used for JWT is defined in `.env` file. The value must be hexadecimal str
 '93db059c6f7f88ccf831726c24c08d07f8fa51770c562cec9130fe524c49d85300876f30b15d3751fee201d967d7dc1b82355d3459fb21bf50a1351da01ab374'
 ```
 
-The string could be put in `TOKEN_SECRET` variable inside `.env` file without quotes. Credentials in the database (Auth table) can be filled with any name (for logging purposes), with client key of 64 character hexadecimal string. This could be generated using the same command as before, but with `32` as random bytes argument.
+The string could be put in `TOKEN_SECRET` variable inside `.env` file without quotes. Credentials in the database (Auth database) can be filled with any name for logging purposes, with client key of 64 character hexadecimal string. This could be generated using the same command as before, but with `32` as random bytes argument.
 
 ## Authenticating
 
@@ -62,25 +62,9 @@ Client Key.
 }
 ```
 
-##### Example response (400):
-
-```json
-{
-  "message": "Invalid POST data."
-}
-```
-
-##### Example response (401):
-
-```json
-{
-  "message": "Invalid client ID or key."
-}
-```
-
 ## Using token for authorization
 
-After receiving your token, the token could be included in the **header** of those requests requiring authentication in the following format.
+After receiving your token, the token must be included in the **header** of those requests requiring authentication in the following format.
 
 `Authorization: Bearer {token}`
 
@@ -106,7 +90,7 @@ Otherwise, without any authentication, the following response will be sent.
 }
 ```
 
-Every token has an expire time, retrieved in authentication response as in previous section. If the token expired and couldn't be used, the following response will be sent.
+Every token has an expire time, retrieved in authentication response as in previous section. If the token has been expired and couldn't be used, the following response will be sent.
 
 ##### Example response (401):
 

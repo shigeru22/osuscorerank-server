@@ -8,6 +8,22 @@ Retrieves all users in the database.
 
 #### GET `/users`
 
+##### Query Parameters
+
+`desc` **boolean** *(optional, defaults to `false`)*
+
+Sort descendingly by user ID.
+
+`active` **string** *(optional, defaults to `all`)*
+
+Query only users active, inactive, or both. Available options are:
+
+```
+true = (query only active users)
+false = (query only inactive users)
+all = (query everything)
+```
+
 ##### Response format (JSON):
 
 ```
@@ -40,6 +56,7 @@ Retrieves all users in the database.
         {
           "userId": 1,
           "userName": "Shigeru22",
+          "isActive": true,
           "osuId": 2581664,
           "country": {
             "countryId": 1,
@@ -51,6 +68,7 @@ Retrieves all users in the database.
           "userId": 2,
           "userName": "Patience",
           "osuId": 13509913,
+          "isActive": true,
           "country": {
             "countryId": 2,
             "countryName": "Singapore",
@@ -61,6 +79,7 @@ Retrieves all users in the database.
           "userId": 3,
           "userName": "StylishRENREN",
           "osuId": 17159233,
+          "isActive": true,
           "country": {
             "countryId": 3,
             "countryName": "Japan",
@@ -75,11 +94,86 @@ Retrieves all users in the database.
 }
 ```
 
+## Get user by country
+
+Retrieves a user by country ID specified in route parameter.
+
+#### GET `/users/country/{id}`
+
+##### Route Parameters
+
+`id` **string** *(optional, see above route)*
+
+Country ID in the database.
+
+`desc` **boolean** *(optional, defaults to `false`)*
+
+Sort descendingly by user ID.
+
+`active` **string** *(optional, defaults to `all`)*
+
+Query only active users. Available options are:
+
+- `true` (query only active users)
+- `false` (query only inactive users)
+- `all` (query everything)
+
+##### Response format (JSON):
+
+```
+{
+  "message": string,
+  "data": {
+    "country": {
+      "countryId": number,
+      "countryName": string,
+      "countryCode": string
+    },
+    "users": {
+      "userId": number,
+      "userName": string,
+      "osuId": number,
+      "isActive": boolean
+    }[],
+    "length": number
+  }
+}
+```
+
+##### Example response (200):
+
+```json
+{
+  "message": "Data retrieved successfully.",
+  "data": {
+    "country": {
+      "countryId": 1,
+      "countryName": "Indonesia",
+      "countryCode": "ID"
+    },
+    "users": [
+      {
+        "userId": 1,
+        "userName": "Shigeru22",
+        "osuId": 2581664,
+        "isActive": true
+      },
+      {
+        "userId": 2,
+        "userName": "yandri",
+        "osuId": 3824470,
+        "isActive": false
+      },
+      // ...
+    ],
+    "length": 4
+  }
+}
+```
+
 ## Get user by ID
 
 Retrieves a user by ID specified in route parameter.
-
-**Note:** If previously any user is available in the database and can't be found later on, it is considered as back active.
 
 #### GET `/users/{id}`
 
@@ -121,6 +215,7 @@ User ID in the database.
       "userId": 1,
       "userName": "Shigeru22",
       "osuId": 2581664,
+      "isActive": true,
       "country": {
         "countryId": 1,
         "countryName": "Indonesia",
@@ -128,26 +223,6 @@ User ID in the database.
       }
     }
   }
-}
-```
-
-##### Example response (400):
-
-`/users/a`
-
-```json
-{
-  "message": "Invalid ID parameter."
-}
-```
-
-##### Example response (404):
-
-`/users/100` (ID not in database)
-
-```json
-{
-  "message": "User with specified ID can't be found."
 }
 ```
 
@@ -163,6 +238,7 @@ Inserts a new user to the database.
 {
   "userName": string,
   "osuId": number,
+  "isActive": boolean,
   "countryId": number
 }
 ```
@@ -201,27 +277,43 @@ Response:
 }
 ```
 
-##### Example response (400):
+## Update user
 
-```json
+Updates a user in the database.
+
+#### PUT `/users/update` <ins>Auth</ins>
+
+##### Request body (JSON):
+
+```
 {
-  "message": "Invalid POST data."
-}
-``` 
-
-##### Example response (409):
-
-```json
-{
-  "message": "User with the specified osu! ID already exists."
+  "userName": string,
+  "osuId": number,
+  "isActive": boolean,
+  "countryId": number
 }
 ```
 
-##### Example response (500):
+##### Example response (200):
+
+**POST** `/users/add`
+
+Body:
 
 ```json
 {
-  "message": "Data insertion failed."
+  "userName": "Akshiro",
+  "osuId": 10557490,
+  "isActive": true,
+  "countryId": 1
+}
+```
+
+Response:
+
+```json
+{
+  "message": "Data inserted successfully."
 }
 ```
 
@@ -251,7 +343,7 @@ Body:
 
 ```json
 {
-  "userId": 7
+  "userId": 2
 }
 ```
 
@@ -260,29 +352,5 @@ Response:
 ```json
 {
   "message": "Data deleted successfully."
-}
-```
-
-##### Example response (400):
-
-```json
-{
-  "message": "Invalid DELETE data."
-}
-```
-
-##### Example response (404):
-
-```json
-{
-  "message": "User with specified ID can't be found."
-}
-```
-
-##### Example response (500):
-
-```json
-{
-  "message": "Data deletion failed."
 }
 ```
