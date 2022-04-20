@@ -2,7 +2,6 @@ import _ from "lodash";
 import Deta from "deta/dist/types/deta";
 import { ICountryItemDetailData } from "../../types/deta/country";
 import { ICountryPOSTData } from "../../types/country";
-import { IUserCountryInsertion } from "../../types/user";
 import { log, LogSeverity } from "../log";
 
 const DB_NAME = "osu-countries";
@@ -137,34 +136,6 @@ export async function insertCountry(deta: Deta, country: ICountryPOSTData, silen
 		}
 		else {
 			log("Unknown error occurred while inserting data to database.", "insertCountry", LogSeverity.ERROR);
-		}
-
-		return false;
-	}
-}
-
-/* TODO: define whether this is used */
-export async function updateInactiveCount(deta: Deta, countriesData: IUserCountryInsertion[], silent = false) {
-	const db = deta.Base(DB_NAME);
-
-	try {
-		const updateRequest: Promise<null>[] = [];
-
-		countriesData.forEach(data => updateRequest.push(db.update({ recentlyInactive: data.insertion }, data.countryId.toString())));
-		await Promise.all(updateRequest);
-
-		if(!silent) {
-			log(`${ DB_NAME }: Updated ${ countriesData.length } row${ countriesData.length !== 1 ? "s" : "" }.`, "updateInactiveCount", LogSeverity.LOG);
-		}
-
-		return true;
-	}
-	catch (e) {
-		if(_.isError(e)) {
-			log(`An error occurred while updating data in database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "updateInactiveCount", LogSeverity.ERROR);
-		}
-		else {
-			log("Unknown error occurred while updating data in database.", "updateInactiveCount", LogSeverity.ERROR);
 		}
 
 		return false;
