@@ -17,3 +17,4 @@ Before using it, have a look at all of these routes and the usages for each of t
 - [Scores](6-scores.md)
 - [Updates](7-updates.md)
 - [Data](8-data.md)
+- [Environments](9-environments.md)

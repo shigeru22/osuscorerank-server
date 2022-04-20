@@ -16,14 +16,9 @@ After installing Node.js, prepare the environment with these steps.
     ```
 
 3. Duplicate `.env-template` at the root folder and rename it as `.env`.
-4. Open `.env` and modify the values in square brackets. The file provides documentation for those.
-5. Start the database server, and run this command to synchronize the database with the provided schema.
+4. Open `.env` and modify the values in square brackets. The file provides documentation for those. For more detail of each variables, head to [Environments](9-environments.md) section.
 
-    ```shell
-    $ npx prisma db push
-    ```
-
-6. Run the API server in development mode using this command.
+5. Run the API server in development mode using this command.
 
     ```shell
     $ npm run dev
@@ -85,6 +80,12 @@ This repository has been set up for DETA Micros deployment. For production purpo
 
     ```shell
     $ deta deploy
+    ```
+
+6. Export environment variables to the deployed DETA Micro.
+
+    ```shell
+    $ deta update --env ./.env
     ```
 
 Alternatively, you may build this repository and the [client](https://github.com/shigeru22/osu-inactive-score) separately, and deploy them manually. Note that `index.js` used as the main entry point is intended for DETA Micros or [Vercel](https://vercel.com) as those expects the `app` object to be exported as a single `module.exports` expression.
