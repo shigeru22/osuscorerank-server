@@ -6,6 +6,7 @@ import { getCountryByKey } from "../utils/deta/countries";
 import { getUserByKey } from "../utils/deta/users";
 import { getScoreByKey, getScoreByUserId, getScores, getScoresByCountryId, getScoresByUpdateId, insertScore, removeScore } from "../utils/deta/scores";
 import { getUpdateByKey } from "../utils/deta/updates";
+import { CountryGetStatus, UserGetStatus, ScoreGetStatus, ScoreInsertStatus, ScoreDeleteStatus, UpdateGetStatus } from "../utils/status";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
@@ -98,12 +99,28 @@ export async function getAllScores(req: Request, res: Response, next: NextFuncti
 	}
 
 	const data = await getScoresByUpdateId(res.locals.deta, isActive, update === 0 ? undefined : update, sort, desc);
-	if(!data) {
+	if(data === ScoreGetStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
-			message: "Failed to retrieve score data."
+			message: "Data query failed."
 		};
 
 		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(data === ScoreGetStatus.NO_ONLINE_UPDATE_DATA) {
+		const ret: IResponseMessage = {
+			message: "No online update data."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(data === ScoreGetStatus.INVALID_UPDATE_ID) {
+		const ret: IResponseMessage = {
+			message: "Invalid update ID."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
 		return;
 	}
 
@@ -245,7 +262,15 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 
 	const country = await getCountryByKey(res.locals.deta, id);
 	{
-		if(_.isNull(country)) {
+		if(country === CountryGetStatus.INTERNAL_ERROR) {
+			const ret: IResponseMessage = {
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+		else if(country === CountryGetStatus.NO_DATA) {
 			const ret: IResponseMessage = {
 				message: "Country with specified ID not found."
 			};
@@ -256,6 +281,31 @@ export async function getCountryScores(req: Request, res: Response, next: NextFu
 	}
 
 	const data = await getScoresByCountryId(res.locals.deta, isActive, id, update, sort, desc);
+	if(data === ScoreGetStatus.INTERNAL_ERROR) {
+		const ret: IResponseMessage = {
+			message: "Data query failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(data === ScoreGetStatus.NO_ONLINE_UPDATE_DATA) {
+		const ret: IResponseMessage = {
+			message: "No online update data."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(data === ScoreGetStatus.INVALID_UPDATE_ID) {
+		const ret: IResponseMessage = {
+			message: "Invalid update ID."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
@@ -310,7 +360,15 @@ export async function getScore(req: Request, res: Response, next: NextFunction) 
 	}
 
 	const data = await getScoreByKey(res.locals.deta, id);
-	if(_.isNull(data)) {
+	if(data === ScoreGetStatus.INTERNAL_ERROR) {
+		const ret: IResponseMessage = {
+			message: "Data query failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(data === ScoreGetStatus.NO_DATA) {
 		const ret: IResponseMessage = {
 			message: "Score with specified ID not found."
 		};
@@ -371,8 +429,60 @@ export async function getUserScore(req: Request, res: Response, next: NextFuncti
 		}
 	}
 
+	{
+		const user = await getUserByKey(res.locals.deta, id);
+		if(user === UserGetStatus.INTERNAL_ERROR) {
+			const ret: IResponseMessage = {
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+		else if(user === UserGetStatus.NO_DATA) {
+			const ret: IResponseMessage = {
+				message: "User with specified ID not found."
+			};
+
+			res.status(HTTPStatus.NOT_FOUND).json(ret);
+			return;
+		}
+	}
+
 	const data = await getScoreByUserId(res.locals.deta, id, update);
-	if(_.isNull(data)) {
+	if(data === ScoreGetStatus.INTERNAL_ERROR) {
+		const ret: IResponseMessage = {
+			message: "Data query failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(data === ScoreGetStatus.NO_ONLINE_UPDATE_DATA) {
+		const ret: IResponseMessage = {
+			message: "No online update data."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(data === ScoreGetStatus.INVALID_UPDATE_ID) {
+		const ret: IResponseMessage = {
+			message: "Invalid update ID."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+	else if(data === ScoreGetStatus.DATA_TOO_MANY) {
+		const ret: IResponseMessage = {
+			message: "Multiple data found."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(data === ScoreGetStatus.NO_DATA) {
 		const ret: IResponseMessage = {
 			message: "Score with specified ID not found."
 		};
@@ -503,12 +613,28 @@ export async function getMultipleUserScores(req: Request, res: Response, next: N
 	});
 
 	const queryResult = (update === 0 ? (await getScores(res.locals.deta, null, sort, desc)) : (await getScoresByUpdateId(res.locals.deta, null, update, sort, desc)));
-	if(!queryResult) {
+	if(queryResult === ScoreGetStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
-			message: "Failed to retrieve score data."
+			message: "Data query failed."
 		};
 
 		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(queryResult === ScoreGetStatus.NO_ONLINE_UPDATE_DATA) {
+		const ret: IResponseMessage = {
+			message: "No online update data."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(queryResult === ScoreGetStatus.INVALID_UPDATE_ID) {
+		const ret: IResponseMessage = {
+			message: "Invalid update ID."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
 		return;
 	}
 
@@ -558,7 +684,15 @@ export async function addScore(req: Request, res: Response, next: NextFunction) 
 
 	{
 		const user = await getUserByKey(res.locals.deta, data.userId);
-		if(_.isNull(user)) {
+		if(user === UserGetStatus.INTERNAL_ERROR) {
+			const ret: IResponseMessage = {
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+		else if(user === UserGetStatus.NO_DATA) {
 			const ret: IResponseMessage = {
 				message: "User with specified ID not found."
 			};
@@ -570,12 +704,36 @@ export async function addScore(req: Request, res: Response, next: NextFunction) 
 
 	const result = await insertScore(res.locals.deta, data);
 
-	if(!result) {
+	if(result === ScoreInsertStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
 			message: "Data insertion failed."
 		};
 
 		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(result === ScoreInsertStatus.NO_OFFLINE_UPDATE_DATA) {
+		const ret: IResponseMessage = {
+			message: "No offline update data found."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(result === ScoreInsertStatus.NO_UPDATE_DATA) {
+		const ret: IResponseMessage = {
+			message: "Update data with specified ID not found."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
+		return;
+	}
+	else if(result === ScoreInsertStatus.UPDATE_DATA_FINALIZED) {
+		const ret: IResponseMessage = {
+			message: "Update data with specified ID is already online."
+		};
+
+		res.status(HTTPStatus.BAD_REQUEST).json(ret);
 		return;
 	}
 
@@ -604,7 +762,15 @@ export async function deleteScore(req: Request, res: Response, next: NextFunctio
 
 	const score = await getScoreByKey(res.locals.deta, data.scoreId);
 	{
-		if(_.isNull(score)) {
+		if(score === ScoreGetStatus.INTERNAL_ERROR) {
+			const ret: IResponseMessage = {
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+		else if(score === ScoreGetStatus.NO_DATA) {
 			const ret: IResponseMessage = {
 				message: "Score with specified ID not found."
 			};
@@ -616,9 +782,17 @@ export async function deleteScore(req: Request, res: Response, next: NextFunctio
 
 	{
 		const update = await getUpdateByKey(res.locals.deta, score.updateId);
-		if(_.isNull(update)) {
+		if(update === UpdateGetStatus.INTERNAL_ERROR) {
 			const ret: IResponseMessage = {
-				message: "Score data contains invalid update ID."
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+		else if(update === UpdateGetStatus.NO_DATA) {
+			const ret: IResponseMessage = {
+				message: "Update data with specified ID not found."
 			};
 
 			log(`Score with key ${ data.scoreId } contains invalid update ID. Fix this and try again.`, "deleteScore", LogSeverity.ERROR);
@@ -628,7 +802,7 @@ export async function deleteScore(req: Request, res: Response, next: NextFunctio
 
 		if(update.online) {
 			const ret: IResponseMessage = {
-				message: "Update data status for requested score is online."
+				message: "Update data status for requested score is already online."
 			};
 
 			log(`Score with key ${ data.scoreId } can't be deleted: Update ID ${ update.key } is online.`, "deleteScore", LogSeverity.ERROR);
@@ -638,7 +812,8 @@ export async function deleteScore(req: Request, res: Response, next: NextFunctio
 	}
 
 	const result = await removeScore(res.locals.deta, data.scoreId);
-	if(!result) {
+
+	if(result === ScoreDeleteStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};

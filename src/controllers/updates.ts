@@ -3,6 +3,7 @@ import _ from "lodash";
 import { IResponseData, IResponseMessage } from "../types/express";
 import { IUpdateOnlinePOSTData, IUpdatePOSTData, IUpdateResponse, IUpdatesResponse } from "../types/update";
 import { getUpdateByKey, getUpdates, getUpdatesByStatus, insertUpdate, updateOnlineStatus } from "../utils/deta/updates";
+import { UpdateGetStatus, UpdateInsertStatus, UpdateUpdateStatus } from "../utils/status";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
@@ -53,6 +54,15 @@ export async function getAllUpdates(req: Request, res: Response, next: NextFunct
 	}
 
 	const data = await getUpdates(res.locals.deta, sort, desc);
+	if(data === UpdateGetStatus.INTERNAL_ERROR) {
+		const ret: IResponseMessage = {
+			message: "Data query failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
@@ -105,6 +115,15 @@ export async function getLatestUpdate(req: Request, res: Response, next: NextFun
 	}
 
 	const data = await getUpdatesByStatus(res.locals.deta, online, "id", true);
+	if(data === UpdateGetStatus.INTERNAL_ERROR) {
+		const ret: IResponseMessage = {
+			message: "Data query failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
@@ -148,7 +167,15 @@ export async function getUpdate(req: Request, res: Response, next: NextFunction)
 	}
 
 	const data = await getUpdateByKey(res.locals.deta, id);
-	if(_.isNull(data)) {
+	if(data === UpdateGetStatus.INTERNAL_ERROR) {
+		const ret: IResponseMessage = {
+			message: "Data query failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(data === UpdateGetStatus.NO_DATA) {
 		const ret: IResponseMessage = {
 			message: "Update data with specified ID not found."
 		};
@@ -194,7 +221,7 @@ export async function addUpdateData(req: Request, res: Response, next: NextFunct
 
 	const result = await insertUpdate(res.locals.deta, data);
 
-	if(!result) {
+	if(result === UpdateInsertStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
 			message: "Data insertion failed."
 		};
@@ -228,7 +255,15 @@ export async function updateDataOnlineStatus(req: Request, res: Response, next: 
 
 	{
 		const update = await getUpdateByKey(res.locals.deta, data.updateId);
-		if(_.isNull(update)) {
+		if(update === UpdateGetStatus.INTERNAL_ERROR) {
+			const ret: IResponseMessage = {
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+		else if(update === UpdateGetStatus.NO_DATA) {
 			const ret: IResponseMessage = {
 				message: "Update data with specified ID not found."
 			};
@@ -240,7 +275,7 @@ export async function updateDataOnlineStatus(req: Request, res: Response, next: 
 
 	const result = await updateOnlineStatus(res.locals.deta, data.updateId, data.online);
 
-	if(!result) {
+	if(result === UpdateUpdateStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
 			message: "Data update failed."
 		};

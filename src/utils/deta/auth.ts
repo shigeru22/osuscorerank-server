@@ -3,22 +3,23 @@ import Deta from "deta/dist/types/deta";
 import _ from "lodash";
 import { IClientDetailData } from "../../types/deta/auth";
 import { IClientData } from "../../types/auth";
+import { ClientGetStatus, ClientInsertStatus } from "../status";
 import { LogSeverity, log } from "../log";
 
 const DB_NAME = "client-auth";
 
-export async function getClientById(deta: Deta, id: string) {
+export async function getClientById(deta: Deta, id: string): Promise<IClientDetailData | ClientGetStatus.NO_DATA | ClientGetStatus.DATA_TOO_MANY | ClientGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
 		const fetchResult = (await db.fetch({ clientId: id })).items as unknown as IClientDetailData[];
 		if(fetchResult.length <= 0) {
 			log("No data returned from database.", "getClientById", LogSeverity.WARN);
-			return null;
+			return ClientGetStatus.NO_DATA;
 		}
 		else if(fetchResult.length > 1) {
 			log(`${ DB_NAME }: Queried ${ id } with more than 1 rows. Fix the repeating occurrences and try again.`, "getClientById", LogSeverity.ERROR);
-			return null;
+			return ClientGetStatus.DATA_TOO_MANY;
 		}
 
 		log(`${ DB_NAME }: Returned 1 row.`, "getClientById", LogSeverity.LOG);
@@ -32,11 +33,11 @@ export async function getClientById(deta: Deta, id: string) {
 			log("Unknown error occurred.", "getClientById", LogSeverity.ERROR);
 		}
 
-		return null;
+		return ClientGetStatus.INTERNAL_ERROR;
 	}
 }
 
-export async function insertClient(deta: Deta, id: string, name: string) {
+export async function insertClient(deta: Deta, id: string, name: string): Promise<ClientInsertStatus.OK | ClientInsertStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -64,7 +65,7 @@ export async function insertClient(deta: Deta, id: string, name: string) {
 		}, (currentLastId + 1).toString());
 
 		log(`${ DB_NAME }: Inserted 1 row.`, "insertClient", LogSeverity.LOG);
-		return true;
+		return ClientInsertStatus.OK;
 	}
 	catch (e) {
 		if(_.isError(e)) {
@@ -74,6 +75,6 @@ export async function insertClient(deta: Deta, id: string, name: string) {
 			log("Unknown error occurred while inserting data to database.", "insertClient", LogSeverity.ERROR);
 		}
 
-		return false;
+		return ClientInsertStatus.INTERNAL_ERROR;
 	}
 }

@@ -10,6 +10,7 @@ import { insertScore } from "../utils/deta/scores";
 import { secureTimingSafeEqual } from "../utils/crypto";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
+import { CountryInsertStatus, ScoreInsertStatus, UpdateGetStatus, UpdateInsertStatus, UserInsertStatus } from "../utils/status";
 
 export function getGreeting(req: Request, res: Response) {
 	log("Function accessed. Sending greeting message.", "getGreeting", LogSeverity.LOG);
@@ -48,6 +49,15 @@ export async function addDummyData(req: Request, res: Response, next: NextFuncti
 
 	{
 		const clients = await getUpdates(res.locals.deta);
+		if(clients === UpdateGetStatus.INTERNAL_ERROR) {
+			const ret: IResponseMessage = {
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+
 		if(clients.length > 0) {
 			const ret: IResponseMessage = {
 				message: "Data already exist."
@@ -82,8 +92,8 @@ export async function addDummyData(req: Request, res: Response, next: NextFuncti
 		}
 	}
 
-	let result = await insertClient(res.locals.deta, "C0001", "Webmaster's client");
-	if(!result) {
+	const clientResult = await insertClient(res.locals.deta, "C0001", "Webmaster's client");
+	if(!clientResult) {
 		const ret: IResponseMessage = {
 			message: "An error occurred while inserting client data."
 		};
@@ -92,59 +102,59 @@ export async function addDummyData(req: Request, res: Response, next: NextFuncti
 		return;
 	}
 
-	result = await insertUpdate(res.locals.deta, {
+	const updateResult = await insertUpdate(res.locals.deta, {
 		apiVersion: "1.0.0",
 		webVersion: "1.0.0"
 	});
 
-	if(!result) {
+	if(updateResult === UpdateInsertStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
-			message: "An error occurred while inserting update data."
+			message: "Update data insertion failed."
 		};
 
 		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
 		return;
 	}
 
-	result = await insertCountry(res.locals.deta, {
+	const countryResult = await insertCountry(res.locals.deta, {
 		countryName: "Indonesia",
 		countryCode: "ID"
 	});
 
-	if(!result) {
+	if(countryResult === CountryInsertStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
-			message: "An error occurred while inserting country data."
+			message: "Country data insertion failed."
 		};
 
 		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
 		return;
 	}
 
-	result = await insertUser(res.locals.deta, {
+	const userResult = await insertUser(res.locals.deta, {
 		userName: "Shigeru22",
 		osuId: 2581664,
 		countryId: 1,
 		isActive: true
 	});
 
-	if(!result) {
+	if(userResult === UserInsertStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
-			message: "An error occurred while inserting user data."
+			message: "User data insertion failed."
 		};
 
 		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
 		return;
 	}
 
-	result = await insertScore(res.locals.deta, {
+	const scoreResult = await insertScore(res.locals.deta, {
 		userId: 1,
 		score: 48662338537,
 		pp: 8645
 	});
 
-	if(!result) {
+	if(scoreResult === ScoreInsertStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
-			message: "An error occurred while inserting score data."
+			message: "Score data insertion failed."
 		};
 
 		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);

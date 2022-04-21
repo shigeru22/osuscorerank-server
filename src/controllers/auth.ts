@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { IResponseMessage, IResponseData } from "../types/express";
 import { IClientPOSTData, IAuthenticationResponse } from "../types/auth";
 import { getClientById } from "../utils/deta/auth";
+import { ClientGetStatus } from "../utils/status";
 import { secureTimingSafeEqual } from "../utils/crypto";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
@@ -34,12 +35,28 @@ export async function getAccessToken(req: Request, res: Response, next: NextFunc
 
 		const client = await getClientById(res.locals.deta, data.clientId);
 
-		if(_.isNull(client)) {
+		if(client === ClientGetStatus.INTERNAL_ERROR) {
+			const ret: IResponseMessage = {
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+		else if(client === ClientGetStatus.NO_DATA) {
 			const ret: IResponseMessage = {
 				message: "Invalid client credentials."
 			};
 
 			res.status(HTTPStatus.UNAUTHORIZED).json(ret);
+			return;
+		}
+		else if(client === ClientGetStatus.DATA_TOO_MANY) {
+			const ret: IResponseMessage = {
+				message: "Multiple client found."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
 			return;
 		}
 

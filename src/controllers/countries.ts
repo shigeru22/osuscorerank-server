@@ -3,6 +3,7 @@ import _ from "lodash";
 import { IResponseData, IResponseMessage } from "../types/express";
 import { ICountriesResponse, ICountryDELETEData, ICountryPOSTData, ICountryResponse } from "../types/country";
 import { getCountries, getCountryByKey, insertCountry, removeCountry } from "../utils/deta/countries";
+import { CountryGetStatus, CountryInsertStatus, CountryDeleteStatus } from "../utils/status";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
@@ -12,6 +13,15 @@ export async function getAllCountries(req: Request, res: Response, next: NextFun
 	log("Function accessed.", "getAllCountries", LogSeverity.LOG);
 
 	const data = await getCountries(res.locals.deta);
+
+	if(data === CountryGetStatus.INTERNAL_ERROR) {
+		const ret: IResponseMessage = {
+			message: "Data query failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
 
 	log("Countries data retrieved successfully. Sending data response.", "getAllCountries", LogSeverity.LOG);
 
@@ -47,7 +57,15 @@ export async function getCountry(req: Request, res: Response, next: NextFunction
 	}
 
 	const data = await getCountryByKey(res.locals.deta, id);
-	if(_.isNull(data)) {
+	if(data === CountryGetStatus.INTERNAL_ERROR) {
+		const ret: IResponseMessage = {
+			message: "Internal error occurred while querying country data."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(data === CountryGetStatus.NO_DATA) {
 		const ret: IResponseMessage = {
 			message: "Country with specified ID not found."
 		};
@@ -87,7 +105,7 @@ export async function addCountry(req: Request, res: Response, next: NextFunction
 	}
 
 	const result = await insertCountry(res.locals.deta, data);
-	if(!result) {
+	if(result === CountryInsertStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
 			message: "Data insertion failed."
 		};
@@ -121,7 +139,15 @@ export async function deleteCountry(req: Request, res: Response, next: NextFunct
 
 	{
 		const country = await getCountryByKey(res.locals.deta, data.countryId);
-		if(_.isNull(country)) {
+		if(country === CountryGetStatus.INTERNAL_ERROR) {
+			const ret: IResponseMessage = {
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+		else if(country === CountryGetStatus.NO_DATA) {
 			const ret: IResponseMessage = {
 				message: "Country with specified ID not found."
 			};
@@ -134,7 +160,7 @@ export async function deleteCountry(req: Request, res: Response, next: NextFunct
 	/* TODO: remove scores and users by country id */
 
 	const result = await removeCountry(res.locals.deta, data.countryId);
-	if(!result) {
+	if(result === CountryDeleteStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};

@@ -2,11 +2,12 @@ import _ from "lodash";
 import Deta from "deta/dist/types/deta";
 import { IUpdateDetailData } from "../../types/deta/update";
 import { IUpdateData, IUpdatePOSTData } from "../../types/update";
+import { UpdateGetStatus, UpdateInsertStatus, UpdateUpdateStatus } from "../status";
 import { LogSeverity, log } from "../log";
 
 const DB_NAME = "data-updates";
 
-export async function getUpdates(deta: Deta, sort: "id" | "date" = "date", desc = false) {
+export async function getUpdates(deta: Deta, sort: "id" | "date" = "date", desc = false): Promise<IUpdateDetailData[] | UpdateGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -44,11 +45,11 @@ export async function getUpdates(deta: Deta, sort: "id" | "date" = "date", desc 
 			log("Unknown error occurred while querying database.", "getUpdates", LogSeverity.ERROR);
 		}
 
-		return [];
+		return UpdateGetStatus.INTERNAL_ERROR;
 	}
 }
 
-export async function getUpdatesByStatus(deta: Deta, status: boolean, sort: "id" | "date" = "date", desc = false) {
+export async function getUpdatesByStatus(deta: Deta, status: boolean, sort: "id" | "date" = "date", desc = false): Promise<IUpdateDetailData[] | UpdateGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -86,11 +87,11 @@ export async function getUpdatesByStatus(deta: Deta, status: boolean, sort: "id"
 			log("Unknown error occurred while querying database.", "getUpdatesByStatus", LogSeverity.ERROR);
 		}
 
-		return [];
+		return UpdateGetStatus.INTERNAL_ERROR;
 	}
 }
 
-export async function getUpdateByKey(deta: Deta, key: number) {
+export async function getUpdateByKey(deta: Deta, key: number): Promise<IUpdateDetailData | UpdateGetStatus.NO_DATA | UpdateGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -98,6 +99,7 @@ export async function getUpdateByKey(deta: Deta, key: number) {
 
 		if(_.isNull(fetchResult)) {
 			log(`${ DB_NAME }: No data returned from database.`, "getUpdateByKey", LogSeverity.WARN);
+			return UpdateGetStatus.NO_DATA;
 		}
 		else {
 			log(`${ DB_NAME }: Returned 1 row.`, "getUpdateByKey", LogSeverity.LOG);
@@ -113,17 +115,22 @@ export async function getUpdateByKey(deta: Deta, key: number) {
 			log("Unknown error occurred while querying database.", "getUpdateByKey", LogSeverity.ERROR);
 		}
 
-		return null;
+		return UpdateGetStatus.INTERNAL_ERROR;
 	}
 }
 
-export async function insertUpdate(deta: Deta, update: IUpdatePOSTData, silent = false) {
+export async function insertUpdate(deta: Deta, update: IUpdatePOSTData, silent = false): Promise<UpdateInsertStatus.OK | UpdateInsertStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
 		let currentLastId = 0;
 		{
 			const rows = await getUpdates(deta, "id");
+			if(rows === UpdateGetStatus.INTERNAL_ERROR) {
+				log("Internal error occurred while querying users data.", "insertUpdate", LogSeverity.ERROR);
+				return UpdateInsertStatus.INTERNAL_ERROR;
+			}
+
 			if(rows.length > 0) {
 				currentLastId = _.parseInt(rows[rows.length - 1].key, 10);
 			}
@@ -150,7 +157,7 @@ export async function insertUpdate(deta: Deta, update: IUpdatePOSTData, silent =
 			log(`${ DB_NAME }: Inserted 1 row.`, "insertUpdate", LogSeverity.LOG);
 		}
 
-		return true;
+		return UpdateInsertStatus.OK;
 	}
 	catch (e) {
 		if(_.isError(e)) {
@@ -160,11 +167,11 @@ export async function insertUpdate(deta: Deta, update: IUpdatePOSTData, silent =
 			log("Unknown error occurred while inserting data to database.", "insertUpdate", LogSeverity.ERROR);
 		}
 
-		return false;
+		return UpdateInsertStatus.INTERNAL_ERROR;
 	}
 }
 
-export async function updateOnlineStatus(deta: Deta, key: number, value: boolean, silent = false) {
+export async function updateOnlineStatus(deta: Deta, key: number, value: boolean, silent = false): Promise<UpdateUpdateStatus.OK | UpdateUpdateStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -174,7 +181,7 @@ export async function updateOnlineStatus(deta: Deta, key: number, value: boolean
 			log(`${ DB_NAME }: Updated 1 row.`, "updateOnlineStatus", LogSeverity.LOG);
 		}
 
-		return true;
+		return UpdateUpdateStatus.OK;
 	}
 	catch (e) {
 		if(_.isError(e)) {
@@ -184,6 +191,6 @@ export async function updateOnlineStatus(deta: Deta, key: number, value: boolean
 			log("Unknown error occurred while inserting data to database.", "updateOnlineStatus", LogSeverity.ERROR);
 		}
 
-		return false;
+		return UpdateUpdateStatus.INTERNAL_ERROR;
 	}
 }

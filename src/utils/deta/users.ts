@@ -2,12 +2,13 @@ import _ from "lodash";
 import Deta from "deta/dist/types/deta";
 import { IUserCountryDetailData, IUserDetailData } from "../../types/deta/user";
 import { IUserCountryData, IUserPOSTData, IUserPUTData } from "../../types/user";
+import { CountryGetStatus, UserGetStatus, UserInsertStatus, UserUpdateStatus, UserDeleteStatus } from "../status";
 import { getCountryByKey } from "./countries";
 import { LogSeverity, log } from "../log";
 
 const DB_NAME = "osu-users";
 
-export async function getUsers(deta: Deta, active: boolean | null = null, sort: "id" | "date" = "id", desc = false) {
+export async function getUsers(deta: Deta, active: boolean | null = null, sort: "id" | "date" = "id", desc = false): Promise<IUserCountryDetailData[] | UserGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -50,24 +51,14 @@ export async function getUsers(deta: Deta, active: boolean | null = null, sort: 
 			log("Unknown error occurred while querying database.", "getUsers", LogSeverity.ERROR);
 		}
 
-		return [];
+		return UserGetStatus.INTERNAL_ERROR;
 	}
 }
 
-export async function getUsersByCountryId(deta: Deta, active: boolean | null = null, id: number, sort: "id" | "date" = "id", desc = false) {
+export async function getUsersByCountryId(deta: Deta, active: boolean | null = null, id: number, sort: "id" | "date" = "id", desc = false): Promise<IUserDetailData[] | UserGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
-		{
-			{
-				const country = await getCountryByKey(deta, id);
-				if(_.isNull(country)) {
-					log("Country not found. Cancelling score data retrieval.", "getUsersByCountryId", LogSeverity.WARN);
-					return [];
-				}
-			}
-		}
-
 		let query = { countryId: id };
 		if(!_.isNull(active)) {
 			query = Object.assign(query, { isActive: active });
@@ -107,11 +98,11 @@ export async function getUsersByCountryId(deta: Deta, active: boolean | null = n
 			log("Unknown error occurred while querying database.", "getUsersByCountryId", LogSeverity.ERROR);
 		}
 
-		return [];
+		return UserGetStatus.INTERNAL_ERROR;
 	}
 }
 
-export async function getUserByKey(deta: Deta, key: number) {
+export async function getUserByKey(deta: Deta, key: number): Promise<IUserCountryDetailData | UserGetStatus.NO_DATA | UserGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -119,6 +110,7 @@ export async function getUserByKey(deta: Deta, key: number) {
 
 		if(_.isNull(fetchResult)) {
 			log(`${ DB_NAME }: No data returned from database.`, "getUserByKey", LogSeverity.WARN);
+			return UserGetStatus.NO_DATA;
 		}
 		else {
 			log(`${ DB_NAME }: Returned 1 row.`, "getUserByKey", LogSeverity.LOG);
@@ -134,22 +126,22 @@ export async function getUserByKey(deta: Deta, key: number) {
 			log("Unknown error occurred while querying database.", "getUserByKey", LogSeverity.ERROR);
 		}
 
-		return null;
+		return UserGetStatus.INTERNAL_ERROR;
 	}
 }
 
-export async function getUserByOsuId(deta: Deta, id: number) {
+export async function getUserByOsuId(deta: Deta, id: number): Promise<IUserDetailData | UserGetStatus.NO_DATA | UserGetStatus.DATA_TOO_MANY | UserGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
 		const fetchResult = (await db.fetch({ osuId: id.toString() })).items as unknown as IUserDetailData[];
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getUserByOsuId", LogSeverity.WARN);
-			return null;
+			return UserGetStatus.NO_DATA;
 		}
 		else if(fetchResult.length > 1) {
 			log(`${ DB_NAME }: Queried ${ id } with more than 1 rows. Fix the repeating occurences and try again.`, "getUserByOsuId", LogSeverity.ERROR);
-			return null;
+			return UserGetStatus.DATA_TOO_MANY;
 		}
 
 		log(`${ DB_NAME }: Returned 1 row.`, "getUserByOsuId", LogSeverity.LOG);
@@ -163,18 +155,20 @@ export async function getUserByOsuId(deta: Deta, id: number) {
 			log("Unknown error occurred while querying database.", "getUserByOsuId", LogSeverity.ERROR);
 		}
 
-		return null;
+		return UserGetStatus.INTERNAL_ERROR;
 	}
 }
 
-export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false) {
+export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false): Promise<UserInsertStatus.OK | UserInsertStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
 		const country = await getCountryByKey(deta, user.countryId);
-		if(_.isNull(country)) {
-			log("Null country returned. See above log (if any) for details.", "insertUser", LogSeverity.ERROR);
-			return false;
+		switch(country) {
+			case CountryGetStatus.NO_DATA: // fallthrough
+			case CountryGetStatus.INTERNAL_ERROR:
+				log("Internal error occurred while querying country data.", "insertUser", LogSeverity.DEBUG);
+				return UserInsertStatus.INTERNAL_ERROR;
 		}
 
 		const countryKey = _.parseInt(country.key, 10);
@@ -182,6 +176,11 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 		let currentLastId = 0;
 		{
 			const rows = await getUsers(deta, null, "id");
+			if(rows === UserGetStatus.INTERNAL_ERROR) {
+				log("Internal error occurred while querying users data.", "insertUser", LogSeverity.DEBUG);
+				return UserInsertStatus.INTERNAL_ERROR;
+			}
+
 			if(rows.length > 0) {
 				currentLastId = _.parseInt(rows[rows.length - 1].key, 10);
 			}
@@ -213,7 +212,7 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 			log(`${ DB_NAME }: Deleted 1 row.`, "insertUser", LogSeverity.LOG);
 		}
 
-		return true;
+		return UserInsertStatus.OK;
 	}
 	catch (e) {
 		if(_.isError(e)) {
@@ -223,24 +222,28 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 			log("Unknown error occurred while querying database.", "insertUser", LogSeverity.ERROR);
 		}
 
-		return false;
+		return UserInsertStatus.INTERNAL_ERROR;
 	}
 }
 
-export async function updateUser(deta: Deta, user: IUserPUTData, silent = false) {
+export async function updateUser(deta: Deta, user: IUserPUTData, silent = false): Promise<UserUpdateStatus.OK | UserUpdateStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
 		const fetchedUser = await getUserByKey(deta, user.userId);
-		if(_.isNull(fetchedUser)) {
-			log("Null user returned. See above log (if any) for details.", "updateUser", LogSeverity.ERROR);
-			return false;
+		switch(fetchedUser) {
+			case UserGetStatus.NO_DATA: // fallthrough
+			case UserGetStatus.INTERNAL_ERROR:
+				log("Internal error occurred while querying user data.", "updateUser", LogSeverity.DEBUG);
+				return UserUpdateStatus.INTERNAL_ERROR;
 		}
 
 		const fetchedCountry = await getCountryByKey(deta, user.countryId);
-		if(_.isNull(fetchedCountry)) {
-			log("Null country returned. See above log (if any) for details.", "updateUser", LogSeverity.ERROR);
-			return false;
+		switch(fetchedCountry) {
+			case CountryGetStatus.NO_DATA: // fallthrough
+			case CountryGetStatus.INTERNAL_ERROR:
+				log("Internal error occurred while querying user data.", "updateUser", LogSeverity.DEBUG);
+				return UserUpdateStatus.INTERNAL_ERROR;
 		}
 
 		const countryKey = _.parseInt(fetchedCountry.key, 10);
@@ -260,7 +263,7 @@ export async function updateUser(deta: Deta, user: IUserPUTData, silent = false)
 			log(`${ DB_NAME }: Updated 1 row.`, "updateUser", LogSeverity.LOG);
 		}
 
-		return true;
+		return UserUpdateStatus.OK;
 	}
 	catch (e) {
 		if(_.isError(e)) {
@@ -270,11 +273,11 @@ export async function updateUser(deta: Deta, user: IUserPUTData, silent = false)
 			log("Unknown error occurred while querying database.", "updateUser", LogSeverity.ERROR);
 		}
 
-		return false;
+		return UserUpdateStatus.INTERNAL_ERROR;
 	}
 }
 
-export async function removeUser(deta: Deta, key: number, silent = false) {
+export async function removeUser(deta: Deta, key: number, silent = false): Promise<UserDeleteStatus.OK | UserDeleteStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -284,7 +287,7 @@ export async function removeUser(deta: Deta, key: number, silent = false) {
 			log(`${ DB_NAME }: Deleted 1 row.`, "removeUser", LogSeverity.LOG);
 		}
 
-		return true;
+		return UserDeleteStatus.OK;
 	}
 	catch (e) {
 		if(_.isError(e)) {
@@ -294,6 +297,6 @@ export async function removeUser(deta: Deta, key: number, silent = false) {
 			log("Unknown error occurred while querying database.", "removeUser", LogSeverity.ERROR);
 		}
 
-		return false;
+		return UserDeleteStatus.INTERNAL_ERROR;
 	}
 }

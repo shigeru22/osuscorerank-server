@@ -4,6 +4,7 @@ import { IResponseData, IResponseMessage } from "../types/express";
 import { ICountryUsersResponse, IUserDELETEData, IUserPOSTData, IUserPUTData, IUserResponse, IUsersResponse } from "../types/user";
 import { getCountryByKey } from "../utils/deta/countries";
 import { getUserByKey, getUserByOsuId, getUsers, getUsersByCountryId, insertUser, removeUser, updateUser as updateUserData } from "../utils/deta/users";
+import { CountryGetStatus, UserGetStatus, UserInsertStatus, UserUpdateStatus, UserDeleteStatus } from "../utils/status";
 import { HTTPStatus } from "../utils/http";
 import { LogSeverity, log } from "../utils/log";
 import { checkNumber } from "../utils/common";
@@ -54,7 +55,15 @@ export async function getAllUsers(req: Request, res: Response, next: NextFunctio
 	}
 
 	const data = await getUsers(res.locals.deta, isActive, "id", desc);
-	if(data.length <= 0) {
+	if(data === UserGetStatus.INTERNAL_ERROR) {
+		const ret: IResponseMessage = {
+			message: "Data query failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
 		};
@@ -144,7 +153,15 @@ export async function getCountryUsers(req: Request, res: Response, next: NextFun
 	}
 
 	const country = await getCountryByKey(res.locals.deta, id);
-	if(_.isNull(country)) {
+	if(country === CountryGetStatus.INTERNAL_ERROR) {
+		const ret: IResponseMessage = {
+			message: "Data query failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(country === CountryGetStatus.NO_DATA) {
 		const ret: IResponseMessage = {
 			message: "Country with specified ID not found."
 		};
@@ -154,6 +171,15 @@ export async function getCountryUsers(req: Request, res: Response, next: NextFun
 	}
 
 	const data = await getUsersByCountryId(res.locals.deta, isActive, id, "id", desc);
+	if(data === UserGetStatus.INTERNAL_ERROR) {
+		const ret: IResponseMessage = {
+			message: "Data query failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+
 	if(data.length <= 0) {
 		const ret: IResponseMessage = {
 			message: "No data found."
@@ -203,7 +229,15 @@ export async function getUser(req: Request, res: Response, next: NextFunction) {
 	}
 
 	const data = await getUserByKey(res.locals.deta, id);
-	if(_.isNull(data)) {
+	if(data === UserGetStatus.INTERNAL_ERROR) {
+		const ret: IResponseMessage = {
+			message: "Data query failed."
+		};
+
+		res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+		return;
+	}
+	else if(data === UserGetStatus.NO_DATA) {
 		const ret: IResponseMessage = {
 			message: "User with specified ID not found."
 		};
@@ -250,7 +284,15 @@ export async function addUser(req: Request, res: Response, next: NextFunction) {
 
 	{
 		const user = await getUserByOsuId(res.locals.deta, data.osuId);
-		if(!_.isNull(user)) {
+		if(user === UserGetStatus.INTERNAL_ERROR || user === UserGetStatus.DATA_TOO_MANY) {
+			const ret: IResponseMessage = {
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+		else if(user !== UserGetStatus.NO_DATA) {
 			const ret: IResponseMessage = {
 				message: "The specified osu! ID has been exist by another user."
 			};
@@ -262,7 +304,15 @@ export async function addUser(req: Request, res: Response, next: NextFunction) {
 
 	{
 		const country = await getCountryByKey(res.locals.deta, data.countryId);
-		if(_.isNull(country)) {
+		if(country === CountryGetStatus.INTERNAL_ERROR) {
+			const ret: IResponseMessage = {
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+		else if(country === CountryGetStatus.NO_DATA) {
 			const ret: IResponseMessage = {
 				message: "Country with specified ID not found."
 			};
@@ -274,7 +324,7 @@ export async function addUser(req: Request, res: Response, next: NextFunction) {
 
 	const result = await insertUser(res.locals.deta, data);
 
-	if(!result) {
+	if(result === UserInsertStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
 			message: "Data insertion failed."
 		};
@@ -308,7 +358,15 @@ export async function updateUser(req: Request, res: Response, next: NextFunction
 
 	{
 		const user = await getUserByKey(res.locals.deta, data.userId);
-		if(_.isNull(user)) {
+		if(user === UserGetStatus.INTERNAL_ERROR) {
+			const ret: IResponseMessage = {
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+		else if(user === UserGetStatus.NO_DATA) {
 			const ret: IResponseMessage = {
 				message: "User with specified ID not found."
 			};
@@ -320,7 +378,15 @@ export async function updateUser(req: Request, res: Response, next: NextFunction
 
 	{
 		const country = await getCountryByKey(res.locals.deta, data.countryId);
-		if(_.isNull(country)) {
+		if(country === CountryGetStatus.INTERNAL_ERROR) {
+			const ret: IResponseMessage = {
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+		else if(country === CountryGetStatus.NO_DATA) {
 			const ret: IResponseMessage = {
 				message: "Country with specified ID not found."
 			};
@@ -332,7 +398,7 @@ export async function updateUser(req: Request, res: Response, next: NextFunction
 
 	const result = await updateUserData(res.locals.deta, data);
 
-	if(!result) {
+	if(result === UserUpdateStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
 			message: "Data update failed."
 		};
@@ -366,7 +432,15 @@ export async function deleteUser(req: Request, res: Response, next: NextFunction
 
 	{
 		const user = await getUserByKey(res.locals.deta, data.userId);
-		if(_.isNull(user)) {
+		if(user === UserGetStatus.INTERNAL_ERROR) {
+			const ret: IResponseMessage = {
+				message: "Data query failed."
+			};
+
+			res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json(ret);
+			return;
+		}
+		else if(user === UserGetStatus.NO_DATA) {
 			const ret: IResponseMessage = {
 				message: "User with specified ID not found."
 			};
@@ -379,7 +453,7 @@ export async function deleteUser(req: Request, res: Response, next: NextFunction
 	/* TODO: remove scores by user id */
 
 	const result = await removeUser(res.locals.deta, data.userId);
-	if(!result) {
+	if(result === UserDeleteStatus.INTERNAL_ERROR) {
 		const ret: IResponseMessage = {
 			message: "Data deletion failed."
 		};
