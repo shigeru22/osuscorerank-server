@@ -5,7 +5,7 @@
 	"main": "index.js",
 	"scripts": {
 		"dev": "nodemon --exec npx ts-node src/index.ts",
-		"fetch": "ts-node ./src/data-fetch.ts",
+		"fetch": "ts-node fetch/index.ts",
 		"build": "tsc && cd client && npm install && npm run build",
 		"start": "node ."
 	},
