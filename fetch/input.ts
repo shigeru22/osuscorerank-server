@@ -44,16 +44,30 @@ export async function inputNumber(promptText: string, validCallback: (ret: numbe
 	}
 }
 
-export async function inputText(promptText: string): Promise<string> {
+export async function inputText(promptText: string, validCallback?: (ret: string) => boolean): Promise<string> {
 	try {
-		const input = await inquirer.prompt([
-			{
-				name: "data",
-				message: promptText
-			}
-		]);
+		let condition = false;
+		let ret = "";
 
-		return input.data;
+		while(!condition) {
+			// eslint-disable-next-line no-await-in-loop
+			const input = await inquirer.prompt([
+				{
+					name: "data",
+					message: promptText
+				}
+			]);
+
+			if(!_.isUndefined(validCallback) && !validCallback(input.data)) {
+				console.log("Input is not valid.");
+			}
+			else {
+				ret = input.data;
+				condition = true;
+			}
+		}
+
+		return ret;
 	}
 	catch (e) {
 		if(_.isError(e)) {
