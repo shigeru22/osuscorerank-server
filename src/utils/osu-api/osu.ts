@@ -128,6 +128,8 @@ export async function getScoreRanking(clientId: number, clientSecret: string) {
 					process.stdout.cursorTo(0);
 				}
 				else {
+					process.stdout.write("\n");
+
 					/* revoking access token requires await, but it's okay since looping here is intended */
 					// eslint-disable-next-line no-await-in-loop
 					await revokeAccessToken(accessToken);
