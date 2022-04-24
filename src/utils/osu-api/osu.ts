@@ -93,22 +93,24 @@ export async function revokeAccessToken(token: string) {
 	}
 }
 
-export async function getScoreRanking(countryCode: string, token: string) {
+export async function getScoreRanking(clientId: number, clientSecret: string) {
 	try {
 		let loop = true;
 		let page = 1;
 
 		let ret: IUserStatistics[] = [];
 
+		let accessToken = await getAccessToken(clientId, clientSecret);
+
 		do {
 			process.stdout.write(`[LOG] getScoreRanking :: Requesting rankings (page: ${ page })...`);
 
-			/* disable this since looping require cursor */
+			/* looping depends on cursor from its response */
 			// eslint-disable-next-line no-await-in-loop
 			const response = await axios.get<IRankingsGETResponse<IRankingsCursor>>(`${ OSU_API_ENDPOINT }/rankings/osu/score?page=${ page }`, {
 				headers: {
 					"Content-Type": "application/json",
-					"Authorization": `Bearer ${ token }`
+					"Authorization": `Bearer ${ accessToken }`
 				}
 			});
 
@@ -126,13 +128,18 @@ export async function getScoreRanking(countryCode: string, token: string) {
 					process.stdout.cursorTo(0);
 				}
 				else {
+					/* revoking access token requires await, but it's okay since looping here is intended */
+					// eslint-disable-next-line no-await-in-loop
+					await revokeAccessToken(accessToken);
 					loop = false;
 				}
 			}
 			else if(response.status === HTTPStatus.UNAUTHORIZED) {
 				process.stdout.write("[WARN] getScoreRanking :: Token expired or invalid. Requesting access token...");
 
-				/* TODO: refresh access token */
+				/* acquiring access token requires await */
+				// eslint-disable-next-line no-await-in-loop
+				accessToken = await getAccessToken(clientId, clientSecret);
 			}
 			else {
 				process.stdout.write(`[WARN] getScoreRanking :: API returned status ${ response.status }.\n`);
