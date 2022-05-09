@@ -292,7 +292,7 @@ export async function insertMultipleUsers(deta: Deta, users: IUserPOSTData[], si
 					osuId: users[i].osuId,
 					isActive: users[i].isActive,
 					country: {
-						countryId: countryIndex,
+						countryId: _.parseInt(countries[countryIndex].key, 10),
 						countryName: countries[countryIndex].countryName,
 						countryCode: countries[countryIndex].countryCode
 					}
