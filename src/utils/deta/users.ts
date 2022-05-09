@@ -300,22 +300,38 @@ export async function insertMultipleUsers(deta: Deta, users: IUserPOSTData[], si
 
 				const date = new Date();
 
-				/* run sequentially */
-				// eslint-disable-next-line no-await-in-loop
-				await db.put({
-					userName: data.userName,
-					osuId: data.osuId,
-					isActive: data.isActive,
-					country: JSON.parse(JSON.stringify(data.country)),
-					countryId: countries[countryIndex].key,
-					dateAdded: date.toISOString()
-				}, (currentLastId + 1).toString());
+				try {
+					/* run sequentially */
+					// eslint-disable-next-line no-await-in-loop
+					await db.put({
+						userName: data.userName,
+						osuId: data.osuId,
+						isActive: data.isActive,
+						country: JSON.parse(JSON.stringify(data.country)),
+						countryId: countries[countryIndex].key,
+						dateAdded: date.toISOString()
+					}, (currentLastId + 1).toString());
 
-				currentLastId++;
-				inserted++;
+					currentLastId++;
+					inserted++;
 
-				// eslint-disable-next-line no-await-in-loop
-				await sleep(100);
+					// eslint-disable-next-line no-await-in-loop
+					await sleep(100);
+				}
+				catch (e) {
+					if(_.isError(e)) {
+						log(`\n${ e.name }: ${ e.message }`, "insertMultipleUsers", LogSeverity.ERROR);
+						log("Retrying in 5 seconds...", "insertMultipleUsers", LogSeverity.LOG);
+						i--;
+
+						// eslint-disable-next-line no-await-in-loop
+						await sleep(5000);
+					}
+					else {
+						log("Unknown error occurred while inserting data.", "insertMultipleUsers", LogSeverity.ERROR);
+						return UserInsertStatus.INTERNAL_ERROR;
+					}
+				}
 			}
 
 			if(!silent) {
@@ -429,23 +445,39 @@ export async function updateMultipleUsers(deta: Deta, users: IUserPUTData[], sil
 				const countryIndex = countries.findIndex(country => country.key === users[i].countryId.toString());
 
 				if(countryIndex >= 0) {
-					/* run sequentially */
-					// eslint-disable-next-line no-await-in-loop
-					await db.update({
-						userName: users[i].userName,
-						isActive: users[i].isActive,
-						country: {
-							countryId: countries[countryIndex].key,
-							countryName: countries[countryIndex].countryName,
-							countryCode: countries[countryIndex].countryCode
-						},
-						countryId: countries[countryIndex].key
-					}, dbUsers[i].key);
+					try {
+						/* run sequentially */
+						// eslint-disable-next-line no-await-in-loop
+						await db.update({
+							userName: users[i].userName,
+							isActive: users[i].isActive,
+							country: {
+								countryId: countries[countryIndex].key,
+								countryName: countries[countryIndex].countryName,
+								countryCode: countries[countryIndex].countryCode
+							},
+							countryId: countries[countryIndex].key
+						}, dbUsers[i].key);
 
-					updated++;
+						updated++;
 
-					// eslint-disable-next-line no-await-in-loop
-					await sleep(100);
+						// eslint-disable-next-line no-await-in-loop
+						await sleep(100);
+					}
+					catch (e) {
+						if(_.isError(e)) {
+							log(`\n${ e.name }: ${ e.message }`, "updateMultipleUsers", LogSeverity.ERROR);
+							log("Retrying in 5 seconds...", "updateMultipleUsers", LogSeverity.LOG);
+							i--;
+
+							// eslint-disable-next-line no-await-in-loop
+							await sleep(5000);
+						}
+						else {
+							log("Unknown error occurred while inserting data.", "updateMultipleUsers", LogSeverity.ERROR);
+							return UserUpdateStatus.INTERNAL_ERROR;
+						}
+					}
 				}
 			}
 

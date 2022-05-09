@@ -506,24 +506,40 @@ export async function insertMultipleScores(deta: Deta, scores: IScorePOSTData[],
 
 				const date = new Date();
 
-				/* run sequentially */
-				// eslint-disable-next-line no-await-in-loop
-				await db.put({
-					user: JSON.parse(JSON.stringify(data.user)),
-					userId: data.user.userId,
-					countryId: data.user.country.countryId,
-					isActive: data.user.isActive,
-					score: data.score.toString(),
-					pp: data.pp,
-					updateId: updateKey,
-					dateAdded: date.toISOString()
-				}, (currentLastId + 1).toString());
+				try {
+					/* run sequentially */
+					// eslint-disable-next-line no-await-in-loop
+					await db.put({
+						user: JSON.parse(JSON.stringify(data.user)),
+						userId: data.user.userId,
+						countryId: data.user.country.countryId,
+						isActive: data.user.isActive,
+						score: data.score.toString(),
+						pp: data.pp,
+						updateId: updateKey,
+						dateAdded: date.toISOString()
+					}, (currentLastId + 1).toString());
 
-				currentLastId++;
-				inserted++;
+					currentLastId++;
+					inserted++;
 
-				// eslint-disable-next-line no-await-in-loop
-				await sleep(100);
+					// eslint-disable-next-line no-await-in-loop
+					await sleep(100);
+				}
+				catch (e) {
+					if(_.isError(e)) {
+						log(`\n${ e.name }: ${ e.message }`, "insertMultipleScores", LogSeverity.ERROR);
+						log("Retrying in 5 seconds...", "insertMultipleScores", LogSeverity.LOG);
+						i--;
+
+						// eslint-disable-next-line no-await-in-loop
+						await sleep(5000);
+					}
+					else {
+						log("Unknown error occurred while inserting data.", "insertMultipleScores", LogSeverity.ERROR);
+						return ScoreInsertStatus.INTERNAL_ERROR;
+					}
+				}
 			}
 		}
 

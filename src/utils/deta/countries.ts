@@ -161,7 +161,7 @@ export async function insertMultipleCountries(deta: Deta, countries: ICountryPOS
 	try {
 		const currentCountries = await getCountries(deta, "id", false, true);
 		if(currentCountries === CountryGetStatus.INTERNAL_ERROR) {
-			log("Internal error occurred while querying countries data.", "insertMultipleUsers", LogSeverity.ERROR);
+			log("Internal error occurred while querying countries data.", "insertMultipleCountries", LogSeverity.ERROR);
 			return CountryInsertStatus.INTERNAL_ERROR;
 		}
 
@@ -178,18 +178,38 @@ export async function insertMultipleCountries(deta: Deta, countries: ICountryPOS
 			if(countryIndex < 0) {
 				const date = new Date();
 
-				// eslint-disable-next-line no-await-in-loop
-				await db.put({
-					countryName: countries[i].countryName,
-					countryCode: countries[i].countryCode,
-					dateAdded: date.toISOString()
-				}, (currentLastId + 1).toString());
+				try {
+					if(!silent) {
+						process.stdout.write(`[LOG] insertMultipleCountries :: Inserting country to database (${ i + 1 }/${ len })...`);
+					}
 
-				currentLastId++;
-				inserted++;
+					// eslint-disable-next-line no-await-in-loop
+					await db.put({
+						countryName: countries[i].countryName,
+						countryCode: countries[i].countryCode,
+						dateAdded: date.toISOString()
+					}, (currentLastId + 1).toString());
 
-				// eslint-disable-next-line no-await-in-loop
-				await sleep(100);
+					currentLastId++;
+					inserted++;
+
+					// eslint-disable-next-line no-await-in-loop
+					await sleep(100);
+				}
+				catch (e) {
+					if(_.isError(e)) {
+						log(`\n${ e.name }: ${ e.message }`, "insertMultipleCountries", LogSeverity.ERROR);
+						log("Retrying in 5 seconds...", "insertMultipleCountries", LogSeverity.LOG);
+						i--;
+
+						// eslint-disable-next-line no-await-in-loop
+						await sleep(5000);
+					}
+					else {
+						log("Unknown error occurred while inserting data.", "insertMultipleCountries", LogSeverity.ERROR);
+						return CountryInsertStatus.INTERNAL_ERROR;
+					}
+				}
 			}
 		}
 
