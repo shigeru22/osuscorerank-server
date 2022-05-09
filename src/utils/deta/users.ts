@@ -3,8 +3,9 @@ import Deta from "deta/dist/types/deta";
 import { IUserCountryDetailData, IUserDetailData } from "../../types/deta/user";
 import { IUserCountryData, IUserPOSTData, IUserPUTData } from "../../types/user";
 import { CountryGetStatus, UserGetStatus, UserInsertStatus, UserUpdateStatus, UserDeleteStatus } from "../status";
-import { getCountryByKey } from "./countries";
+import { getCountries, getCountryByKey } from "./countries";
 import { LogSeverity, log } from "../log";
+import { sleep } from "../common";
 
 const DB_NAME = "osu-users";
 
@@ -235,7 +236,7 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 		}, (currentLastId + 1).toString());
 
 		if(!silent) {
-			log(`${ DB_NAME }: Deleted 1 row.`, "insertUser", LogSeverity.LOG);
+			log(`${ DB_NAME }: Inserted 1 row.`, "insertUser", LogSeverity.LOG);
 		}
 
 		return UserInsertStatus.OK;
@@ -246,6 +247,100 @@ export async function insertUser(deta: Deta, user: IUserPOSTData, silent = false
 		}
 		else {
 			log("Unknown error occurred while querying database.", "insertUser", LogSeverity.ERROR);
+		}
+
+		return UserInsertStatus.INTERNAL_ERROR;
+	}
+}
+
+/* intended to be used for fetch utility */
+export async function insertMultipleUsers(deta: Deta, users: IUserPOSTData[], silent = false): Promise<UserInsertStatus.OK | UserInsertStatus.INTERNAL_ERROR> {
+	const db = deta.Base(DB_NAME);
+
+	try {
+		const countries = await getCountries(deta, "id", false, true);
+		if(countries === CountryGetStatus.INTERNAL_ERROR) {
+			log("Internal error occurred while querying countries data.", "insertMultipleUsers", LogSeverity.ERROR);
+			return UserInsertStatus.INTERNAL_ERROR;
+		}
+
+		let currentLastId = 0;
+		{
+			const rows = await getUsers(deta, null, "id", true);
+			if(rows === UserGetStatus.INTERNAL_ERROR) {
+				log("Internal error occurred while querying users data.", "insertMultipleUsers", LogSeverity.DEBUG);
+				return UserInsertStatus.INTERNAL_ERROR;
+			}
+
+			if(rows.length > 0) {
+				currentLastId = _.parseInt(rows[rows.length - 1].key, 10);
+			}
+		}
+
+		let inserted = 0;
+
+		const len = users.length;
+		for(let i = 0; i < len; i++) {
+			if(!silent) {
+				process.stdout.write(`[LOG] insertMultipleUsers :: Inserting user to database (${ i + 1 }/${ len })...`);
+			}
+
+			const countryIndex = countries.findIndex(country => country.key === users[i].countryId.toString());
+			if(countryIndex >= 0) {
+				const data: IUserCountryData = {
+					userName: users[i].userName,
+					osuId: users[i].osuId,
+					isActive: users[i].isActive,
+					country: {
+						countryId: countryIndex,
+						countryName: countries[countryIndex].countryName,
+						countryCode: countries[countryIndex].countryCode
+					}
+				};
+
+				const date = new Date();
+
+				/* run sequentially */
+				// eslint-disable-next-line no-await-in-loop
+				await db.put({
+					userName: data.userName,
+					osuId: data.osuId,
+					isActive: data.isActive,
+					country: JSON.parse(JSON.stringify(data.country)),
+					countryId: countryIndex,
+					dateAdded: date.toISOString()
+				}, (currentLastId + 1).toString());
+
+				currentLastId++;
+				inserted++;
+
+				// eslint-disable-next-line no-await-in-loop
+				await sleep(100);
+			}
+
+			if(!silent) {
+				if(i < len - 1) {
+					process.stdout.clearLine(0);
+					process.stdout.cursorTo(0);
+				}
+				else {
+					process.stdout.write("\n");
+				}
+			}
+		}
+
+		if(!silent) {
+			log(`${ DB_NAME }: Inserted ${ inserted } ${ inserted === 1 ? "row" : "rows" }.`, "insertMultipleUsers", LogSeverity.LOG);
+		}
+
+		return UserInsertStatus.OK;
+	}
+	catch (e) {
+		if(_.isError(e)) {
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "insertMultipleUsers", LogSeverity.ERROR);
+		}
+		else {
+			log("Unknown error occurred while querying database.", "insertMultipleUsers", LogSeverity.ERROR);
 		}
 
 		return UserInsertStatus.INTERNAL_ERROR;
@@ -268,7 +363,7 @@ export async function updateUser(deta: Deta, user: IUserPUTData, silent = false)
 		switch(fetchedCountry) {
 			case CountryGetStatus.NO_DATA: // fallthrough
 			case CountryGetStatus.INTERNAL_ERROR:
-				log("Internal error occurred while querying user data.", "updateUser", LogSeverity.DEBUG);
+				log("Internal error occurred while querying country data.", "updateUser", LogSeverity.DEBUG);
 				return UserUpdateStatus.INTERNAL_ERROR;
 		}
 
@@ -297,6 +392,86 @@ export async function updateUser(deta: Deta, user: IUserPUTData, silent = false)
 		}
 		else {
 			log("Unknown error occurred while querying database.", "updateUser", LogSeverity.ERROR);
+		}
+
+		return UserUpdateStatus.INTERNAL_ERROR;
+	}
+}
+
+/* intended to be used for fetch utility */
+export async function updateMultipleUsers(deta: Deta, users: IUserPUTData[], silent = false): Promise<UserUpdateStatus.OK | UserUpdateStatus.INTERNAL_ERROR> {
+	const db = deta.Base(DB_NAME);
+
+	try {
+		const countries = await getCountries(deta, "id", false, true);
+		if(countries === CountryGetStatus.INTERNAL_ERROR) {
+			log("Internal error occurred while querying country data.", "updateMultipleUsers", LogSeverity.DEBUG);
+			return UserUpdateStatus.INTERNAL_ERROR;
+		}
+
+		const users = await getUsers(deta, null, "id", false, true);
+		if(users === UserGetStatus.INTERNAL_ERROR) {
+			log("Internal error occurred while querying user data.", "updateMultipleUsers", LogSeverity.DEBUG);
+			return UserUpdateStatus.INTERNAL_ERROR;
+		}
+
+		let updated = 0;
+
+		const len = users.length;
+		for(let i = 0; i < len; i++) {
+			const userIndex = users.findIndex(user => user.key === users[i].key);
+
+			if(userIndex >= 0) {
+				if(!silent) {
+					process.stdout.write(`[LOG] updateMultipleUsers :: Updating user in database (${ i + 1 }/${ len })...`);
+				}
+
+				const countryIndex = countries.findIndex(country => country.key === users[i].countryId.toString());
+
+				if(countryIndex >= 0) {
+					/* run sequentially */
+					// eslint-disable-next-line no-await-in-loop
+					await db.update({
+						userName: users[i].userName,
+						isActive: users[i].isActive,
+						country: {
+							countryId: countries[countryIndex].key,
+							countryName: countries[countryIndex].countryName,
+							countryCode: countries[countryIndex].countryCode
+						},
+						countryId: countries[countryIndex].key
+					}, users[i].key);
+
+					updated++;
+
+					// eslint-disable-next-line no-await-in-loop
+					await sleep(100);
+				}
+			}
+
+			if(!silent) {
+				if(i < len - 1) {
+					process.stdout.clearLine(0);
+					process.stdout.cursorTo(0);
+				}
+				else {
+					process.stdout.write("\n");
+				}
+			}
+		}
+
+		if(!silent) {
+			log(`${ DB_NAME }: Updated ${ updated } ${ updated === 1 ? "row" : "rows" }.`, "updateMultipleUsers", LogSeverity.LOG);
+		}
+
+		return UserUpdateStatus.OK;
+	}
+	catch (e) {
+		if(_.isError(e)) {
+			log(`An error occurred while querying database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "updateMultipleUsers", LogSeverity.ERROR);
+		}
+		else {
+			log("Unknown error occurred while querying database.", "updateMultipleUsers", LogSeverity.ERROR);
 		}
 
 		return UserUpdateStatus.INTERNAL_ERROR;

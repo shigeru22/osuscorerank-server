@@ -4,9 +4,10 @@ import { IScoreDetailData } from "../../types/deta/score";
 import { IScoreCountryData, IScorePOSTData } from "../../types/score";
 import { CountryGetStatus, UserGetStatus, ScoreGetStatus, ScoreInsertStatus, ScoreUpdateStatus, ScoreDeleteStatus, UpdateGetStatus } from "../status";
 import { getCountryByKey } from "./countries";
-import { getUserByKey, getUserByOsuId } from "./users";
+import { getUserByKey, getUserByOsuId, getUsers } from "./users";
 import { LogSeverity, log } from "../log";
 import { getUpdateByKey, getUpdatesByStatus } from "./updates";
+import { sleep } from "../common";
 
 const DB_NAME = "osu-scores";
 
@@ -418,6 +419,126 @@ export async function insertScore(deta: Deta, score: IScorePOSTData, updateId?: 
 		}
 		else {
 			log("Unknown error occurred while inserting data to database.", "insertScore", LogSeverity.ERROR);
+		}
+
+		return ScoreInsertStatus.INTERNAL_ERROR;
+	}
+}
+
+/* intended to be used for fetch utility */
+export async function insertMultipleScores(deta: Deta, scores: IScorePOSTData[], updateId?: number, silent = false): Promise<ScoreInsertStatus.OK | ScoreInsertStatus.NO_UPDATE_DATA | ScoreInsertStatus.UPDATE_DATA_FINALIZED | ScoreInsertStatus.NO_OFFLINE_UPDATE_DATA | ScoreInsertStatus.INTERNAL_ERROR> {
+	const db = deta.Base(DB_NAME);
+
+	try {
+		let updateKey = 0;
+		{
+			if(!_.isUndefined(updateId)) {
+				const updateResult = await getUpdateByKey(deta, updateId, silent);
+				switch(updateResult) {
+					case UpdateGetStatus.NO_DATA:
+						log(`${ DB_NAME }: No update data found. Canceling score insertion.`, "insertScore", LogSeverity.DEBUG);
+						return ScoreInsertStatus.NO_UPDATE_DATA;
+					case UpdateGetStatus.INTERNAL_ERROR:
+						log("Internal error occurred while querying update data.", "insertScore", LogSeverity.DEBUG);
+						return ScoreInsertStatus.INTERNAL_ERROR;
+				}
+
+				if(updateResult.online) {
+					log("Update data already finalized. Cancelling score data insertion.", "insertScore", LogSeverity.ERROR);
+					return ScoreInsertStatus.UPDATE_DATA_FINALIZED;
+				}
+
+				updateKey = updateId;
+			}
+			else {
+				const updateResult = await getUpdatesByStatus(deta, false, "id", true);
+				if(updateResult === UpdateGetStatus.INTERNAL_ERROR) {
+					log("Internal error occurred while querying update data.", "insertScore", LogSeverity.DEBUG);
+					return ScoreInsertStatus.INTERNAL_ERROR;
+				}
+
+				if(updateResult.length <= 0) {
+					log("No update data in non-finalized status. Cancelling score data insertion.", "insertScore", LogSeverity.ERROR);
+					return ScoreInsertStatus.NO_OFFLINE_UPDATE_DATA;
+				}
+
+				updateKey = _.parseInt(updateResult[0].key, 10);
+			}
+		}
+
+		const users = await getUsers(deta, null, "id", false, true);
+		if(users === UserGetStatus.INTERNAL_ERROR) {
+			log("Internal error occurred while querying user data.", "insertMultipleScores", LogSeverity.DEBUG);
+			return ScoreInsertStatus.INTERNAL_ERROR;
+		}
+
+		let currentLastId = 0;
+		{
+			const rows = await getScores(deta, null, "id", silent);
+			if(rows === ScoreGetStatus.INTERNAL_ERROR) {
+				log("Internal error occurred while querying scores data.", "insertMultipleScores", LogSeverity.DEBUG);
+				return ScoreInsertStatus.INTERNAL_ERROR;
+			}
+
+			if(rows.length > 0) {
+				currentLastId = _.parseInt(rows[rows.length - 1].key, 10);
+			}
+		}
+
+		let inserted = 0;
+
+		const len = scores.length;
+		for(let i = 0; i < len; i++) {
+			const userIndex = users.findIndex(user => user.key === scores[i].userId.toString());
+
+			if(userIndex >= 0) {
+				const data: IScoreCountryData = {
+					user: {
+						userId: _.parseInt(users[userIndex].key, 10),
+						userName: users[userIndex].userName,
+						osuId: users[userIndex].osuId,
+						isActive: users[userIndex].isActive,
+						country: users[userIndex].country
+					},
+					score: scores[i].score,
+					pp: scores[i].pp
+				};
+
+				const date = new Date();
+
+				/* run sequentially */
+				// eslint-disable-next-line no-await-in-loop
+				await db.put({
+					user: JSON.parse(JSON.stringify(data.user)),
+					userId: data.user.userId,
+					countryId: data.user.country.countryId,
+					isActive: data.user.isActive,
+					score: data.score.toString(),
+					pp: data.pp,
+					updateId: updateKey,
+					dateAdded: date.toISOString()
+				}, (currentLastId + 1).toString());
+
+				currentLastId++;
+				inserted++;
+
+				// eslint-disable-next-line no-await-in-loop
+				await sleep(100);
+			}
+		}
+
+		if(!silent) {
+			log(`${ DB_NAME }: Inserted ${ inserted } ${ inserted === 1 ? "row" : "rows" }.`, "insertScore", LogSeverity.LOG);
+		}
+
+		return ScoreInsertStatus.OK;
+	}
+	catch (e) {
+		if(_.isError(e)) {
+			log(`An error occurred while inserting data to database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "insertMultipleScores", LogSeverity.ERROR);
+		}
+		else {
+			log("Unknown error occurred while inserting data to database.", "insertMultipleScores", LogSeverity.ERROR);
 		}
 
 		return ScoreInsertStatus.INTERNAL_ERROR;
