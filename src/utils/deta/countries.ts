@@ -4,6 +4,7 @@ import { ICountryItemDetailData } from "../../types/deta/country";
 import { ICountryPOSTData } from "../../types/country";
 import { CountryGetStatus, CountryInsertStatus, CountryDeleteStatus } from "../status";
 import { log, LogSeverity } from "../log";
+import { sleep } from "../common";
 
 const DB_NAME = "osu-countries";
 
@@ -144,10 +145,66 @@ export async function insertCountry(deta: Deta, country: ICountryPOSTData, silen
 	}
 	catch (e) {
 		if(_.isError(e)) {
-			log(`An error occurred while inserting data to database.. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "insertCountry", LogSeverity.ERROR);
+			log(`An error occurred while inserting data to database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "insertCountry", LogSeverity.ERROR);
 		}
 		else {
 			log("Unknown error occurred while inserting data to database.", "insertCountry", LogSeverity.ERROR);
+		}
+
+		return CountryInsertStatus.INTERNAL_ERROR;
+	}
+}
+
+export async function insertMultipleCountries(deta: Deta, countries: ICountryPOSTData[], silent = false): Promise<CountryInsertStatus.OK | CountryInsertStatus.INTERNAL_ERROR> {
+	const db = deta.Base(DB_NAME);
+
+	try {
+		const currentCountries = await getCountries(deta, "id", false, true);
+		if(currentCountries === CountryGetStatus.INTERNAL_ERROR) {
+			log("Internal error occurred while querying countries data.", "insertMultipleUsers", LogSeverity.ERROR);
+			return CountryInsertStatus.INTERNAL_ERROR;
+		}
+
+		let currentLastId = 0;
+		if(currentCountries.length > 0) {
+			currentLastId = _.parseInt(currentCountries[countries.length - 1].key, 10);
+		}
+
+		let inserted = 0;
+
+		const len = countries.length;
+		for(let i = 0; i < len; i++) {
+			const countryIndex = currentCountries.findIndex(country => country.countryCode === countries[i].countryCode);
+			if(countryIndex < 0) {
+				const date = new Date();
+
+				// eslint-disable-next-line no-await-in-loop
+				await db.put({
+					countryName: countries[i].countryName,
+					countryCode: countries[i].countryCode,
+					dateAdded: date.toISOString()
+				}, (currentLastId + 1).toString());
+
+				currentLastId++;
+				inserted++;
+
+				// eslint-disable-next-line no-await-in-loop
+				await sleep(100);
+			}
+		}
+
+		if(!silent) {
+			log(`${ DB_NAME }: Inserted ${ inserted } ${ inserted === 1 ? "row" : "rows" }.`, "insertMultipleCountries", LogSeverity.LOG);
+		}
+
+		return CountryInsertStatus.OK;
+	}
+	catch (e) {
+		if(_.isError(e)) {
+			log(`An error occurred while inserting data to database. Error details below.\n${ e.name }: ${ e.message }${ process.env.DEVELOPMENT === "1" ? `\n${ e.stack }` : "" }`, "insertMultipleCountries", LogSeverity.ERROR);
+		}
+		else {
+			log("Unknown error occurred while inserting data to database.", "insertMultipleCountries", LogSeverity.ERROR);
 		}
 
 		return CountryInsertStatus.INTERNAL_ERROR;
