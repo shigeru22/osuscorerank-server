@@ -10,7 +10,7 @@ import { getUpdateByKey, getUpdatesByStatus } from "./updates";
 
 const DB_NAME = "osu-scores";
 
-export async function getScores(deta: Deta, active: boolean | null = null, sort: "id" | "score" | "pp" | "date" = "score", desc = false): Promise<IScoreDetailData[] | ScoreGetStatus.INTERNAL_ERROR> {
+export async function getScores(deta: Deta, active: boolean | null = null, sort: "id" | "score" | "pp" | "date" = "score", desc = false, silent = false): Promise<IScoreDetailData[] | ScoreGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -19,13 +19,25 @@ export async function getScores(deta: Deta, active: boolean | null = null, sort:
 			query = Object.assign(query, { isActive: active });
 		}
 
-		const fetchResult = (await db.fetch(query)).items as unknown as IScoreDetailData[];
+		let queryResult = await db.fetch(query);
+		const fetchResult = queryResult.items as unknown as IScoreDetailData[];
+
+		while(queryResult.last) {
+			// eslint-disable-next-line no-await-in-loop
+			queryResult = await db.fetch(query, { last: queryResult.last });
+			const tempItems = queryResult.items as unknown as IScoreDetailData[];
+			fetchResult.push(...tempItems);
+		}
 
 		if(fetchResult.length <= 0) {
-			log(`${ DB_NAME }: No data returned from database.`, "getScores", LogSeverity.WARN);
+			if(!silent) {
+				log(`${ DB_NAME }: No data returned from database.`, "getScores", LogSeverity.WARN);
+			}
+
 			return [];
 		}
-		else {
+
+		if(!silent) {
 			log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getScores", LogSeverity.LOG);
 		}
 
@@ -78,7 +90,15 @@ export async function getScoresByCountryId(deta: Deta, active: boolean | null = 
 			query = Object.assign(query, { isActive: active });
 		}
 
-		const fetchResult = (await db.fetch(query)).items as unknown as IScoreDetailData[];
+		let queryResult = await db.fetch(query);
+		const fetchResult = queryResult.items as unknown as IScoreDetailData[];
+
+		while(queryResult.last) {
+			// eslint-disable-next-line no-await-in-loop
+			queryResult = await db.fetch(query, { last: queryResult.last });
+			const tempItems = queryResult.items as unknown as IScoreDetailData[];
+			fetchResult.push(...tempItems);
+		}
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScoresByCountryId", LogSeverity.WARN);
@@ -135,7 +155,15 @@ export async function getScoresByUpdateId(deta: Deta, active: boolean | null = n
 			query = Object.assign(query, { isActive: active });
 		}
 
-		const fetchResult = (await db.fetch(query)).items as unknown as IScoreDetailData[];
+		let queryResult = await db.fetch(query);
+		const fetchResult = queryResult.items as unknown as IScoreDetailData[];
+
+		while(queryResult.last) {
+			// eslint-disable-next-line no-await-in-loop
+			queryResult = await db.fetch(query, { last: queryResult.last });
+			const tempItems = queryResult.items as unknown as IScoreDetailData[];
+			fetchResult.push(...tempItems);
+		}
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getScoresByUpdateId", LogSeverity.WARN);
@@ -296,7 +324,7 @@ export async function insertScore(deta: Deta, score: IScorePOSTData, updateId?: 
 	const db = deta.Base(DB_NAME);
 
 	try {
-		const user = await getUserByKey(deta, score.userId);
+		const user = await getUserByKey(deta, score.userId, silent);
 		switch(user) {
 			case UserGetStatus.NO_DATA: // fallthrough
 			case UserGetStatus.INTERNAL_ERROR:
@@ -306,7 +334,7 @@ export async function insertScore(deta: Deta, score: IScorePOSTData, updateId?: 
 
 		let currentLastId = 0;
 		{
-			const rows = await getScores(deta, null, "id");
+			const rows = await getScores(deta, null, "id", silent);
 			if(rows === ScoreGetStatus.INTERNAL_ERROR) {
 				log("Internal error occurred while querying scores data.", "insertScore", LogSeverity.DEBUG);
 				return ScoreInsertStatus.INTERNAL_ERROR;
@@ -320,7 +348,7 @@ export async function insertScore(deta: Deta, score: IScorePOSTData, updateId?: 
 		let updateKey = 0;
 		{
 			if(!_.isUndefined(updateId)) {
-				const updateResult = await getUpdateByKey(deta, updateId);
+				const updateResult = await getUpdateByKey(deta, updateId, silent);
 				switch(updateResult) {
 					case UpdateGetStatus.NO_DATA:
 						log(`${ DB_NAME }: No update data found. Canceling score insertion.`, "insertScore", LogSeverity.DEBUG);

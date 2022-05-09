@@ -7,14 +7,17 @@ import { log, LogSeverity } from "../log";
 
 const DB_NAME = "osu-countries";
 
-export async function getCountries(deta: Deta, sort: "id" | "date" = "id", desc = false): Promise<ICountryItemDetailData[] | CountryGetStatus.INTERNAL_ERROR> {
+export async function getCountries(deta: Deta, sort: "id" | "date" = "id", desc = false, silent = false): Promise<ICountryItemDetailData[] | CountryGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
 		const fetchResult = (await db.fetch()).items as unknown as ICountryItemDetailData[];
 
 		if(fetchResult.length <= 0) {
-			log(`${ DB_NAME }: No data returned from database.`, "getCountries", LogSeverity.WARN);
+			if(!silent) {
+				log(`${ DB_NAME }: No data returned from database.`, "getCountries", LogSeverity.WARN);
+			}
+
 			return [];
 		}
 
@@ -34,7 +37,9 @@ export async function getCountries(deta: Deta, sort: "id" | "date" = "id", desc 
 			return desc ? compB - compA : compA - compB;
 		});
 
-		log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getCountries", LogSeverity.LOG);
+		if(!silent) {
+			log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getCountries", LogSeverity.LOG);
+		}
 
 		return fetchResult;
 	}

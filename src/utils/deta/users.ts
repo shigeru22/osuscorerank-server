@@ -8,7 +8,7 @@ import { LogSeverity, log } from "../log";
 
 const DB_NAME = "osu-users";
 
-export async function getUsers(deta: Deta, active: boolean | null = null, sort: "id" | "date" = "id", desc = false): Promise<IUserCountryDetailData[] | UserGetStatus.INTERNAL_ERROR> {
+export async function getUsers(deta: Deta, active: boolean | null = null, sort: "id" | "date" = "id", desc = false, silent = false): Promise<IUserCountryDetailData[] | UserGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
@@ -17,10 +17,21 @@ export async function getUsers(deta: Deta, active: boolean | null = null, sort: 
 			query = Object.assign(query, { isActive: active });
 		}
 
-		const fetchResult = (await db.fetch(query)).items as unknown as IUserCountryDetailData[];
+		let queryResult = await db.fetch(query);
+		const fetchResult = queryResult.items as unknown as IUserCountryDetailData[];
+
+		while(queryResult.last) {
+			// eslint-disable-next-line no-await-in-loop
+			queryResult = await db.fetch(query, { last: queryResult.last });
+			const tempItems = queryResult.items as unknown as IUserCountryDetailData[];
+			fetchResult.push(...tempItems);
+		}
 
 		if(fetchResult.length <= 0) {
-			log(`${ DB_NAME }: No data returned from database.`, "getUsers", LogSeverity.WARN);
+			if(!silent) {
+				log(`${ DB_NAME }: No data returned from database.`, "getUsers", LogSeverity.WARN);
+			}
+
 			return [];
 		}
 
@@ -40,7 +51,10 @@ export async function getUsers(deta: Deta, active: boolean | null = null, sort: 
 			return desc ? compB - compA : compA - compB;
 		});
 
-		log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getUsers", LogSeverity.LOG);
+		if(!silent) {
+			log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getUsers", LogSeverity.LOG);
+		}
+
 		return fetchResult;
 	}
 	catch (e) {
@@ -64,7 +78,15 @@ export async function getUsersByCountryId(deta: Deta, active: boolean | null = n
 			query = Object.assign(query, { isActive: active });
 		}
 
-		const fetchResult = (await db.fetch(query)).items as unknown as IUserDetailData[];
+		let queryResult = await db.fetch(query);
+		const fetchResult = queryResult.items as unknown as IUserDetailData[];
+
+		while(queryResult.last) {
+			// eslint-disable-next-line no-await-in-loop
+			queryResult = await db.fetch(query, { last: queryResult.last });
+			const tempItems = queryResult.items as unknown as IUserDetailData[];
+			fetchResult.push(...tempItems);
+		}
 
 		if(fetchResult.length <= 0) {
 			log(`${ DB_NAME }: No data returned from database.`, "getUsersByCountryId", LogSeverity.WARN);
@@ -102,17 +124,21 @@ export async function getUsersByCountryId(deta: Deta, active: boolean | null = n
 	}
 }
 
-export async function getUserByKey(deta: Deta, key: number): Promise<IUserCountryDetailData | UserGetStatus.NO_DATA | UserGetStatus.INTERNAL_ERROR> {
+export async function getUserByKey(deta: Deta, key: number, silent = false): Promise<IUserCountryDetailData | UserGetStatus.NO_DATA | UserGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
 		const fetchResult = (await db.get(key.toString())) as unknown as IUserCountryDetailData;
 
 		if(_.isNull(fetchResult)) {
-			log(`${ DB_NAME }: No data returned from database.`, "getUserByKey", LogSeverity.WARN);
+			if(!silent) {
+				log(`${ DB_NAME }: No data returned from database.`, "getUserByKey", LogSeverity.WARN);
+			}
+
 			return UserGetStatus.NO_DATA;
 		}
-		else {
+
+		if(!silent) {
 			log(`${ DB_NAME }: Returned 1 row.`, "getUserByKey", LogSeverity.LOG);
 		}
 
