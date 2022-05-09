@@ -7,14 +7,14 @@ import { LogSeverity, log } from "../log";
 
 const DB_NAME = "data-updates";
 
-export async function getUpdates(deta: Deta, sort: "id" | "date" = "date", desc = false): Promise<IUpdateDetailData[] | UpdateGetStatus.INTERNAL_ERROR> {
+export async function getUpdates(deta: Deta, sort: "id" | "date" = "date", desc = false, silent = false): Promise<IUpdateDetailData[] | UpdateGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
 		const fetchResult = (await db.fetch()).items as unknown as IUpdateDetailData[];
 
 		if(fetchResult.length <= 0) {
-			log(`${ DB_NAME }: No data returned from database.`, "getScores", LogSeverity.WARN);
+			log(`${ DB_NAME }: No data returned from database.`, "getUpdates", LogSeverity.WARN);
 			return [];
 		}
 
@@ -34,7 +34,10 @@ export async function getUpdates(deta: Deta, sort: "id" | "date" = "date", desc 
 			return desc ? compB - compA : compA - compB;
 		});
 
-		log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getScores", LogSeverity.LOG);
+		if(!silent) {
+			log(`${ DB_NAME }: Returned ${ fetchResult.length } row${ fetchResult.length !== 1 ? "s" : "" }.`, "getUpdates", LogSeverity.LOG);
+		}
+
 		return fetchResult;
 	}
 	catch (e) {
@@ -91,17 +94,21 @@ export async function getUpdatesByStatus(deta: Deta, status: boolean, sort: "id"
 	}
 }
 
-export async function getUpdateByKey(deta: Deta, key: number): Promise<IUpdateDetailData | UpdateGetStatus.NO_DATA | UpdateGetStatus.INTERNAL_ERROR> {
+export async function getUpdateByKey(deta: Deta, key: number, silent = false): Promise<IUpdateDetailData | UpdateGetStatus.NO_DATA | UpdateGetStatus.INTERNAL_ERROR> {
 	const db = deta.Base(DB_NAME);
 
 	try {
 		const fetchResult = (await db.get(key.toString())) as unknown as IUpdateDetailData;
 
 		if(_.isNull(fetchResult)) {
-			log(`${ DB_NAME }: No data returned from database.`, "getUpdateByKey", LogSeverity.WARN);
+			if(!silent) {
+				log(`${ DB_NAME }: No data returned from database.`, "getUpdateByKey", LogSeverity.WARN);
+			}
+
 			return UpdateGetStatus.NO_DATA;
 		}
-		else {
+
+		if(!silent) {
 			log(`${ DB_NAME }: Returned 1 row.`, "getUpdateByKey", LogSeverity.LOG);
 		}
 
@@ -125,7 +132,7 @@ export async function insertUpdate(deta: Deta, update: IUpdatePOSTData, silent =
 	try {
 		let currentLastId = 0;
 		{
-			const rows = await getUpdates(deta, "id");
+			const rows = await getUpdates(deta, "id", silent);
 			if(rows === UpdateGetStatus.INTERNAL_ERROR) {
 				log("Internal error occurred while querying users data.", "insertUpdate", LogSeverity.ERROR);
 				return UpdateInsertStatus.INTERNAL_ERROR;
