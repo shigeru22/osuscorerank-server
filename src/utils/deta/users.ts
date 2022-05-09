@@ -409,8 +409,8 @@ export async function updateMultipleUsers(deta: Deta, users: IUserPUTData[], sil
 			return UserUpdateStatus.INTERNAL_ERROR;
 		}
 
-		const users = await getUsers(deta, null, "id", false, true);
-		if(users === UserGetStatus.INTERNAL_ERROR) {
+		const dbUsers = await getUsers(deta, null, "id", false, true);
+		if(dbUsers === UserGetStatus.INTERNAL_ERROR) {
 			log("Internal error occurred while querying user data.", "updateMultipleUsers", LogSeverity.DEBUG);
 			return UserUpdateStatus.INTERNAL_ERROR;
 		}
@@ -419,7 +419,7 @@ export async function updateMultipleUsers(deta: Deta, users: IUserPUTData[], sil
 
 		const len = users.length;
 		for(let i = 0; i < len; i++) {
-			const userIndex = users.findIndex(user => user.key === users[i].key);
+			const userIndex = dbUsers.findIndex(user => user.key === users[i].userId.toString());
 
 			if(userIndex >= 0) {
 				if(!silent) {
@@ -440,7 +440,7 @@ export async function updateMultipleUsers(deta: Deta, users: IUserPUTData[], sil
 							countryCode: countries[countryIndex].countryCode
 						},
 						countryId: countries[countryIndex].key
-					}, users[i].key);
+					}, dbUsers[i].key);
 
 					updated++;
 
