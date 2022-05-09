@@ -307,7 +307,7 @@ export async function insertMultipleUsers(deta: Deta, users: IUserPOSTData[], si
 					osuId: data.osuId,
 					isActive: data.isActive,
 					country: JSON.parse(JSON.stringify(data.country)),
-					countryId: countryIndex,
+					countryId: countries[countryIndex].key,
 					dateAdded: date.toISOString()
 				}, (currentLastId + 1).toString());
 
