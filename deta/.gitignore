@@ -1,0 +1,5 @@
+# output directory
+dist/
+
+# package json copied from root repository
+package.json
