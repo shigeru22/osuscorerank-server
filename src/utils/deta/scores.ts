@@ -489,6 +489,10 @@ export async function insertMultipleScores(deta: Deta, scores: IScorePOSTData[],
 
 		const len = scores.length;
 		for(let i = 0; i < len; i++) {
+			if(!silent) {
+				process.stdout.write(`[LOG] insertMultipleScores :: Inserting scores to database (${ i + 1 }/${ len })...`);
+			}
+
 			const userIndex = users.findIndex(user => user.key === scores[i].userId.toString());
 
 			if(userIndex >= 0) {
@@ -539,6 +543,16 @@ export async function insertMultipleScores(deta: Deta, scores: IScorePOSTData[],
 						log("Unknown error occurred while inserting data.", "insertMultipleScores", LogSeverity.ERROR);
 						return ScoreInsertStatus.INTERNAL_ERROR;
 					}
+				}
+			}
+
+			if(!silent) {
+				if(i < len - 1) {
+					process.stdout.clearLine(0);
+					process.stdout.cursorTo(0);
+				}
+				else {
+					process.stdout.write("\n");
 				}
 			}
 		}

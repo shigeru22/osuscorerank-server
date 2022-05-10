@@ -211,6 +211,16 @@ export async function insertMultipleCountries(deta: Deta, countries: ICountryPOS
 					}
 				}
 			}
+
+			if(!silent) {
+				if(i < len - 1) {
+					process.stdout.clearLine(0);
+					process.stdout.cursorTo(0);
+				}
+				else {
+					process.stdout.write("\n");
+				}
+			}
 		}
 
 		if(!silent) {
