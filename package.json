@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "nodemon --exec npx ts-node src/index.ts",
 		"fetch": "ts-node fetch/index.ts",
-		"build": "rimraf ./dist && tsc && cd client && npm run build-wasm && npm install && npm run build && move-cli ./build ../dist/client && cd .. && cp-cli ./package.json ./dist/package.json && rimraf ./deta/dist && move-cli ./dist ./deta/dist",
+		"build": "rimraf ./dist && tsc && cd client && npm run build-wasm && npm install && npm run build && move-cli ./build ../dist/client && cd .. && cp-cli ./package.json ./dist/package.json && rimraf ./deta/dist && move-cli ./dist ./deta/dist && ts-node ./src/utils/post-build/index.ts",
 		"clean": "rimraf ./dist",
 		"start": "node .",
 		"deploy": "cd ./deta && deta deploy"
