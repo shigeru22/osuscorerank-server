@@ -1,8 +1,12 @@
 {
-	"name": "osuinactive-api",
-	"version": "0.1.0",
-	"description": "API for osu! Inactive User Score Rankings",
-	"main": "index.js",
+	"name": "osuscorerank-server",
+	"version": "1.0.0",
+	"author": "shigeru22",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "homepage": "https://github.com/shigeru22/osuscorerank-server"
+  },
+	"main": "deta/dist/index.js",
 	"scripts": {
 		"dev": "nodemon --exec npx ts-node src/index.ts",
 		"fetch": "ts-node fetch/index.ts",
@@ -11,8 +15,6 @@
 		"start": "node .",
 		"deploy": "cd ./deta && deta deploy"
 	},
-	"author": "shigeru22",
-	"license": "MIT",
 	"devDependencies": {
 		"@types/cors": "^2.8.12",
 		"@types/express": "^4.17.13",
