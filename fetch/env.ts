@@ -21,3 +21,12 @@ export function envCheck() {
 
 	return true;
 }
+
+export function envDetaCheck() {
+	if(_.isUndefined(process.env.DETA_PROJECT_KEY) || _.isEmpty(process.env.DETA_PROJECT_KEY)) {
+		console.log("DETA_PROJECT_KEY must be defined in environment variables.");
+		return false;
+	}
+
+	return true;
+}

@@ -50,3 +50,30 @@ export function exportRankingsData(data: IUserStatistics[], path: string) {
 
 	return true;
 }
+
+export function importRankingsData(path: string) {
+	if(!path.endsWith(".json")) {
+		console.log("[ERROR] importRankingsData :: path must end with .json.");
+		return null;
+	}
+
+	let tempPath = path.slice(); // prevent argument mutation
+	if(path.startsWith("../")) {
+		console.log("[ERROR] importRankingData :: Never import from parent directory. This may cause file location ambiguity.");
+		return null;
+	}
+	else if(path.startsWith("/")) {
+		tempPath = tempPath.slice(1);
+	}
+	else if(path.startsWith("./")) {
+		tempPath = tempPath.slice(2);
+	}
+
+	if(!fs.existsSync(tempPath)) {
+		console.log("[ERROR] importRankingData :: path not found.");
+		return null;
+	}
+
+	const tempData = JSON.parse(fs.readFileSync(tempPath, { encoding: "utf8" })) as IUserStatistics[];
+	return tempData;
+}
