@@ -1,3 +1,3 @@
 [submodule "client"]
 	path = client
-	url = https://github.com/shigeru22/osu-inactive-score.git
+	url = https://github.com/shigeru22/osuscorerank-web.git
