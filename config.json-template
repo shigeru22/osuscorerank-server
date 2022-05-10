@@ -1,0 +1,20 @@
+{
+  "countries": [
+    {
+      "code": "ID",
+      "name": "Indonesia"
+    },
+    {
+      "code": "SG",
+      "name": "Singapore"
+    },
+    {
+      "code": "JP",
+      "name": "Japan"
+    },
+    {
+      "code": "US",
+      "name": "United States"
+    }
+  ]
+}

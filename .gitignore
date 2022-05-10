@@ -3,6 +3,9 @@ node_modules
 # Keep environment variables out of version control
 .env
 
+# Configurations
+config.json
+
 # Migrations, won't be used in version controlling
 prisma/migrations
 
