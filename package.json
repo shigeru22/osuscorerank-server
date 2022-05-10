@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "nodemon --exec npx ts-node src/index.ts",
 		"fetch": "ts-node fetch/index.ts",
-		"build": "tsc && cd client && npm install && npm run build",
+		"build": "tsc && cd client && npm run build-wasm && npm install && npm run build && move-cli ./build ../dist/client",
+		"clean": "rimraf ./dist",
 		"start": "node ."
 	},
 	"author": "shigeru22",
@@ -23,7 +24,9 @@
 		"eslint": "^8.6.0",
 		"eslint-plugin-import": "^2.25.4",
 		"inquirer": "^8.2.0",
+		"move-cli": "^2.0.0",
 		"nodemon": "^2.0.15",
+		"rimraf": "^3.0.2",
 		"ts-node": "^10.4.0",
 		"typescript": "^4.5.4"
 	},
