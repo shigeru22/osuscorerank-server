@@ -97,7 +97,7 @@ if(!_.isUndefined(process.env.STANDALONE) && process.env.STANDALONE === "1") {
 	}
 
 	app.listen(PORT, () => {
-		log(`Server is running at port ${ PORT }`, "checkEnv", LogSeverity.LOG);
+		log(`Server is running at port ${ PORT }`, "main", LogSeverity.LOG);
 	});
 }
 
