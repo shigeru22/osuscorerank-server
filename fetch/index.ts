@@ -218,7 +218,7 @@ async function dataImport() {
 				if(countryIndex >= 0) {
 					/* update user data as needed */
 
-					if(rankings[i].user.country_code !== usersData[userIndex].country.countryCode || rankings[i].user.username !== usersData[userIndex].userName) {
+					if(rankings[i].user.country_code !== usersData[userIndex].country.countryCode || rankings[i].user.username !== usersData[userIndex].userName || rankings[i].user.is_active !== usersData[userIndex].isActive) {
 						updateUsersData.push({
 							userId: _.parseInt(usersData[userIndex].key, 10),
 							countryId: _.parseInt(countryData[countryIndex].key, 10),
