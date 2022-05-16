@@ -10,7 +10,7 @@ import { IScorePOSTData } from "../src/types/score";
 import { getCountries, insertMultipleCountries } from "../src/utils/deta/countries";
 import { getUsers, insertMultipleUsers, updateMultipleUsers } from "../src/utils/deta/users";
 import { insertMultipleScores } from "../src/utils/deta/scores";
-import { getUpdates, insertUpdate } from "../src/utils/deta/updates";
+import { getUpdates, insertUpdate, updateOnlineStatus } from "../src/utils/deta/updates";
 import { getScoreRanking } from "../src/utils/osu-api/osu";
 import { CountryGetStatus, CountryInsertStatus, ScoreInsertStatus, UpdateGetStatus, UserGetStatus, UserInsertStatus, UserUpdateStatus } from "../src/utils/status";
 import Config from "../config.json";
@@ -326,6 +326,9 @@ async function dataImport() {
 	}
 
 	await sleep(3000); // wait for data flush
+
+	console.log("[LOG] dataImport :: Setting update data online status...");
+	await updateOnlineStatus(deta, _.parseInt(updateData.key, 10), true, false);
 
 	const endTime = new Date();
 
