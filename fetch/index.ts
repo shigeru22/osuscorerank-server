@@ -5,6 +5,7 @@ import { envCheck, envDetaCheck } from "./env";
 import { exportRankingsData, importRankingsData } from "./fs";
 import { inputNumber, inputText } from "./input";
 import { IUpdateDetailData } from "../src/types/deta/update";
+import { ICountryPOSTData } from "../src/types/country";
 import { IUserPOSTData, IUserPUTData } from "../src/types/user";
 import { IScorePOSTData } from "../src/types/score";
 import { getCountries, insertMultipleCountries } from "../src/utils/deta/countries";
@@ -13,9 +14,8 @@ import { insertMultipleScores } from "../src/utils/deta/scores";
 import { getUpdates, insertUpdate, updateOnlineStatus } from "../src/utils/deta/updates";
 import { getScoreRanking } from "../src/utils/osu-api/osu";
 import { CountryGetStatus, CountryInsertStatus, ScoreInsertStatus, UpdateGetStatus, UserGetStatus, UserInsertStatus, UserUpdateStatus } from "../src/utils/status";
-import Config from "../config.json";
-import { ICountryPOSTData } from "../src/types/country";
 import { sleep } from "../src/utils/common";
+import Config from "../config.json";
 
 dotenv.config();
 
