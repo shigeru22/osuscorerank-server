@@ -457,7 +457,7 @@ export async function updateMultipleUsers(deta: Deta, users: IUserPUTData[], sil
 								countryCode: countries[countryIndex].countryCode
 							},
 							countryId: countries[countryIndex].key
-						}, dbUsers[i].key);
+						}, users[i].userId.toString());
 
 						updated++;
 
