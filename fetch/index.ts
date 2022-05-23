@@ -8,6 +8,7 @@ import { IUpdateDetailData } from "../src/types/deta/update";
 import { ICountryPOSTData } from "../src/types/country";
 import { IUserPOSTData, IUserPUTData } from "../src/types/user";
 import { IScorePOSTData } from "../src/types/score";
+import { getRepositoryReleases } from "../src/utils/github-api/releases";
 import { getCountries, insertMultipleCountries } from "../src/utils/deta/countries";
 import { getUsers, insertMultipleUsers, updateMultipleUsers } from "../src/utils/deta/users";
 import { insertMultipleScores } from "../src/utils/deta/scores";
@@ -170,9 +171,24 @@ async function dataImport() {
 
 	/* 2. insert new update data */
 
-	console.log("[LOG] dataImport :: Inserting new update data...");
+	{
+		console.log("[LOG] dataImport :: Requesting latest server and web versions...");
 
-	await insertUpdate(deta, { apiVersion: "1.0.0", webVersion: "1.0.0" }, true);
+		const apiVersions = await getRepositoryReleases("shigeru22", "osuscorerank-server");
+		const webVersions = await getRepositoryReleases("shigeru22", "osuscorerank-web");
+
+		if(_.isNull(apiVersions) || _.isNull(webVersions)) { // TODO: retry if failed
+			console.log("[ERROR] Failed to get latest releases. Exiting.");
+			process.exit(1);
+		}
+
+		console.log("[LOG] dataImport :: Inserting new update data...");
+
+		await insertUpdate(deta, { apiVersion: apiVersions[0].name, webVersion: webVersions[0].name }, true);
+	}
+
+	/* 3. get latest update data for later usage */
+
 	let updateData: IUpdateDetailData;
 	{
 		const updatesData = await getUpdates(deta, "date", true);
