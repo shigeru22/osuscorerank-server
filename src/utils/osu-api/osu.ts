@@ -22,15 +22,14 @@ export async function getAccessToken(clientId: number, clientSecret: string) {
 
 		const response = await axios.post<IClientCredentialsPOSTResponse>(OSU_API_OAUTH_ENDPOINT, request);
 
-		if(response.status === HTTPStatus.OK) {
-			return response.data.access_token;
-		}
-		else {
+		if(response.status !== HTTPStatus.OK) {
 			log(`API returned status ${ response.status }`, "getAccessToken", LogSeverity.WARN);
 			log(`Response data:\n${ JSON.stringify(response.data) }`, "getAccessToken", LogSeverity.DEBUG);
+
+			return "";
 		}
 
-		log("Retrieved access token. Returning token as string.", "getAccessToken", LogSeverity.LOG);
+		log("Access token retrieved. Returning token as string.", "getAccessToken", LogSeverity.LOG);
 		return !_.isUndefined(response.data.access_token) ? response.data.access_token : "";
 	}
 	catch (e) {
